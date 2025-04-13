@@ -1,7 +1,5 @@
-myenv/
+envi/
 
 .env/
-
-.gitignore/
 
 db.sqlite3
