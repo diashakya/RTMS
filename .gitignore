@@ -1,0 +1,5 @@
+myenvi/
+
+.env/
+
+db.sqlite3
