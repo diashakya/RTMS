@@ -38,6 +38,7 @@ def register(request):
         password = data.get('password')
         Cpassword = data.get('Cpassword')
 
+        
         if password != Cpassword:
             messages.error(request,"confrim password and password doesnt match")
             return redirect('register')
