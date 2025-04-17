@@ -317,7 +317,7 @@ button {
 
 .banner_section {
     width: 100%;
-    background-image: url(../images/banner-bg.jpg);
+    background-image: url(../images/front.jpg);
     height: auto;
     background-size: cover;
     padding: 10px 0px 25px 0px;
@@ -523,7 +523,7 @@ button {
     text-align: center;
     margin: 0px;
     padding-top: 20px;
-    color: #262525;
+    color: #ffffff;
 }
 
 .gallery_section_2 {
@@ -1086,3 +1086,16 @@ a:hover {
 
 
 /* authenticate button */
+
+/* head part */
+.custom-login-btn {
+    background-color: #f76d37;
+    color: white;
+    border: none;
+}
+
+.custom-signup-btn {
+    background-color: #f76d37;
+    color: white;
+    border: none;
+}

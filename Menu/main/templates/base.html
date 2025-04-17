@@ -46,6 +46,8 @@
     <!-- custom css link -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/s.css' %}">
+    {% comment %} <link rel="stylesheet" href="{% static 'css/authenticate.css' %}"> {% endcomment %}
+    <link rel="stylesheet" href="{% static 'css/menu.css'%}">
 </head>
 
 <body>
@@ -53,7 +55,7 @@
 
     <nav class="navbar navbar-expand-lg new_navbar bg-transparent" data-bs-theme="dark">
         <div class="container-fluid nav-container">
-            <a class="navbar-brand brand-logo" href="{% url 'index' %}"><b>M</b>OMOS</a>
+            <a class="navbar-brand brand-logo" href="{% url 'index' %}"><b>AM</b>DIA</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
                 aria-label="Toggle navigation">
@@ -82,16 +84,17 @@
                 </ul>
                 <div class="d-flex gap-3 px-3 mx-atuo">
                     <a href="{% url 'log_in' %}">
-                        <button class="btn btn-primary">
-                            login
-                        </button>
+                        <button class="btn custom-login-btn">Login</button>
                     </a>
                     <a href="{% url 'register' %}">
-                        <button class="btn btn-secondary">
-                            signUp
-                        </button>
+                        <button class="btn custom-signup-btn">Sign Up</button> 
                     </a>
-                </div>
+                </div> 
+
+
+               
+                
+
                 
                 <div class="icon_ho">
 
@@ -131,7 +134,7 @@
                         our momos are bursting with flavor and sure to tantalize your taste buds. </p>
                 </div>
                 <div class="col-lg-3 col-sm-6">
-                    <h3 class="useful_text"><b style="color: #f76d37;">M</b>OMOS</h3>
+                    <h3 class="useful_text"><b style="color: #f76d37;">AM</b>DIA</h3>
                     <div class="footer_menu">
                         <ul>
                             <li><a href="{% url 'index' %}">Home</a></li>

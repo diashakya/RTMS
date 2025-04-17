@@ -3,3 +3,5 @@ myenv/
 .env/
 
 db.sqlite3
+
+.gitignore
