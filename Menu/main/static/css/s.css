@@ -25,7 +25,7 @@
 }
 
 
-/* .menu-title::after {
+.menu-title::after {
   content: '';
   width: 0;
   height: 3px;
@@ -34,7 +34,7 @@
   bottom: -8px;
   left: 0;
   transition: 0.5s;
-} */
+} 
 
 .tab-content {
   display: none;
@@ -70,7 +70,6 @@
   border-radius: 10%;
 }
 
-/*
 
 .tab-links.active-link::after{
     width: 50%;
@@ -89,7 +88,7 @@
 .tab-contents.active-tab{
     display: inline;
 }
-*/
+
 
 .card-price {
   display: inline-block;
@@ -108,7 +107,7 @@
   font-size: 22px;
   line-height: 38px;
   padding: 0 10px 0 10px;
-}
+} 
 
 /* Makes the triangle */
 .card-price:before {
@@ -121,7 +120,7 @@
   border-top: 19px solid transparent;
   border-bottom: 19px solid transparent;
   border-right: 19px solid #f76d37;
-}
+} 
 
 /* Makes the circle */
 .card-price:after {
@@ -134,7 +133,7 @@
   position: absolute;
   left: -9px;
   top: 17px;
-}
+} 
 
 .pin {
   text-align: center;
@@ -151,7 +150,7 @@
   background-color: #252525;
   padding: 30px;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
-}
+} 
 
 .form-container-1 {
   border: 3px solid #f76d37;
@@ -168,7 +167,7 @@
   font-weight: bold;
   transition: all 0.2s ease-in-out;
   border-left: 1px solid transparent;
-}
+} 
 
 .form-container .form .input:focus {
   border-left: 5px solid #f76d37;
@@ -191,7 +190,7 @@
 
 .form-container .form .textarea:focus {
   border-left: 5px solid #f76d37;
-}
+} 
 
 .form-container .form .button-container {
   display: flex;
@@ -206,7 +205,7 @@
   font-weight: bold;
   background-color: transparent;
   border: 3px solid #f76d37;
-}
+} 
 
 .form-container .form .button-container .send-button:hover {
   background: #f76d37;
@@ -217,7 +216,7 @@
 .form-container .form .button-container .reset-button-container {
   filter: drop-shadow(1px 1px 0px #ff7a01);
   flex-basis: 30%;
-}
+} 
 
 .form-container .form .button-container .reset-button-container .reset-button {
   position: relative;
@@ -233,7 +232,7 @@
 .form-container .form .button-container .reset-button-container .reset-button:hover {
   background: #ff7a01;
   color: #001925;
-}
+} 
 
 .just {
   width: 100%;
@@ -251,7 +250,7 @@
 .qr-image img {
   height: 300px;
   width: 300px;
-}
+} 
 
 .momo_name {
   color: mediumslateblue;
@@ -277,7 +276,7 @@
     7px 7px 20px 0px rgba(0, 0, 0, .1),
     4px 4px 5px 0px rgba(0, 0, 0, .1);
   outline: none;
-}
+} 
 
 .btn-1 {
   background: black;
@@ -290,7 +289,7 @@
   color: black;
   border: 2px solid black;
   font-weight: 600;
-}
+} 
 
 
 .tab-titles-class {
@@ -305,7 +304,7 @@
   text-transform: uppercase;
   font-size: 50px;
   text-decoration: underline;
-}
+} 
 
 
 
@@ -324,60 +323,62 @@
   border: 3px solid black;
   border-radius: 10%;
   box-shadow: 20px 0px 50px rgba(7, 7, 7, 0.4);
-}
+} 
 
 
 .map-responsive iframe {
   border: 3px solid #f76d37;
   width: 100%;
-}
+} 
 
 /* instagram color code */
 /* Instagram gradient hover effect */
 .fa-brands.fa-instagram {
-  padding: 10px; /* Add padding for better spacing */
-  font-size: 24px; /* Adjust the size as needed */
-  color: white; /* Default color of the icon */
-  border-radius: 50%; /* Make it circular */
-  transition: all 0.3s ease-in-out; /* Smooth hover transition */
-}
+  padding: 10px; 
+  font-size: 24px; 
+  color: white; 
+  border-radius: 50%;
+  transition: all 0.3s ease-in-out; 
+}   
+
 
 .fa-brands.fa-instagram:hover {
   background: #f09433;
   background: -moz-linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
   background: -webkit-linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
   background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-  color: white; /* Keep the icon white */
+  color: white; 
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#f09433', endColorstr='#bc1888', GradientType=1);
-  transform: scale(1.2); /* Slight zoom effect on hover */
-}
+  transform: scale(1.2); 
+}   
+  
+
 
 
 
 /* Facebook gradient hover effect */
 .fa-brands.fa-facebook {
-  padding: 10px; /* Add padding for better spacing */
-  font-size: 24px; /* Adjust the size as needed */
-  color: white; /* Default color of the icon */
-  border-radius: 50%; /* Make it circular */
-  transition: all 0.3s ease-in-out; /* Smooth hover transition */
-}
+  padding: 10px; 
+  font-size: 24px; 
+  color: white;
+  border-radius: 50%; 
+  transition: all 0.3s ease-in-out; 
+} 
 
 .fa-brands.fa-facebook:hover {
   background: #3b5998;
   background: -moz-linear-gradient(45deg, #3b5998 0%, #4267b2 50%, #587ccf 100%);
   background: -webkit-linear-gradient(45deg, #3b5998 0%, #4267b2 50%, #587ccf 100%);
   background: linear-gradient(45deg, #3b5998 0%, #4267b2 50%, #587ccf 100%);
-  color: white; /* Keep the icon white */
+  color: white; 
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#3b5998', endColorstr='#587ccf', GradientType=1);
-  transform: scale(1.2); /* Slight zoom effect on hover */
-}
+  transform: scale(1.2); 
+} 
 
 
 .active {
   color: black !important;
-  border-bottom: 2px solid black;
-}
-
+  border-bottom: 2px solid black; 
+} 
 
 

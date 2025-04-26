@@ -1,41 +1,92 @@
 .main-container {
-    display: flex;
-    flex-direction: row;
-  }
-  
-  .sidebar {
-    width: 220px;
-    min-height: 100vh;
-    background-color: #f76d37 !important;
-    color: white;
-    padding: 20px;
-    position: sticky;
-    top: 0;
-  }
-  
-  .sidebar h2 {
-    font-size: 24px;
-    text-align: center;
-    margin-bottom: 30px;
-  }
-  
-  .sidebar a {
-    display: block;
-    padding: 12px;
-    margin-bottom: 10px;
-    color: white;
-    text-decoration: none;
-    background-color: #000000;
-    border-radius: 8px;
-    transition: background 0.3s ease;
-  }
-  
-  .sidebar a:hover {
-    background-color: #3f3f5a;
-  }
-  
-  .menu-content {
-    flex: 1;
-    padding: 20px;
-  }
-  
+  display: flex;
+  flex-direction: column; /* Stack sidebar on top for horizontal scrolling */
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column; /* stack heading and links vertically */
+  align-items: center;    /* center horizontally */
+  overflow-x: auto;
+  white-space: nowrap;
+  background-color: #f76d37;
+  padding: 20px;
+  gap: 10px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  margin-top: 50px;
+  margin-bottom: 50px;
+  text-align: center;
+}
+
+
+.sidebar::-webkit-scrollbar {
+  display: none; 
+}
+
+.sidebar h1 {
+  flex: 0 0 auto;
+  font-size: 50px;
+  color: white;
+  margin-right: 20px;
+}
+
+/* .sidebar a {
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  color: white;
+  background-color: #000;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+} */
+
+.sidebar a:hover {
+  background-color: #3f3f5a;
+}
+
+.menu-content {
+  padding: 20px;
+} 
+
+/* menu layout */
+.food-categories {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 30px;
+  padding: 40px 20px;
+}
+
+.category {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.image-wrapper {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  transition: 0.3s ease;
+}
+
+.image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-wrapper.active {
+  border: 5px solid #ff5722; 
+  padding: 3px;
+  box-sizing: border-box;
+}
+
+.category p {
+  margin-top: 10px;
+  font-weight: 500;
+  color: #555;
+  font-family: sans-serif;
+}
