@@ -7,11 +7,13 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 
 from django.db import IntegrityError
+from .models import Special
 # Create your views here.
 
 date = datetime.now()
 def index(request):
-    return render(request,'main/index.html',{'data':date})
+    todays_specials = Special.objects.filter(date=date.today(), active=True)
+    return render(request,'main/index.html',{'data':date,'todays_specials': todays_specials})
 
 def about(request):
     return render(request,'main/about.html')
@@ -20,9 +22,9 @@ def contact(request):
     return render(request,'main/contact.html')
 
 def menu(request):
-    return render(request,'main/menu.html')
-
-
+    todays_specials = Special.objects.filter(date=date.today(), active=True)
+    return render(request, 'main/menu.html', {'todays_specials': todays_specials})
+    
 def services(request):
     return render(request,'main/services.html')
 
