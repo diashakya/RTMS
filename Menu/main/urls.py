@@ -6,6 +6,9 @@ urlpatterns = [
     path('contact/',contact,name="contact"),
     path('menu/',menu,name="menu"),
     path('services/',services,name="services"),
+
+
+    # authentication urls
     path('register/',register,name='register'),
     path('login/',log_in,name='log_in')
 ]
