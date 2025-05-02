@@ -1,331 +1,435 @@
-
 {% extends "base.html" %}
-{% load static %}
-{% block title %}
-  Home
-{% endblock title %}
-
+{% load static %} 
+{% block title %} Home {% endblock title %} 
 
 {% block content %}
-   <!-- banner section start -->
-   <div class="banner_section layout_padding">
-      <div class="container">
-         <div id="main_slider" class="carousel slide" data-ride="carousel">
-            <div class="carousel-inner">
-               <div class="carousel-item active">
-                  <div class="row">
-                     <div class="col-sm-6">
-
-                     </div>
-                     <div class="col-sm-6">
-                        <div class="banner_title">
-                           <h1 class="outstanding_text" style="color: white;" data-aos="zoom-out" data-aos-duration="2000"><b style="color: #f76d37;">AM</b>DIA</h1>
-                           <h1 class="coffee_text" data-aos="zoom-in" data-aos-duration="2000">The Best <br>Restaurant</h1>
-                           <p class="there_text" data-aos="fade-up" data-aos-duration="1000">
-                              <b style="color:rgb(255, 136, 0);">We at AMDIA we believe that dining is more than just a meal — it's an experience. From the moment you step through our doors, you’re welcomed into an atmosphere of warmth, elegance, and exceptional hospitality. Our carefully curated menu features a blend of traditional flavors and modern culinary artistry, crafted with the freshest ingredients and the highest standards. Whether you're joining us for a casual lunch, a family dinner, or a special celebration, AMDIA promises a dining experience that delights the senses and leaves lasting memories. </b>
-                           </p> 
-                           <div class="learnmore_bt" data-aos="fade-up" data-aos-duration="1000"><a href="">LEARN MORE</a></div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-
+<!-- banner section start -->
+<div class="banner_section layout_padding">
+  <div class="container">
+    <div id="main_slider" class="carousel slide" data-ride="carousel">
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <div class="row">
+            <div class="col-sm-6"></div>
+            <div class="col-sm-6">
+              <div class="banner_title">
+                <h1
+                  class="outstanding_text"
+                  style="color: white"
+                  data-aos="zoom-out"
+                  data-aos-duration="2000"
+                >
+                  <b style="color: #f76d37">AM</b>DIA
+                </h1>
+                <h1
+                  class="coffee_text"
+                  data-aos="zoom-in"
+                  data-aos-duration="2000"
+                >
+                  The Best <br />Restaurant
+                </h1>
+                <p
+                  class="there_text"
+                  data-aos="fade-up"
+                  data-aos-duration="1000"
+                >
+                  <b style="color: rgb(255, 136, 0)"
+                    >We at AMDIA we believe that dining is more than just a meal
+                    — it's an experience. From the moment you step through our
+                    doors, you’re welcomed into an atmosphere of warmth,
+                    elegance, and exceptional hospitality. Our carefully curated
+                    menu features a blend of traditional flavors and modern
+                    culinary artistry, crafted with the freshest ingredients and
+                    the highest standards. Whether you're joining us for a
+                    casual lunch, a family dinner, or a special celebration,
+                    AMDIA promises a dining experience that delights the senses
+                    and leaves lasting memories.
+                  </b>
+                </p>
+                <div
+                  class="learnmore_bt"
+                  data-aos="fade-up"
+                  data-aos-duration="1000"
+                >
+                  <a href="">LEARN MORE</a>
+                </div>
+              </div>
             </div>
-            {% comment %} <div class="sliders-bottom" data-aos="fade-up" data-aos-duration="1000">
-               <a class="carousel-control-prev" href="#main_slider" role="button" data-slide="prev">
-                  <i class="fa fa-angle-left"></i>
-               </a>
-               <a class="carousel-control-next" href="#main_slider" role="button" data-slide="next">
-                  <i class="fa fa-angle-right"></i>
-               </a>
-            </div> {% endcomment %}
-         </div>
+          </div>
+        </div>
       </div>
-   </div>
-   <!-- banner section end -->
-   <!-- about section start -->
-   <div class="about_section layout_padding">
-      <div class="container">
-         <div class="row">
-            <div class="col-md-6">
-               <div class="row-md-2">
-                  <div class="about_taital_main">
-                     <div class="about_taital" data-aos="fade-up" data-aos-duration="1000">Why Customer Love Us?</div>
-                     <p class="about_text" data-aos="fade-up" data-aos-duration="1000">We serve up authentic cusines bursting with flavor, made with 
-                        fresh ingredients and traditional recipes. We offer a warm and welcoming atmosphere, 
-                        perfect for enjoying a delicious and satisfying meal. Whether you're a food
-                        connoisseur or just discovering their magic, we're sure you'll love our taste.</p>
-                     <div class="read_bt"><a href="">READ MORE</a></div>
-                     
-                     
-                  </div>
-               </div>
-               
-               <div class="row-md-4 about_img" data-aos="fade-down-right">
-                  <img src="{% static 'images/top-momo.jpg' %}">
-               </div>
-               
-               
-            </div>
-            <div class="col-md-1">
-            </div>
-            <div class="col-md-5">
-               <div class="about_img1" data-aos="fade-down-right"><img src="{% static 'images/eating.jpg' %}"></div>
-            </div>
-         </div>
+      {% comment %}
+      <div class="sliders-bottom" data-aos="fade-up" data-aos-duration="1000">
+        <a
+          class="carousel-control-prev"
+          href="#main_slider"
+          role="button"
+          data-slide="prev"
+        >
+          <i class="fa fa-angle-left"></i>
+        </a>
+        <a
+          class="carousel-control-next"
+          href="#main_slider"
+          role="button"
+          data-slide="next"
+        >
+          <i class="fa fa-angle-right"></i>
+        </a>
       </div>
-   </div>
+      {% endcomment %}
+    </div>
+  </div>
+</div>
+<!-- banner section end -->
+<!-- about section start -->
+<div class="about_section layout_padding">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="row-md-2">
+          <div class="about_taital_main">
+            <div
+              class="about_taital"
+              data-aos="fade-up"
+              data-aos-duration="1000"
+            >
+              Why Customer Love Us?
+            </div>
+            <p class="about_text" data-aos="fade-up" data-aos-duration="1000">
+              We serve up authentic cusines bursting with flavor, made with
+              fresh ingredients and traditional recipes. We offer a warm and
+              welcoming atmosphere, perfect for enjoying a delicious and
+              satisfying meal. Whether you're a food connoisseur or just
+              discovering their magic, we're sure you'll love our taste.
+            </p>
+            <div class="read_bt"><a href="">READ MORE</a></div>
+          </div>
+        </div>
 
+        <div class="row-md-4 about_img" data-aos="fade-down-right">
+          <img src="{% static 'images/top-momo.jpg' %}" />
+        </div>
+      </div>
+      <div class="col-md-1"></div>
+      <div class="col-md-5">
+        <div class="about_img1" data-aos="fade-down-right">
+          <img src="{% static 'images/eating.jpg' %}" />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-   <!-- services section start -->
-      <div class="services_section layout_padding">
-         <div class="container">
+<!-- services section start -->
+<div class="services_section layout_padding">
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-12">
+        <h1 class="services_taital">Our Services</h1>
+        <p class="services_text">KNOWING OUR CUSTOMER NEEDS</p>
+        <p class="services_text">We're more then just food</p>
+        <p class="services_text">We're a full-services dining experience!</p>
+      </div>
+    </div>
+    <div class="services_section_2">
+      <div class="row">
+        <div class="col-lg-4 col-sm-12 col-md-4" data-aos="flip-left">
+          <div class="box_main active">
+            <div class="house_icon">
+              <img
+                src="{% static 'images/high-quality.png' %}"
+                class="image_1"
+              />
+              <img src="{% static 'images/quality2.png' %}" class="image_2" />
+            </div>
+            <h3 class="decorate_text">Quality Food</h3>
+            <p class="tation_text">
+              We believe in using only the highest quality ingredients to create
+              food that are bursting with flavor. Our fillings are prepared
+              daily with fresh, vegetables and succulent meats.
+            </p>
+            <div class="readmore_bt"><a href="">Read More</a></div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-sm-12 col-md-4" data-aos="flip-left">
+          <div class="box_main">
+            <div class="house_icon">
+              <img src="{% static 'images/party.png' %}" class="image_1" />
+              <img src="{% static 'images/party2.png' %}" class="image_2" />
+            </div>
+            <h3 class="decorate_text">Private Party</h3>
+            <p class="tation_text">
+              Pair your mood with our selection of dipping sauces and spices for
+              an unforgettable get-together. Let us help you create a fun and
+              flavorful feast for your next celebration!
+            </p>
+            <div class="readmore_bt"><a href="">Read More</a></div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-sm-12 col-md-4" data-aos="flip-left">
+          <div class="box_main">
+            <div class="house_icon">
+              <img src="{% static 'images/food-cover.png' %}" class="image_1" />
+              <img src="{% static 'images/catering2.png' %}" class="image_2" />
+            </div>
+            <h3 class="decorate_text">Catering</h3>
+            <p class="tation_text">
+              Make your next gathering unforgettable with our food catering
+              service! We offer a variety of catering packages to suit any event
+              size and budget as per need.
+            </p>
+            <div class="readmore_bt"><a href="">Read More</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- services section end -->
+
+<!-- gallery section start -->
+<div class="specials-container">
+  <h1 class="text-center">Today's Special</h1>
+  <h3 class="text-center subtitle">Handpicked dishes just for you</h3>
+
+  <div class="specials-carousel">
+    {% for special in todays_specials %}
+    <div class="special-item-card" data-category="{{ special.category }}">
+      <div class="special-item-img">
+        <img src="{{ special.image.url }}" alt="{{ special.name }}" />
+        {% if special.is_vegetarian %}
+        <span class="veg-indicator veg">VEG</span>
+        {% else %}
+        <span class="veg-indicator non-veg">NON-VEG</span>
+        {% endif %}
+        <div class="special-badge">Today's Special</div>
+      </div>
+      <div class="special-item-details">
+        <h3>{{ special.name }}</h3>
+        <p class="item-description">{{ special.description }}</p>
+        <div class="price-addcart">
+          <div class="price-container">
+            {% if special.discounted_price %}
+            <span class="original-price">Rs {{ special.price }}</span>
+            <span class="item-price">Rs {{ special.discounted_price }}</span>
+            {% else %}
+            <span class="item-price">Rs {{ special.price }}</span>
+            {% endif %}
+          </div>
+          <div class="quantity-controls">
+            <button class="quantity-btn minus">-</button>
+            <span class="quantity">1</span>
+            <button class="quantity-btn plus">+</button>
+          </div>
+          <button class="add-to-cart-btn" data-id="{{ special.id }}">
+            <i class="fas fa-shopping-cart"></i> Add
+          </button>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="no-specials">
+      <p>No specials available today. Check back tomorrow!</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- gallery section end -->
+
+<!-- testimonial section start -->
+<div class="client_section layout_padding">
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-12">
+        <h1 class="client_taital">TESTEMONIALS</h1>
+        <p class="client_text">
+          Here's what our customers have to say about us:
+        </p>
+      </div>
+    </div>
+  </div>
+  <div
+    id="carouselExampleIndicators"
+    class="carousel slide"
+    data-ride="carousel"
+  >
+    <ol class="carousel-indicators">
+      <li
+        data-target="#carouselExampleIndicators"
+        data-slide-to="0"
+        class="active"
+      ></li>
+      <li data-target="#carouselExampleIndicators" data-slide-to="1"></li>
+      <li data-target="#carouselExampleIndicators" data-slide-to="2"></li>
+    </ol>
+    <div class="carousel-inner">
+      <div class="carousel-item active">
+        <div class="client_section_2">
+          <div class="container">
             <div class="row">
-               <div class="col-sm-12">
-                  <h1 class="services_taital"> Our Services</h1>
-                  <p class="services_text">KNOWING OUR CUSTOMER NEEDS </p>
-                  <p class="services_text">We're more then just food</p>
-                  <p class="services_text">We're a full-services dining experience!</p>
-               </div>
-            </div>
-            <div class="services_section_2">
-               <div class="row">
-                  <div class="col-lg-4 col-sm-12 col-md-4" data-aos="flip-left">
-                     <div class="box_main active" >
-                        <div class="house_icon" >
-                           <img src="{% static 'images/high-quality.png' %}" class="image_1">
-                           <img src="{% static 'images/quality2.png' %}" class="image_2">
-                        </div>
-                        <h3 class="decorate_text">Quality Food</h3>
-                        <p class="tation_text">
-                           We believe in using only the highest quality ingredients to create food that are bursting with flavor. 
-                           Our fillings are prepared daily with fresh, vegetables and succulent meats.
-                           
-                        </p>
-                        <div class="readmore_bt"><a href="">Read More</a></div>
-                     </div>
-                  </div>
-                  <div class="col-lg-4 col-sm-12 col-md-4" data-aos="flip-left">
-                     <div class="box_main">
-                        <div class="house_icon">
-                           <img src="{% static 'images/party.png' %}" class="image_1">
-                           <img src="{% static 'images/party2.png' %}" class="image_2">
-                        </div>
-                        <h3 class="decorate_text">Private Party</h3>
-                        <p class="tation_text">
-                           Pair your mood with our selection of dipping sauces and spices for an unforgettable get-together. 
-                           Let us help you create a fun and flavorful feast for your next celebration!
-                        </p>
-                        <div class="readmore_bt"><a href="">Read More</a></div>
-                     </div>
-                  </div>
-                  <div class="col-lg-4 col-sm-12 col-md-4" data-aos="flip-left">
-                     <div class="box_main">
-                        <div class="house_icon" >
-                           <img src="{% static 'images/food-cover.png' %}" class="image_1">
-                           <img src="{% static 'images/catering2.png' %}" class="image_2">
-                        </div>
-                        <h3 class="decorate_text">Catering</h3>
-                        <p class="tation_text">
-                           Make your next gathering unforgettable with our food catering service! 
-                           We offer a variety of catering packages to suit any event size and budget as per need.
-                        </p>
-                        <div class="readmore_bt"><a href="">Read More</a></div>
-                     </div>
-                  </div>
-               </div>
-            </div>
-         </div>
-      </div>
-      <!-- services section end -->
-
-      <!-- gallery section start -->
-      <div class="specials-container">
-         <h1 class="text-center">Today's Special</h1>
-         <h3 class="text-center subtitle">Handpicked dishes just for you</h3>
-         
-         <div class="specials-carousel">
-             {% for special in todays_specials %}
-             <div class="special-item-card" data-category="{{ special.category }}">
-                 <div class="special-item-img">
-                     <img src="{{ special.image.url }}" alt="{{ special.name }}">
-                     {% if special.is_vegetarian %}
-                     <span class="veg-indicator veg">VEG</span>
-                     {% else %}
-                     <span class="veg-indicator non-veg">NON-VEG</span>
-                     {% endif %}
-                     <div class="special-badge">Today's Special</div>
-                 </div>
-                 <div class="special-item-details">
-                     <h3>{{ special.name }}</h3>
-                     <p class="item-description">{{ special.description }}</p>
-                     <div class="price-addcart">
-                         <div class="price-container">
-                             {% if special.discounted_price %}
-                             <span class="original-price">Rs {{ special.price }}</span>
-                             <span class="item-price">Rs {{ special.discounted_price }}</span>
-                             {% else %}
-                             <span class="item-price">Rs {{ special.price }}</span>
-                             {% endif %}
-                         </div>
-                         <div class="quantity-controls">
-                             <button class="quantity-btn minus">-</button>
-                             <span class="quantity">1</span>
-                             <button class="quantity-btn plus">+</button>
-                         </div>
-                         <button class="add-to-cart-btn" data-id="{{ special.id }}">
-                             <i class="fas fa-shopping-cart"></i> Add
-                         </button>
-                     </div>
-                 </div>
-             </div>
-             {% empty %}
-             <div class="no-specials">
-                 <p>No specials available today. Check back tomorrow!</p>
-             </div>
-             {% endfor %}
-         </div>
-     </div>
-     
-   <!-- gallery section end -->
-
-      <!-- testimonial section start -->
-      <div class="client_section layout_padding">
-         <div class="container">
-            <div class="row">
-               <div class="col-sm-12">
-                  <h1 class="client_taital">TESTEMONIALS</h1>
-                  <p class="client_text">
-                     Here's what our customers have to say about us:
+              <div class="col-md-12">
+                <div class="testimonial_section_2">
+                  <h4 class="client_name_text">
+                    Amir Kant Chaudhary
+                    <span class="quick_icon">
+                      <img src="{% static 'images/amir.png' %}" />
+                    </span>
+                  </h4>
+                  <p class="customer_text">
+                    Just discovered this place and I'm obsessed! The atmosphere
+                    is so warm and inviting, perfect for a casual lunch with
+                    friends. We tried a bunch of momos to share - veggie,
+                    chicken, and pork - and honestly, couldn't pick a favorite.
+                    Each one was bursting with flavor and cooked to perfection.
+                    Definitely coming back to work my way through the whole
+                    menu!
                   </p>
-               </div>
+                </div>
+              </div>
             </div>
-         </div>
-         <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
-            <ol class="carousel-indicators">
-               <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
-               <li data-target="#carouselExampleIndicators" data-slide-to="1"></li>
-               <li data-target="#carouselExampleIndicators" data-slide-to="2"></li>
-            </ol>
-            <div class="carousel-inner">
-               <div class="carousel-item active">
-                  <div class="client_section_2">
-                     <div class="container">
-                        <div class="row">
-                           <div class="col-md-12">
-                              <div class="testimonial_section_2">
-                                 <h4 class="client_name_text" >Amir Kant Chaudhary
-                                    <span class="quick_icon">
-                                    <img src="{% static 'images/amir.png' %}">
-                                 </span>
-                              </h4>
-                                 <p class="customer_text">
-                                    Just discovered this place and I'm obsessed! 
-                                    The atmosphere is so warm and inviting, perfect for a casual lunch with friends. 
-                                    We tried a bunch of momos to share - veggie, chicken, and pork - and honestly, 
-                                    couldn't pick a favorite. Each one was bursting with flavor and cooked to perfection.  
-                                    Definitely coming back to work my way through the whole menu!
-                                 </p>
-                              </div>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-
-               <div class="carousel-item">
-                  <div class="client_section_2">
-                     <div class="container">
-                        <div class="row">
-                           <div class="col-md-12">
-                              <div class="testimonial_section_2">
-                                 <h4 class="client_name_text">Diya Shakya
-                                    <span class="quick_icon">
-                                    <img src="{% static 'images/diya.png' %}">
-                                 </span>
-                              </h4>
-                                 <p class="customer_text">Momos have always been a favorite comfort food, but yours are on another level! 
-                                    The fillings are so fresh and flavorful, and the dough is perfectly cooked - light and chewy at the same time.  
-                                    I can never decide which filling to try, so the variety is amazing.  
-                                    This place is now my go-to for a delicious and satisfying meal.  Highly recommend!</p>
-                              </div>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-
-               <div class="carousel-item">
-                  <div class="client_section_2">
-                     <div class="container">
-                        <div class="row">
-                           <div class="col-md-12">
-                              <div class="testimonial_section_2">
-                                 <h4 class="client_name_text">aditya malla thakuri
-                                    <span class="quick_icon">
-                                    <img src="{% static 'images/aditya.png' %}">
-                                 </span>
-                              </h4>
-                                 <p class="customer_text">
-                                    We recently had a family gathering and decided to try your momo catering for the first time. 
-                                    It was a huge hit! Everyone loved the different fillings, especially the spicy ones (me!). 
-                                    The momos themselves were beautifully steamed and the dipping sauces were delicious.  
-                                    Delivery was on time and everything was perfectly presented.  
-                                    Huge thanks for making our event so easy and enjoyable!
-                                 </p>
-                              </div>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-               
-            </div>
-         </div>
+          </div>
+        </div>
       </div>
 
-      <!-- contact section start -->
-    <div class="contact_section_2 layout_padding">
-      <div class="container-fluid">
-         <div class="row">
-            <div class="col-md-6 padding_0" >
-               <div class="form-container form-container-1" >
-                  <form method="#" action="#">
-                     <h1 style="color: white; font-size: 50px; border-bottom: 3px solid #f76d37;" class="text-center"><b>GET IN TOUCH</b></h1>
-
-                     <div class="form-container" data-aos="zoom-in-down">
-                        <div class="form">
-                           <input required="" placeholder="Name" type="text" class="input" name="name">
-                           <input required="" placeholder="Email" type="email" class="input" name="email">
-                           <input required="" placeholder="Phone Number" id="phone" type="tel" class="input" name="phone">
-                           <textarea required="" placeholder="Say Hello" rows="10" cols="30" id="message"
-                              name="message" class="textarea"></textarea>
-                           <div class="button-container">
-                              <input type="submit" value="SEND" class="send-button">
-
-                           </div>
-                        </div>
-                     </div>
-                  </form>
-               </div>
-
+      <div class="carousel-item">
+        <div class="client_section_2">
+          <div class="container">
+            <div class="row">
+              <div class="col-md-12">
+                <div class="testimonial_section_2">
+                  <h4 class="client_name_text">
+                    Diya Shakya
+                    <span class="quick_icon">
+                      <img src="{% static 'images/diya.png' %}" />
+                    </span>
+                  </h4>
+                  <p class="customer_text">
+                    Momos have always been a favorite comfort food, but yours
+                    are on another level! The fillings are so fresh and
+                    flavorful, and the dough is perfectly cooked - light and
+                    chewy at the same time. I can never decide which filling to
+                    try, so the variety is amazing. This place is now my go-to
+                    for a delicious and satisfying meal. Highly recommend!
+                  </p>
+                </div>
+              </div>
             </div>
-            <div class="col-md-6 padding_0">
-               <div class="map-responsive" >
-                  <h1 style="color: black; font-size: 50px;" class="text-center"><b>OUR LOCATION</b></h1>
-
-
-                  <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14127.45802872326!2d85.3429805871582!3d27.721469400000004!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1bda4a951f0f%3A0x3ddabb234891c3bd!2sBuddha%20Stupa!5e0!3m2!1sen!2snp!4v1713623524286!5m2!1sen!2snp" 
-                  width="600px" height="620px"
-                  allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-
-                  
-               </div>
-            </div>
-         </div>
+          </div>
+        </div>
       </div>
-   </div>
-   <!-- contact section end -->
 
+      <div class="carousel-item">
+        <div class="client_section_2">
+          <div class="container">
+            <div class="row">
+              <div class="col-md-12">
+                <div class="testimonial_section_2">
+                  <h4 class="client_name_text">
+                    aditya malla thakuri
+                    <span class="quick_icon">
+                      <img src="{% static 'images/aditya.png' %}" />
+                    </span>
+                  </h4>
+                  <p class="customer_text">
+                    We recently had a family gathering and decided to try your
+                    momo catering for the first time. It was a huge hit!
+                    Everyone loved the different fillings, especially the spicy
+                    ones (me!). The momos themselves were beautifully steamed
+                    and the dipping sauces were delicious. Delivery was on time
+                    and everything was perfectly presented. Huge thanks for
+                    making our event so easy and enjoyable!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-   {% endblock content %}
+<!-- contact section start -->
+<div class="contact_section_2 layout_padding">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-6 padding_0">
+        <div class="form-container form-container-1">
+          <form method="#" action="#">
+            <h1
+              style="
+                color: white;
+                font-size: 50px;
+                border-bottom: 3px solid #f76d37;
+              "
+              class="text-center"
+            >
+              <b>GET IN TOUCH</b>
+            </h1>
+
+            <div class="form-container" data-aos="zoom-in-down">
+              <div class="form">
+                <input
+                  required=""
+                  placeholder="Name"
+                  type="text"
+                  class="input"
+                  name="name"
+                />
+                <input
+                  required=""
+                  placeholder="Email"
+                  type="email"
+                  class="input"
+                  name="email"
+                />
+                <input
+                  required=""
+                  placeholder="Phone Number"
+                  id="phone"
+                  type="tel"
+                  class="input"
+                  name="phone"
+                />
+                <textarea
+                  required=""
+                  placeholder="Say Hello"
+                  rows="10"
+                  cols="30"
+                  id="message"
+                  name="message"
+                  class="textarea"
+                ></textarea>
+                <div class="button-container">
+                  <input type="submit" value="SEND" class="send-button" />
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="col-md-6 padding_0">
+        <div class="map-responsive">
+          <h1 style="color: black; font-size: 50px" class="text-center">
+            <b>OUR LOCATION</b>
+          </h1>
+
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d29841.366579849622!2d85.37329307535!3d27.712879448947014!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1b1fed5126c5%3A0x66a89bde8e23a65e!2sNepal%20Engineering%20College!5e1!3m2!1sen!2snp!4v1746169463292!5m2!1sen!2snp"
+            width="600"
+            height="450"
+            style="border: 0"
+            allowfullscreen=""
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- contact section end -->
+
+{% endblock content %}
