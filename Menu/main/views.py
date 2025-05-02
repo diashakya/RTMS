@@ -12,7 +12,8 @@ from .models import Special
 
 date = datetime.now()
 def index(request):
-    return render(request,'main/index.html',{'data':date})
+    todays_specials = Special.objects.filter(date=date.today(), active=True)
+    return render(request,'main/index.html',{'data':date,'todays_specials': todays_specials})
 
 def about(request):
     return render(request,'main/about.html')

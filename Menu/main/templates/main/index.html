@@ -140,60 +140,53 @@
       <!-- services section end -->
 
       <!-- gallery section start -->
-   <div class="card text-center tab-titles-class" >
-      <h1>Today's special</h1>
-  
-         <!-- <ul class="tab-titles text-center">
-            <li class="tab-links menu-title" >Pizza</li>
-            <li class="tab-links menu-title">Prashant</li>
-            <li class="tab-links menu-title">Cupcake</li>
-         </ul> -->
-      </div> 
-
-      <div class="tab-content active-tab" id="buff" onclick="opentab('buff')">
-         <div class="container">
-            <div class="row">
-               <div class="col-md-4 menu-item" data-aos="flip-right">
-                  <div class="row-md-4">
-                     <p>
-                        <img src="{% static 'images/pizza.jpg' %}">
-                     </p>
-
-                  </div>
-                     <div class="row-md-2">
-                        <span>Bacon Pizza</span>
-                        <button class="btn btn-primary card-price">Rs 450</button>
+      <div class="specials-container">
+         <h1 class="text-center">Today's Special</h1>
+         <h3 class="text-center subtitle">Handpicked dishes just for you</h3>
+         
+         <div class="specials-carousel">
+             {% for special in todays_specials %}
+             <div class="special-item-card" data-category="{{ special.category }}">
+                 <div class="special-item-img">
+                     <img src="{{ special.image.url }}" alt="{{ special.name }}">
+                     {% if special.is_vegetarian %}
+                     <span class="veg-indicator veg">VEG</span>
+                     {% else %}
+                     <span class="veg-indicator non-veg">NON-VEG</span>
+                     {% endif %}
+                     <div class="special-badge">Today's Special</div>
+                 </div>
+                 <div class="special-item-details">
+                     <h3>{{ special.name }}</h3>
+                     <p class="item-description">{{ special.description }}</p>
+                     <div class="price-addcart">
+                         <div class="price-container">
+                             {% if special.discounted_price %}
+                             <span class="original-price">Rs {{ special.price }}</span>
+                             <span class="item-price">Rs {{ special.discounted_price }}</span>
+                             {% else %}
+                             <span class="item-price">Rs {{ special.price }}</span>
+                             {% endif %}
+                         </div>
+                         <div class="quantity-controls">
+                             <button class="quantity-btn minus">-</button>
+                             <span class="quantity">1</span>
+                             <button class="quantity-btn plus">+</button>
+                         </div>
+                         <button class="add-to-cart-btn" data-id="{{ special.id }}">
+                             <i class="fas fa-shopping-cart"></i> Add
+                         </button>
                      </div>
-   
-               </div>
-               <div class="col-md-4 menu-item" data-aos="flip-right">
-                  <div class="row-md-4">
-                     <p>
-                        <img src="{% static 'images/prashant.jpg' %}">
-                     </p>
-                  </div>
-                  <div class="row-md-4">
-                     <span>Prashant</span>
-                     <button class="btn btn-primary card-price">Rs 150</button>
-                  </div>
-               </div>
-               <div class="col-md-4 menu-item" data-aos="flip-right">
-                  
-                  <div class="row-md-4">
-                     <p>
-                        <img src="{% static 'images/cake.jpg' %}">
-                     </p>
-                  </div>
-                  <div class="row-md-4">
-                     <span>Cupcake</span>
-                     <button class="btn btn-primary card-price">Rs 50</button>
-                  </div>
-               </div>
-            </div>
+                 </div>
+             </div>
+             {% empty %}
+             <div class="no-specials">
+                 <p>No specials available today. Check back tomorrow!</p>
+             </div>
+             {% endfor %}
          </div>
-      </div>
-
-   </div>
+     </div>
+     
    <!-- gallery section end -->
 
       <!-- testimonial section start -->
