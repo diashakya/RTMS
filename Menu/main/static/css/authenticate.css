@@ -6,6 +6,7 @@ Table of Contents:
 4. Form Elements CSS
 5. Social Authentication CSS
 6. Message Box CSS
+7. Navigation Elements CSS
 */
 
 /* ----------------------------------------Body Background starts ---------------------------------------- */
@@ -102,6 +103,11 @@ body {
     border: none;
     border-radius: 0.375rem;
     font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+.sign:hover {
+    background-color: rgb(56, 42, 98);
 }
 /* ----------------------------------------Form Elements ends ---------------------------------------- */
 
@@ -129,6 +135,8 @@ body {
 .social-icons {
     display: flex;
     justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
 }
 
 .social-icons .icon {
@@ -136,7 +144,11 @@ body {
     padding: 0.75rem;
     border: none;
     background-color: transparent;
-    margin-left: 8px;
+    transition: transform 0.3s ease;
+}
+
+.social-icons .icon:hover {
+    transform: scale(1.1);
 }
 
 .social-icons .icon svg {
@@ -150,6 +162,7 @@ body {
     font-size: 0.75rem;
     line-height: 1rem;
     color: rgb(255, 255, 255);
+    margin-top: 1rem;
 }
 /* ----------------------------------------Social Authentication ends ---------------------------------------- */
 
@@ -167,6 +180,7 @@ body {
     margin-bottom: 20px;
     border: 1px solid transparent;
     border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .alert-success {
@@ -182,56 +196,18 @@ body {
 }
 /* ----------------------------------------Message Box ends ---------------------------------------- */
 
-/* ----------------------------------------------Message Box Css starts----------------------------------------------------- */
-
-/* Styles for the message container */
-.messages-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-    max-width: 400px;
+/* ----------------------------------------Navigation Elements starts ---------------------------------------- */
+.cross {
+    position: absolute;
+    top: 10px;
+    right: 10px; /* Adjusted to move to the right */
+    font-size: 40px;
+    color: #fff;
+    transition: all 0.3s ease;
 }
 
-/* Styles for the alert messages */
-.alert {
-    padding: 15px;
-    margin-bottom: 20px;
-    border: 1px solid transparent;
-    border-radius: 4px;
+.cross:hover {
+    color: orangered;
+    transform: scale(1.1);
 }
-
-/* Styles for the success alert message */
-.alert-success {
-    color: #3c763d;
-    background-color: #dff0d8;
-    border-color: #d6e9c6;
-}
-
-/* Styles for the error alert message */
-.alert-error {
-    color: #a94442;
-    background-color: #f2dede;
-    border-color: #ebccd1;
-}
-
-/* ----------------------------------------------Message Box Css ends----------------------------------------------------- */
-
-
-/*-------------------------------------------------- Cross Mark Css-------------------------------------------------------- */
-
-
-    .cross {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        font-size: 40px;
-        color: #333; 
-    }
-
-    .cross:hover {
-        color: orangered;
-        scale: 1.1;
-    }
-
-/* ----------------------------------------------------cross mark css ends-------------------------------------- */
+/* ----------------------------------------Navigation Elements ends ---------------------------------------- */

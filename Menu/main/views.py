@@ -1,43 +1,37 @@
-from django.shortcuts import render,redirect
-
-from datetime import datetime
-
-from django.contrib.auth.models import User
-
+from django.shortcuts import render, redirect
 from django.contrib import messages
-
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from .models import Special
+from datetime import datetime
 
-
-# In views.py
-from django.contrib.auth import logout
-
-
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login, logout
 # Create your views here.
 
+# ......................................................Main Views...............................
+
 date = datetime.now()
+
 def index(request):
     todays_specials = Special.objects.filter(date=date.today(), active=True)
-    return render(request,'main/index.html',{'data':date,'todays_specials': todays_specials})
+    return render(request, 'main/index.html', {'data': date, 'todays_specials': todays_specials})
 
 def about(request):
-    return render(request,'main/about.html')
+    return render(request, 'main/about.html')
 
 def contact(request):
-    return render(request,'main/contact.html')
+    return render(request, 'main/contact.html')
 
 def menu(request):
     todays_specials = Special.objects.filter(date=date.today(), active=True)
     return render(request, 'main/menu.html', {'todays_specials': todays_specials})
     
 def services(request):
-    return render(request,'main/services.html')
+    return render(request, 'main/services.html')
 
 
-# ......................................................authenticate part ......................
+# ......................................................Authentication Views......................
+
 def register(request):
     if request.method == "POST":
         data = request.POST
@@ -48,15 +42,18 @@ def register(request):
         password = data.get('password')
         Cpassword = data.get('Cpassword')
 
-        
+        # Validate password match
         if password != Cpassword:
-            messages.error(request,"confrim password and password doesnt match")
+            messages.error(request, "Confirm password and password don't match")
             return redirect('register')
 
+        # Check all required fields
         if not all([first_name, last_name, username, email, password]):
-            return render(request, 'authenticate/register.html', {'error': 'All fields are required'})
+            messages.error(request, "All fields are required")
+            return redirect('register')
 
         try:
+            # Create new user
             User.objects.create_user(
                 first_name=first_name,
                 last_name=last_name,
@@ -64,32 +61,39 @@ def register(request):
                 email=email,
                 password=password
             )
-            return redirect('log_in')  # Replace 'login' with the name of your login URL
+            messages.success(request, "Registration successful! Please login.")
+            return redirect('login')
         except IntegrityError:
-            return render(request, 'authenticate/register.html', {'error': 'Username already exists'})
+            messages.error(request, "Username already exists")
+            return redirect('register')
 
     return render(request, 'authenticate/register.html')
 
+def login(request):
+    # Redirect if already logged in
+    if request.user.is_authenticated:
+        return redirect('index')
 
-def login(request): 
     if request.method == "POST":
         username = request.POST.get('username')
         password = request.POST.get('password')
 
+        # Authenticate user
         user = authenticate(request, username=username, password=password)
         
         if user is not None:
             login(request, user)
-            messages.success(request, "You have been successfully logged in!")
+            messages.success(request, "Logged in successfully!")
             return redirect('index')
         else:
-            messages.error(request, "Invalid username or password.")
+            messages.error(request, "Invalid username or password")
             return redirect('login')
 
-    return render(request, 'authenticate/login.html') 
-
+    return render(request, 'authenticate/login.html')
 
 def log_out(request):
     logout(request)
-    messages.success(request, "You have been logged out.")
+    messages.success(request, "You have been logged out successfully.")
     return redirect('index')
+
+# -------------------------------Authentication part ends here---------------------
