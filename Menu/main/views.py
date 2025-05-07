@@ -8,6 +8,14 @@ from django.contrib import messages
 
 from django.db import IntegrityError
 from .models import Special
+
+
+# In views.py
+from django.contrib.auth import logout
+
+
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login, logout
 # Create your views here.
 
 date = datetime.now()
@@ -63,5 +71,25 @@ def register(request):
     return render(request, 'authenticate/register.html')
 
 
-def log_in(request):
-    return render(request,'authenticate/login.html')
+def login(request): 
+    if request.method == "POST":
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            login(request, user)
+            messages.success(request, "You have been successfully logged in!")
+            return redirect('index')
+        else:
+            messages.error(request, "Invalid username or password.")
+            return redirect('login')
+
+    return render(request, 'authenticate/login.html') 
+
+
+def log_out(request):
+    logout(request)
+    messages.success(request, "You have been logged out.")
+    return redirect('index')
