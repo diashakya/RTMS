@@ -1,12 +1,26 @@
+/* 
+Table of Contents:
+1. Main Container CSS
+2. Sidebar CSS
+3. Menu Content CSS
+4. Food Categories CSS
+5. Enhanced Menu Section CSS
+6. Responsive Design CSS
+7. Today's Special Section CSS
+*/
+
+/* ----------------------------------------Main Container starts ---------------------------------------- */
 .main-container {
   display: flex;
-  flex-direction: column; /* Stack sidebar on top for horizontal scrolling */
+  flex-direction: column; 
 }
+/* ----------------------------------------Main Container ends ---------------------------------------- */
 
+/* ----------------------------------------Sidebar starts ---------------------------------------- */
 .sidebar {
   display: flex;
-  flex-direction: column; /* stack heading and links vertically */
-  align-items: center; /* center horizontally */
+  flex-direction: column; 
+  align-items: center; 
   overflow-x: auto;
   white-space: nowrap;
   background-color: #f76d37;
@@ -30,25 +44,18 @@
   margin-right: 20px;
 }
 
-/* .sidebar a {
-  flex: 0 0 auto;
-  padding: 10px 16px;
-  color: white;
-  background-color: #000;
-  border-radius: 8px;
-  text-decoration: none;
-  transition: background-color 0.3s ease;
-} */
-
 .sidebar a:hover {
   background-color: #3f3f5a;
 }
+/* ----------------------------------------Sidebar ends ---------------------------------------- */
 
+/* ----------------------------------------Menu content starts ---------------------------------------- */
 .menu-content {
   padding: 20px;
 }
+/* ----------------------------------------Menu content ends ---------------------------------------- */
 
-/* menu layout */
+/* ----------------------------------------Food Categories starts ---------------------------------------- */
 .food-categories {
   display: flex;
   justify-content: center;
@@ -89,8 +96,9 @@
   color: #555;
   font-family: sans-serif;
 }
+/* ----------------------------------------Food Categories ends ---------------------------------------- */
 
-/* Enhanced Menu Section Styles */
+/* ----------------------------------------Enhanced Menu Section starts ---------------------------------------- */
 .menu-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -241,6 +249,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: 15px;
 }
 
 .item-price {
@@ -257,12 +266,17 @@
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .add-to-cart-btn:hover {
   background-color: #ff5252;
 }
+/* ----------------------------------------Enhanced Menu Section ends ---------------------------------------- */
 
+/* ----------------------------------------Responsive Design starts ---------------------------------------- */
 @media (max-width: 768px) {
   .menu-items-grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -272,9 +286,9 @@
     width: 80%;
   }
 }
-/* Enhanced Menu Section Styles ends*/
-/* todays special */
-/* Today's Special Section Styles */
+/* ----------------------------------------Responsive Design ends ---------------------------------------- */
+
+/* ----------------------------------------Today's Special Section starts ---------------------------------------- */
 .specials-container {
   max-width: 1200px;
   margin: 30px auto;
@@ -361,13 +375,6 @@
   color: #333;
 }
 
-.price-addcart {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 15px;
-}
-
 .price-container {
   display: flex;
   flex-direction: column;
@@ -377,12 +384,6 @@
   text-decoration: line-through;
   color: #999;
   font-size: 14px;
-}
-
-.item-price {
-  font-weight: bold;
-  color: #ff6b6b;
-  font-size: 18px;
 }
 
 .quantity-controls {
@@ -412,23 +413,6 @@
   text-align: center;
 }
 
-.add-to-cart-btn {
-  background-color: #ff6b6b;
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.add-to-cart-btn:hover {
-  background-color: #ff5252;
-}
-
 .no-specials {
   text-align: center;
   width: 100%;
@@ -445,3 +429,4 @@
     padding: 15px 5px;
   }
 }
+/* ----------------------------------------Today's Special Section ends ---------------------------------------- */

@@ -13,6 +13,25 @@
 
     <!-- custom css link authenticate.css -->
      <link rel="stylesheet" href="{% static 'css/authenticate.css' %}">
+
+     <!-- fontawesome css link -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .cross {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 40px;
+        }
+
+        .cross:hover {
+
+            color: orangered;
+            scale: 1.1;
+        }
+    </style>
 </head>
 
 <body>
@@ -32,6 +51,9 @@
     <div class="main ">
         
         <div class="form-container">
+            <a href="{% url 'index' %}">
+                <h2 class="cross"><i class="fa-solid fa-circle-xmark"></i></h2>
+            </a>
             <p class="title">Login</p>
             <form class="form" action="{% url 'login' %}" method="post">
                 {% csrf_token %}
