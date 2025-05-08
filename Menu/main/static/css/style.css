@@ -1019,13 +1019,37 @@ a:hover {
 
 /* head part */
 .custom-login-btn {
-    background-color: #f76d37;
-    color: white;
-    border: none;
+    background-color: #ffffff;
+    color: #f76d37;
+    border: 2px solid #f76d37;
 }
 
+
 .custom-signup-btn {
-    background-color: #f76d37;
+    background-color: #ffffff;
+    color: #f76d37;
+    border: 2px solid #f76d37;
+}
+
+
+.user-greeting {
+    background: rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.greeting-text {
     color: white;
-    border: none;
+    font-size: 14px;
+    font-weight: 300;
+}
+.username {
+    font-weight: 600;
+    color: black;
+    text-decoration: underline;
+    font-size: 15px;
 }

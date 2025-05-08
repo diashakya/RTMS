@@ -10,6 +10,6 @@ urlpatterns = [
 
     # authentication urls
     path('register/',register,name='register'),
-    path('login/', login, name='login'),
+    path('login/', login_view, name='login'),
     path('logout/', log_out, name='log_out')
 ]
