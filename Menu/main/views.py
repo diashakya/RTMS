@@ -15,6 +15,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+
+from django.contrib.auth.decorators import login_required
 # -----------------------------------   Local Apps
 from .models import Special
 
@@ -36,7 +38,7 @@ def about(request):
 def contact(request):
     """Renders the contact page."""
     return render(request, 'main/contact.html')
-
+@login_required(login_url='login')
 def menu(request):
     """Renders the menu page with today's specials."""
     todays_specials = Special.objects.filter(date=date.today(), active=True)
