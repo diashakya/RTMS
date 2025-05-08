@@ -18,6 +18,14 @@ from django.core.exceptions import ValidationError
 
 from django.contrib.auth.forms import PasswordChangeForm    
 from django.contrib.auth.decorators import login_required
+
+
+
+# ------------------------Django Rest Framework
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .serializers import SpecialSerializer,UserSerializer
 # -----------------------------------   Local Apps
 from .models import Special
 
@@ -152,4 +160,18 @@ def change_password(request):
             user = form.save()
             return redirect('login')
     return render(request, 'authenticate/change_pass.html',{'form': form}) 
-# ----------------كنولوجياAuthentication part ends here---------------------
+# ------------------------------------------Authentication part ends here---------------------
+
+
+# ......................................................API Views...............................
+@api_view(['GET'])
+def special_list(request):
+    specials = Special.objects.all()
+    serializer = SpecialSerializer(specials, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def user_list(request):
+    users = User.objects.all()
+    serializer = UserSerializer(users, many=True)
+    return Response(serializer.data)

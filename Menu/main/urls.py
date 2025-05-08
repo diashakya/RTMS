@@ -10,7 +10,7 @@ urlpatterns = [
     path('services/',services,name="services"),
 
 
-    # authentication urls
+    # --------------------------------------------authentication urls-----------------------------
     path('register/',register,name='register'),
     path('login/', login_view, name='login'),
     path('logout/', log_out, name='log_out'),
@@ -41,5 +41,9 @@ urlpatterns = [
              template_name="authenticate/password_reset_complete.html"
          ), 
          name='password_reset_complete'),
-   
+
+
+# --------------------api urls--------------------
+    path('specials/', special_list, name='special_list'),
+    path('users/', user_list, name='user_list'),
 ]
