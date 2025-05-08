@@ -79,8 +79,12 @@ WSGI_APPLICATION = 'Menu.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'rtms',
+        'USER': 'root',
+        'PASSWORD': 'root',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
 
@@ -115,15 +119,17 @@ USE_I18N = True
 
 USE_TZ = True
 
+import os
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'main/static'),
+]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
 
 MEDIA_ROOT = BASE_DIR/'media'
 MEDIA_URL = '/media/'

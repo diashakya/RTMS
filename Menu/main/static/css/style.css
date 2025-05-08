@@ -1,6 +1,27 @@
+/* 
+Table of Contents:
+1. Font Imports
+2. CSS Library Imports
+3. Base Styles
+4. Typography
+5. Navigation Styles
+6.banner Section Styles
+7. about Section Styles
+8.  gallery Section Styles
+9.  services Section Styles
+10. client Section Styles
+11. contact Section Styles
+12. footer Section Styles
+13. copyright Section Styles
+13. authenticate button
+*/
+
+/* ----------------------------------------Font Imports starts ---------------------------------------- */
 @import url('https://fonts.googleapis.com/css?family=Rajdhani:300,400,500,600,700');
 @import url('https://fonts.googleapis.com/css?family=Poppins:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i');
+/* ----------------------------------------Font Imports ends ---------------------------------------- */
 
+/* ----------------------------------------CSS Library Imports starts ---------------------------------------- */
 @import url(animate.min.css);
 @import url(normalize.css);
 @import url(icomoon.css);
@@ -12,7 +33,9 @@
 @import url(jquery.fancybox.min.css);
 @import url(jquery-ui.css);
 @import url(nice-select.css);
+/* ----------------------------------------CSS Library Imports ends ---------------------------------------- */
 
+/* ----------------------------------------Base Styles starts ---------------------------------------- */
 * {
     box-sizing: border-box !important;
     transition: ease all 0.5s;
@@ -42,6 +65,93 @@ a {
     transition: all .3s ease-in-out;
 }
 
+*,
+*::after,
+*::before {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+button:focus {
+    outline: none;
+}
+
+ul,
+li,
+ol {
+    margin: 0px;
+    list-style: none;
+}
+
+p {
+    margin: 20px;
+    font-weight: 300;
+    font-size: 15px;
+    line-height: 24px;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+:focus {
+    outline: 0;
+}
+
+.paddind_bottom_0 {
+    padding-bottom: 0 !important;
+}
+
+.btn-custom {
+    margin-top: 20px;
+    background-color: transparent !important;
+    border: 2px solid #ddd;
+    padding: 12px 40px;
+    font-size: 16px;
+}
+
+.lead {
+    font-size: 18px;
+    line-height: 30px;
+    color: #767676;
+    margin: 0;
+    padding: 0;
+}
+
+.form-control:focus {
+    border-color: #ffffff !important;
+    box-shadow: 0 0 0 .2rem rgba(255, 255, 255, .25);
+}
+
+.badge {
+    font-weight: 500;
+}
+
+blockquote {
+    margin: 20px 0 20px;
+    padding: 30px;
+}
+
+button {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+.full {
+    float: left;
+    width: 100%;
+}
+
+.layout_padding {
+    padding: 90px;
+}
+/* ----------------------------------------Base Styles ends ---------------------------------------- */
+
+/* ----------------------------------------Typography starts ---------------------------------------- */
 h1,
 h2,
 h3,
@@ -82,14 +192,6 @@ h6 {
     font-size: 13px;
 }
 
-*,
-*::after,
-*::before {
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-}
-
 h1 a,
 h2 a,
 h3 a,
@@ -100,106 +202,12 @@ h6 a {
     text-decoration: none!important;
     opacity: 1
 }
+/* ----------------------------------------Typography ends ---------------------------------------- */
 
-button:focus {
-    outline: none;
-}
-
-ul,
-li,
-ol {
-    margin: 0px;
-    list-style: none;
-}
-
-p {
-    margin: 20px;
-    font-weight: 300;
-    font-size: 15px;
-    line-height: 24px;
-}
-
-a {
-    color: #222222;
-    text-decoration: none;
-    outline: none !important;
-}
-
-a,
-.btn {
-    text-decoration: none !important;
-    outline: none !important;
-    -webkit-transition: all .3s ease-in-out;
-    -moz-transition: all .3s ease-in-out;
-    -ms-transition: all .3s ease-in-out;
-    -o-transition: all .3s ease-in-out;
-    transition: all .3s ease-in-out;
-}
-
-img {
-    max-width: 100%;
-    height: auto;
-}
-
- :focus {
-    outline: 0;
-}
-
-.paddind_bottom_0 {
-    padding-bottom: 0 !important;
-}
-
-.btn-custom {
-    margin-top: 20px;
-    background-color: transparent !important;
-    border: 2px solid #ddd;
-    padding: 12px 40px;
-    font-size: 16px;
-}
-
-.lead {
-    font-size: 18px;
-    line-height: 30px;
-    color: #767676;
-    margin: 0;
-    padding: 0;
-}
-
-.form-control:focus {
-    border-color: #ffffff !important;
-    box-shadow: 0 0 0 .2rem rgba(255, 255, 255, .25);
-}
-
-
-.badge {
-    font-weight: 500;
-}
-
-blockquote {
-    margin: 20px 0 20px;
-    padding: 30px;
-}
-
-button {
-    border: 0;
-    margin: 0;
-    padding: 0;
-    cursor: pointer;
-}
-
-.full {
-    float: left;
-    width: 100%;
-}
-
-.layout_padding {
-    padding: 90px;
-}
-
-.new_navbar{
+/* ----------------------------------------Navigation Styles starts ---------------------------------------- */
+.new_navbar {
     display: flex;
     justify-content: space-between !important;
-    
 }
 
 .new_navbar li a {
@@ -209,52 +217,48 @@ button {
     text-align: left;
 }
 
-.new_navbar
-{
+.new_navbar {
     background-image: linear-gradient(to right, #252525,#4d2212, #f76d37) !important;
 }
 
-.brand-logo{
+.brand-logo {
     font-weight: 600; 
     font-size: 25px;
 }
-.brand-logo b{
+
+.brand-logo b {
     color: #f76d37;
 }
-.nav-item a{
+
+.nav-item a {
     color: white !important;
     font-weight: 500;
     font-size: 15px;
 }
 
-.nav-item :hover{
+.nav-item :hover {
     color: #f76d37 !important;
     font-weight: 500;
     font-size: 15px;
 }
 
-.new_navbar .icon_ho{
+.new_navbar .icon_ho {
     display: flex !important;
-    justify-content:space-between;
+    justify-content: space-between;
     font-weight: 500;
     float: right;
     text-align: left;
 }
-.new_navbar .icon_ho i{
+
+.new_navbar .icon_ho i {
     font-size: 30px;
     font-weight: 800;
     padding: 7px 10px;
     color: black;
 }
+/* ----------------------------------------Navigation Styles ends ---------------------------------------- */
 
-.new_navbar .icon_ho i:hover{
-    color: white;
-}
-
-.navbar-collapse button{
-    float: right;
-    text-align: left;
-}
+/* ------------------banner section starts ------------------ */
 
 .banner_section {
     width: 100%;
@@ -288,7 +292,6 @@ button {
     margin: 0px;
     padding-bottom: 30px;
 }
-
 
 .learnmore_bt a {
     background-color: #252525;
@@ -342,9 +345,9 @@ button {
     opacity: 1;
 }
 
-/* banner section end */
+/* ------------------banner section end ------------------ */
 
-/* about section start */
+/* ------------------about section start ------------------ */
 
 .about_section {
     width: 100%;
@@ -414,8 +417,6 @@ button {
     border: 3px solid black;
 }
 
-
-
 .about_img img{
     filter: drop-shadow(0.50rem 0.70rem 0.25rem #363636);
     /* height: 400px; */
@@ -434,9 +435,9 @@ button {
   }
 
 
-/* about section end */
+/* ------------------about section end ------------------ */
 
-/* gallery section start */
+/* ------------------gallery section start ------------------ */
 
 .gallery_section {
     width: 100%;
@@ -542,9 +543,9 @@ a:hover {
     color: #f76d37;
 }
 
-/* gallery section end */
+/* ------------------gallery section end ------------------ */
 
-/* services section start */
+/* ------------------services section start ------------------ */
 
 .services_section {
     background-image: linear-gradient(rgba(35, 36, 39, 0.8), rgba(33, 33, 37, 0.6)), url(../images/service_momo.jpg);
@@ -616,8 +617,6 @@ a:hover {
     box-shadow: 0px 0px 18px -6px;
 }
 
-
-
 .box_main:hover .decorate_text {
     color: #000;
 }
@@ -629,7 +628,6 @@ a:hover {
 .box_main:hover .readmore_bt {
     display: block;
 }
-
 
 .services_section_2 {
     width: 100%;
@@ -680,9 +678,9 @@ a:hover {
     border: 3px solid #070603;
 }
 
-/* services section end */
+/* ------------------services section end ------------------ */
 
-/* client section start */
+/* ------------------client section start ------------------ */
 
 .client_section {
     width: 100%;
@@ -755,7 +753,6 @@ a:hover {
     font-weight: bold;
 }
 
-
 .quick_icon {
     text-align: right;
     padding-left: 30px;
@@ -796,9 +793,9 @@ a:hover {
     background-color: #f76d37;
 }
 
-/* client section end */
+/* ------------------client section end ------------------ */
 
-/* contact section start */
+/* ------------------contact section start ------------------ */
 
 .contact_section {
     width: 100%;
@@ -897,10 +894,9 @@ a:hover {
     padding: 0px;
 }
 
-/* contact section end */
+/* ------------------contact section end ------------------ */
 
-/* footer section start */
-
+/* ------------------footer section start ------------------ */
 
 .footer_section {
     width: 100%;
@@ -985,10 +981,9 @@ a:hover {
     padding-left: 10px;
 }
 
+/* ------------------footer section end ------------------ */
 
-/* footer section end */
-
-/* copyright section start */
+/* ------------------copyright section start ------------------ */
 
 .copyright_section {
     width: 100%;
@@ -1014,15 +1009,13 @@ a:hover {
     color: #f76d37;
 }
 
-
-/* copyright section end */
+/* ------------------copyright section end ------------------ */
 
 .margin_top90 {
     margin-top: 90px;
 }
 
-
-/* authenticate button */
+/* ------------------authenticate button ------------------      */
 
 /* head part */
 .custom-login-btn {
