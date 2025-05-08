@@ -13,7 +13,8 @@ from django.db import IntegrityError
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 # -----------------------------------   Local Apps
 from .models import Special
 
@@ -55,7 +56,15 @@ def register(request):
         username = data.get('username')
         email = data.get('email')
         password = data.get('password')
-        confirm_password = data.get('confirm_password')
+        confirm_password = data.get('Cpassword')
+
+        # Check if user is already logged in
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already exists")
+            return redirect('register')
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Email already exists")
+            return redirect('register')
 
         # Validate password match
         if password != confirm_password:
@@ -66,8 +75,10 @@ def register(request):
         if not all([first_name, last_name, username, email, password]):
             messages.error(request, "All fields are required")
             return redirect('register')
+        
 
         try:
+            validate_password(password=password)
             # Create new user
             User.objects.create_user(
                 first_name=first_name,
@@ -78,24 +89,34 @@ def register(request):
             )
             messages.success(request, "Registration successful! Please login.")
             return redirect('login')
+        # Handle password validation errors
+        except ValidationError as e:
+            
+            messages.error(request, f"Password error: {e}")
+            return redirect('register')
+        # Handle IntegrityError if username already exists
         except IntegrityError:
             messages.error(request, "Username already exists")
             return redirect('register')
 
     return render(request, 'authenticate/register.html')
 
-def login(request):
+def login_view(request):
     """Handles user login."""
     # Redirect if already logged in
-    if request.user.is_authenticated:
-        return redirect('index')
+    # if request.user.is_authenticated:
+    #     return redirect('index')
 
     if request.method == "POST":
         username = request.POST.get('username')
         password = request.POST.get('password')
 
+        if not User.objects.filter(username=username).exists():
+            messages.error(request, "Username does not exist")
+            return redirect('login')
+
         # Authenticate user
-        user = authenticate(username=username, password=password)
+        user = authenticate(request, username=username, password=password)
         
         if user is not None:
             login(request, user)
