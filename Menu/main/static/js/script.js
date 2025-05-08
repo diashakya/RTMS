@@ -73,11 +73,15 @@ input.addEventListener('keyup', reset);
 /* ----------------------------------------Event Listeners ends ---------------------------------------- */
 /* ----------------------------------------Phone Number Validation ends ---------------------------------------- */
 
+/* ----------------------------------------Show Password Functionality starts ---------------------------------------- */
+const showPasswordCheckbox = document.getElementById('show_password');
 
-
-
-
-
-
-
-
+if (showPasswordCheckbox) {
+    showPasswordCheckbox.addEventListener('change', function() {
+        const passwordFields = document.querySelectorAll('input[type="password"]');
+        passwordFields.forEach(function(field) {
+            field.type = showPasswordCheckbox.checked ? 'text' : 'password';
+        });
+    });
+}
+/* ----------------------------------------Show Password Functionality ends ---------------------------------------- */

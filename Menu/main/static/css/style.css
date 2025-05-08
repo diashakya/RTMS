@@ -598,7 +598,7 @@ a:hover {
 }
 
 .box_main:hover .house_icon .image_2 {
-    display: block;
+    display: none;
 }
 
 .box_main:hover .house_icon .image_1 {

@@ -16,6 +16,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
+from django.contrib.auth.forms import PasswordChangeForm    
 from django.contrib.auth.decorators import login_required
 # -----------------------------------   Local Apps
 from .models import Special
@@ -112,6 +113,7 @@ def login_view(request):
     if request.method == "POST":
         username = request.POST.get('username')
         password = request.POST.get('password')
+        remember_me = request.POST.get('remember_me')
 
         if not User.objects.filter(username=username).exists():
             messages.error(request, "Username does not exist")
@@ -122,6 +124,11 @@ def login_view(request):
         
         if user is not None:
             login(request, user)
+            if remember_me:
+                request.session.set_expiry(1209600)
+            else:
+                request.session.set_expiry(0)
+            # Set session expiry to 0 for session cookie (browser close)
             messages.success(request, "Logged in successfully!")
             return redirect('index')
         messages.error(request, "Invalid username or password")
@@ -135,4 +142,14 @@ def log_out(request):
     messages.success(request, "You have been logged out successfully.")
     return redirect('index')
 
+@login_required(login_url='login')
+def change_password(request):
+    form = PasswordChangeForm(user=request.user)
+
+    if request.method == 'POST':
+        form = PasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            user = form.save()
+            return redirect('login')
+    return render(request, 'authenticate/change_pass.html',{'form': form}) 
 # ----------------كنولوجياAuthentication part ends here---------------------
