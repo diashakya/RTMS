@@ -1,12 +1,12 @@
 .main-container {
   display: flex;
-  flex-direction: column; 
+  flex-direction: column; /* Stack sidebar on top for horizontal scrolling */
 }
 
 .sidebar {
   display: flex;
-  flex-direction: column; 
-  align-items: center; 
+  flex-direction: column; /* stack heading and links vertically */
+  align-items: center; /* center horizontally */
   overflow-x: auto;
   white-space: nowrap;
   background-color: #f76d37;
@@ -30,6 +30,15 @@
   margin-right: 20px;
 }
 
+/* .sidebar a {
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  color: white;
+  background-color: #000;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+} */
 
 .sidebar a:hover {
   background-color: #3f3f5a;
@@ -39,6 +48,7 @@
   padding: 20px;
 }
 
+/* menu layout */
 .food-categories {
   display: flex;
   justify-content: center;

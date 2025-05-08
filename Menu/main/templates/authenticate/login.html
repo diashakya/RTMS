@@ -51,18 +51,24 @@
                     <label for="username">Username</label>
                     <input type="text" name="username" id="username" placeholder="Enter your username" required>
                 </div>
+
                 <div class="input-group">
                     <label for="password">Password</label>
                     <input type="password" name="password" id="password" placeholder="Enter your password" required>
                     <div class="forgot">
-                        <a href="#">Forgot Password?</a>
+                        <a href="{% url 'reset_password' %}">Forgot Password?</a>
                     </div>
                 </div>
-                <div class="input-group">
+                <div>
+                    <input type="checkbox" name="remember_me" id="">
+                    <label for="">remember_me</label>
+                </div>
+                <div>
                     <input type="checkbox" id="show_password">
                     <label for="show_password">Show Password</label>
                 </div>
                 <button class="sign" type="submit">Sign in</button>
+                
             </form>
 
             <script>
