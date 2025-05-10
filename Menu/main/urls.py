@@ -42,7 +42,13 @@ urlpatterns = [
          ), 
          name='password_reset_complete'),
 
-
+    path('checkout/', checkout, name='checkout'),
+    path('orders/', order_history, name='order_history'),
+    path('thank-you/', thank_you, name='thank_you'),
+    path('cart/get_cart_items/', get_cart_items, name='get_cart_items'),
+    path('cart/add_to_cart/', add_to_cart, name='add_to_cart'),
+    path('cart/remove_from_cart/', remove_from_cart, name='remove_from_cart'),
+    path('cart/clear_cart/', clear_cart, name='clear_cart'),
 # --------------------api urls--------------------
     path('specials/', special_list, name='special_list'),
     path('users/', user_list, name='user_list'),

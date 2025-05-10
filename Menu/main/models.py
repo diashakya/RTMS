@@ -53,3 +53,28 @@ class Foods(models.Model):
     image = models.ImageField(upload_to="Foods")
     is_spicy = models.BooleanField(default=False)
     rating = models.DecimalField(max_digits=3, decimal_places=1, default=0)
+
+class Order(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)  # for registered users
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ], default='pending')
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    notes = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Order #{self.id} by {self.customer or self.user or 'Guest'}"
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
+    food = models.ForeignKey(Foods, on_delete=models.SET_NULL, null=True, blank=True)
+    special = models.ForeignKey(Special, on_delete=models.SET_NULL, null=True, blank=True)
+    quantity = models.PositiveIntegerField(default=1)
+    price = models.DecimalField(max_digits=8, decimal_places=2)  # price at time of order
+
+    def __str__(self):
+        return f"{self.quantity} x {self.food or self.special} (Order #{self.order.id})"
