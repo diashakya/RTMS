@@ -1,8 +1,60 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+db.sqlite3
+db.sqlite3-journal
+
+
+*.sql
+*.bak
+*.tmp
+
+# Media and static files (optional)
+media/
+staticfiles/
+static/
+
+# Environment variables
+Menu/.env
+Menu/*.env
+Menu/*.env.local
+
+# VSCode settings
+.vscode/
+
+# PyCharm settings
+.idea/
+
+# Virtual environment
 myenvi/
 
-.env/
+# pip dependency file
+pip-log.txt
 
-db.sqlite3/
+# MacOS
+.DS_Store
 
-__pycache__/
-*.pyc
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Coverage reports
+htmlcov/
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+
+# Migrations (optional if you want to regenerate them per environment)
+*/migrations/__pycache__/
+*/migrations/*.pyc
+*/migrations/*.pyo
+*/migrations/*.py~

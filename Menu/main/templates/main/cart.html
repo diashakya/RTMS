@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Cart{% endblock %}
+<style>
+    /* Add to your CSS */
+    .loading {
+        opacity: 0.7;
+        pointer-events: none;
+    }
+</style>
+{% block content %}
+<div class="container" style="max-width: 700px; margin: 40px auto;">
+    {% csrf_token %}
+    <h2 style="font-weight: bold; color: #f76d37; margin-bottom: 30px;">Your Cart</h2>
+    <div id="cart-page-items"></div>
+    <div id="cart-page-total-section" style="margin-top: 20px; display: none;">
+        <hr />
+        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2em;">
+            <span>Total:</span>
+            <span id="cart-page-total">Rs 0</span>
+        </div>
+        <button id="cart-page-checkout-btn" style="margin-top: 18px; width: 100%; background: #f76d37; color: #fff; border: none; border-radius: 5px; padding: 12px 0; font-weight: bold; font-size: 1.1em;">Proceed to Checkout</button>
+        <div id="payment-options" style="display:none; margin-top: 20px; text-align:center;">
+            <button id="pay-cash-btn" style="background:#f76d37; color:#fff; border:none; border-radius:5px; padding:10px 30px; font-weight:bold; margin-right:20px;">Pay with Cash</button>
+            <button id="pay-wallet-btn" style="background:#222; color:#fff; border:none; border-radius:5px; padding:10px 30px; font-weight:bold;">Pay with Wallet</button>
+        </div>
+    </div>
+    <div id="cart-page-empty" style="color: #888; font-size: 1.1em;">Your cart is empty.</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cart.js' %}"></script>
+{% endblock %}

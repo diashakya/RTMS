@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Order History{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 800px; margin: 40px auto;">
+    <h2 style="color: #f76d37; font-weight: bold;">Your Orders</h2>
+    {% if orders %}
+        {% for order in orders %}
+            <div style="border:1px solid #eee; border-radius:8px; margin:20px 0; padding:18px;">
+                <div>
+                    <b>Order #{{ order.id }}</b> | {{ order.created_at|date:'Y-m-d H:i' }} | Status: <span style="color:#f76d37;">{{ order.status }}</span>
+                </div>
+                <ul style="margin-top:10px;">
+                    {% for item in order.items.all %}
+                        <li>
+                            {{ item.quantity }} × {{ item.food|default:item.special }} — Rs {{ item.price }} each
+                        </li>
+                    {% endfor %}
+                </ul>
+                <div style="margin-top:10px;"><b>Total:</b> Rs {{ order.total }}</div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p style="color:#888;">You have no orders yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

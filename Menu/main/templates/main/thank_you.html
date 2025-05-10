@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Thank You{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 600px; margin: 60px auto; text-align:center;">
+    <h2 style="color: #f76d37; font-weight: bold;">Thank You!</h2>
+    <p>Your order has been placed successfully. We appreciate your business!</p>
+    <a href="{% url 'order_history' %}" class="btn btn-primary" style="background:#f76d37; border:none;">View Order History</a>
+</div>
+{% endblock %}
