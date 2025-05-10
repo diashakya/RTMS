@@ -5,17 +5,16 @@
 
 {% block content %}
 
-<!-- First gallery section start -->
-<div class="main-container">
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h1 class="center-text">Explore Our Menu</h1>
-        <h3>Choose from a diverse menu featuring a delectable array of dishes.
-            <br> Our mission is to satisfy your cravings and elevate your dining experience, one delicious meal at a time.
-        </h3>
+<!-- Hero Section (now main visual focus) -->
+<div class="hero-section" style="background: #f76d37; display: flex; align-items: center; justify-content: center; height: 40vh; text-align: center; border-bottom: 6px solid #d35400;">
+    <div class="hero-content" style="width: 100%;">
+        <h1 style="font-size: 3rem; font-weight: bold; color: #fff; margin-bottom: 1rem; letter-spacing: 2px;">Discover Our Culinary Delights</h1>
+        <p style="font-size: 1.5rem; font-weight: 600; color: #fff; margin-bottom: 2rem;">Experience the perfect blend of taste and tradition</p>
+        <a href="#menu-section" class="cta-button" style="font-weight: bold; background: #fff; color: #f76d37; border: 2px solid #fff; padding: 1rem 2rem; border-radius: 5px; text-decoration: none; transition: background 0.3s;">View Menu</a>
     </div>
 </div>
-<!-- First gallery section end -->
+
+<!-- First gallery section removed -->
 
 <!-- Second gallery section (Today's Special) -->
 <!-- Today's Special Section -->
@@ -69,9 +68,22 @@
 <!-- Second gallery section end -->
 
 <!-- Enhanced Menu Section -->
-<div class="menu-container">
+<div class="menu-container" id="menu-section">
     <h1 class="text-center">Our Menu</h1>
     
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <button class="action-btn" id="reservation-btn">
+            <i class="fas fa-calendar-alt"></i> Make Reservation
+        </button>
+        <button class="action-btn" id="catering-btn">
+            <i class="fas fa-utensils"></i> Catering Services
+        </button>
+        <button class="action-btn" id="gift-card-btn">
+            <i class="fas fa-gift"></i> Gift Cards
+        </button>
+    </div>
+
     <!-- Search Bar -->
     <form action="{% url 'menu' %}" method="get" class="search-container">
         <input type="text" id="menu-search" name="q" placeholder="Search for dishes..." class="search-input" value="{{ search_query }}">
@@ -107,15 +119,44 @@
                 {% if food.category %}
                 <span class="category-badge">{{ food.category.name }}</span>
                 {% endif %}
+                <div class="item-overlay">
+                    <button class="quick-view-btn" data-id="{{ food.id }}">
+                        <i class="fas fa-eye"></i> Quick View
+                    </button>
+                    <button class="favorite-btn" data-id="{{ food.id }}">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
             </div>
             <div class="menu-item-details">
-                <h3>{{ food.title }}</h3>
+                <div class="item-header">
+                    <h3>{{ food.title }}</h3>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <span>4.5</span>
+                    </div>
+                </div>
                 <p class="item-description">{{ food.description }}</p>
+                <div class="dietary-info">
+                    {% if food.is_vegetarian %}
+                    <span class="dietary-badge veg"><i class="fas fa-leaf"></i> Vegetarian</span>
+                    {% endif %}
+                    {% if food.is_spicy %}
+                    <span class="dietary-badge spicy"><i class="fas fa-pepper-hot"></i> Spicy</span>
+                    {% endif %}
+                </div>
                 <div class="price-addcart">
-                    <span class="item-price">Rs {{ food.price }}</span>
-                    <button class="add-to-cart-btn" data-id="{{ food.id }}">
-                        <i class="fas fa-shopping-cart"></i> Add to Cart
-                    </button>
+                    <div class="price-info">
+                        <span class="item-price">Rs {{ food.price }}</span>
+                        {% if food.calories %}
+                        <span class="calories">{{ food.calories }} cal</span>
+                        {% endif %}
+                    </div>
+                    <div class="action-buttons">
+                        <button class="add-to-cart-btn" data-id="{{ food.id }}">
+                            <i class="fas fa-shopping-cart"></i> Add to Cart
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
