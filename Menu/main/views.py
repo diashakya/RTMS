@@ -19,8 +19,6 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import PasswordChangeForm    
 from django.contrib.auth.decorators import login_required
 
-
-
 # ------------------------Django Rest Framework
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -47,11 +45,42 @@ def about(request):
 def contact(request):
     """Renders the contact page."""
     return render(request, 'main/contact.html')
-@login_required(login_url='login')
+
+from .models import Special, Foods
+
+from .models import Special, Foods, Category
+
 def menu(request):
-    """Renders the menu page with today's specials."""
+    """Renders the menu page with food items and today's specials, filtered by category and search query."""
     todays_specials = Special.objects.filter(date=date.today(), active=True)
-    return render(request, 'main/menu.html', {'todays_specials': todays_specials})
+    categories = Category.objects.all()
+    selected_category_name = request.GET.get('category')
+    search_query = request.GET.get('q')
+
+    try:
+        if selected_category_name:
+            selected_category = Category.objects.get(name=selected_category_name)
+            foods = Foods.objects.filter(category=selected_category)
+        else:
+            foods = Foods.objects.all()
+            selected_category = None
+    except Category.DoesNotExist:
+        messages.warning(request, f"Category '{selected_category_name}' not found.")
+        foods = Foods.objects.all()
+        selected_category = None
+
+    if search_query:
+        foods = foods.filter(title__icontains=search_query)
+
+    context = {
+        'todays_specials': todays_specials,
+        'foods': foods,
+        'categories': categories,
+        'selected_category': selected_category,
+        'search_query': search_query,
+    }
+    return render(request, 'main/menu.html', context)
+
 def services(request):
     """Renders the services page."""
     return render(request, 'main/services.html')

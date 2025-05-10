@@ -25,7 +25,7 @@
     
     <div class="specials-carousel">
         {% for special in todays_specials %}
-        <div class="special-item-card" data-category="{{ special.category }}">
+        <div class="special-item-card" data-category="{{ special.category.name }}">
             <div class="special-item-img">
                 <img src="{{ special.image.url }}" alt="{{ special.name }}">
                 {% if special.is_vegetarian %}
@@ -73,141 +73,62 @@
     <h1 class="text-center">Our Menu</h1>
     
     <!-- Search Bar -->
-    <div class="search-container">
-        <input type="text" id="menu-search" placeholder="Search for dishes..." class="search-input">
-        <button class="search-btn"><i class="fas fa-search"></i></button>
+    <form action="{% url 'menu' %}" method="get" class="search-container">
+        <input type="text" id="menu-search" name="q" placeholder="Search for dishes..." class="search-input" value="{{ search_query }}">
+        <button type="submit" class="search-btn"><i class="fas fa-search"></i></button>
+    </form>
+
+    <!-- Search Feedback -->
+    <div id="search-feedback" class="search-feedback {% if foods|length == 0 %}show{% endif %}">
+        <p>No items found matching your search.</p>
     </div>
-    
+
     <!-- Category Filter -->
     <div class="category-filter">
         <div class="category-scroll">
-            <button class="category-btn active" data-category="all">All Items</button>
-            <button class="category-btn" data-category="salads">
-                <img src="{% static 'images/salad.png'%}" alt="Salads">
-                <span>Salads</span>
+            <button class="category-btn {% if not selected_category %}active{% endif %}" data-category="all">
+                All Items
             </button>
-            <button class="category-btn" data-category="sushi">
-                <img src="{% static 'images/sushi.png'%}" alt="Sushi">
-                <span>Sushi</span>
+            {% for category in categories %}
+            <button class="category-btn {% if selected_category == category %}active{% endif %}" 
+                    data-category="{{ category.name }}">
+                {{ category.name }}
             </button>
-            <button class="category-btn" data-category="desserts">
-                <img src="{% static 'images/dessert.png'%}" alt="Desserts">
-                <span>Desserts</span>
-            </button>
-            <button class="category-btn" data-category="burgers">
-                <img src="{% static 'images/burger.png'%}" alt="Burgers">
-                <span>Burgers</span>
-            </button>
-            <button class="category-btn" data-category="pizzas">
-                <img src="{% static 'images/pizza.png'%}" alt="Pizzas">
-                <span>Pizzas</span>
-            </button>
-            <button class="category-btn" data-category="drinks">
-                <img src="{% static 'images/drinks.png'%}" alt="Drinks">
-                <span>Drinks</span>
-            </button>
+            {% endfor %}
         </div>
     </div>
     
     <!-- Menu Items Grid -->
     <div class="menu-items-grid" id="menu-items-container">
-        <!-- Sample Menu Item 1 -->
-        <div class="menu-item-card" data-category="salads">
+        {% for food in foods %}
+        <div class="menu-item-card" data-category="{% if food.category %}{{ food.category.name }}{% else %}uncategorized{% endif %}">
             <div class="menu-item-img">
-                <img src="{% static 'images/greek_salad.jpg' %}" alt="Greek Salad">
-                <span class="veg-indicator veg">VEG</span>
+                <img src="{{ food.image.url }}" alt="{{ food.title }}">
+                {% if food.category %}
+                <span class="category-badge">{{ food.category.name }}</span>
+                {% endif %}
             </div>
             <div class="menu-item-details">
-                <h3>Greek Salad</h3>
-                <p class="item-description">Fresh vegetables with feta cheese and olives</p>
+                <h3>{{ food.title }}</h3>
+                <p class="item-description">{{ food.description }}</p>
                 <div class="price-addcart">
-                    <span class="item-price">Rs 220</span>
-                    <button class="add-to-cart-btn">Add to Cart</button>
+                    <span class="item-price">Rs {{ food.price }}</span>
+                    <button class="add-to-cart-btn" data-id="{{ food.id }}">
+                        <i class="fas fa-shopping-cart"></i> Add to Cart
+                    </button>
                 </div>
             </div>
         </div>
-        
-        <!-- Sample Menu Item 2 -->
-        <div class="menu-item-card" data-category="burgers">
-            <div class="menu-item-img">
-                <img src="{% static 'images/cheese_burger.jpg' %}" alt="Cheeseburger">
-                <span class="veg-indicator non-veg">NON-VEG</span>
-            </div>
-            <div class="menu-item-details">
-                <h3>Classic Cheeseburger</h3>
-                <p class="item-description">Beef patty with cheese, lettuce and special sauce</p>
-                <div class="price-addcart">
-                    <span class="item-price">Rs 320</span>
-                    <button class="add-to-cart-btn">Add to Cart</button>
-                </div>
-            </div>
+        {% empty %}
+        <div class="no-items">
+            <p>No food items available in this category.</p>
         </div>
-        
-        <!-- Sample Menu Item 3 -->
-        <div class="menu-item-card" data-category="pizzas">
-            <div class="menu-item-img">
-                <img src="{% static 'images/margherita-pizza.jpg' %}" alt="Margherita Pizza">
-                <span class="veg-indicator veg">VEG</span>
-            </div>
-            <div class="menu-item-details">
-                <h3>Margherita Pizza</h3>
-                <p class="item-description">Classic pizza with tomato sauce and mozzarella</p>
-                <div class="price-addcart">
-                    <span class="item-price">Rs 450</span>
-                    <button class="add-to-cart-btn">Add to Cart</button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Sample Menu Item 4 -->
-        <div class="menu-item-card" data-category="sushi">
-            <div class="menu-item-img">
-                <img src="{% static 'images/sushi_platter.jpg' %}" alt="Sushi Platter">
-                <span class="veg-indicator non-veg">NON-VEG</span>
-            </div>
-            <div class="menu-item-details">
-                <h3>Sushi Platter</h3>
-                <p class="item-description">Assorted sushi with wasabi and soy sauce</p>
-                <div class="price-addcart">
-                    <span class="item-price">Rs 580</span>
-                    <button class="add-to-cart-btn">Add to Cart</button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Sample Menu Item 5 -->
-        <div class="menu-item-card" data-category="desserts">
-            <div class="menu-item-img">
-                <img src="{% static 'images/lava_cake.jpg' %}" alt="Chocolate Cake">
-                <span class="veg-indicator veg">VEG</span>
-            </div>
-            <div class="menu-item-details">
-                <h3>Chocolate Lava Cake</h3>
-                <p class="item-description">Warm chocolate cake with melting center</p>
-                <div class="price-addcart">
-                    <span class="item-price">Rs 180</span>
-                    <button class="add-to-cart-btn">Add to Cart</button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Sample Menu Item 6 -->
-        <div class="menu-item-card" data-category="drinks">
-            <div class="menu-item-img">
-                <img src="{% static 'images/strawberry-mojito.jpg' %}" alt="Mojito">
-                <span class="veg-indicator veg">VEG</span>
-            </div>
-            <div class="menu-item-details">
-                <h3>Fresh Mojito</h3>
-                <p class="item-description">Refreshing mint lime drink</p>
-                <div class="price-addcart">
-                    <span class="item-price">Rs 120</span>
-                    <button class="add-to-cart-btn">Add to Cart</button>
-                </div>
-            </div>
-        </div>
+        {% endfor %}
     </div>
 </div>
 
-
 {% endblock content %}
+
+{% block extra_js %}
+<script src="{% static 'js/menu.js' %}"></script>
+{% endblock %}
