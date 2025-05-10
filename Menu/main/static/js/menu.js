@@ -148,3 +148,136 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+
+// Back to Top Button
+const backToTopBtn = document.getElementById('back-to-top');
+
+window.addEventListener('scroll', () => {
+    if (window.pageYOffset > 300) {
+        backToTopBtn.style.display = 'flex';
+    } else {
+        backToTopBtn.style.display = 'none';
+    }
+});
+
+backToTopBtn.addEventListener('click', () => {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+});
+
+// Quick View Functionality
+document.querySelectorAll('.quick-view-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const itemId = btn.dataset.id;
+        // Implement quick view modal functionality
+        showQuickViewModal(itemId);
+    });
+});
+
+// Favorite Button Functionality
+document.querySelectorAll('.favorite-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const itemId = btn.dataset.id;
+        const icon = btn.querySelector('i');
+        
+        if (icon.classList.contains('far')) {
+            icon.classList.remove('far');
+            icon.classList.add('fas');
+            // Add to favorites
+            addToFavorites(itemId);
+        } else {
+            icon.classList.remove('fas');
+            icon.classList.add('far');
+            // Remove from favorites
+            removeFromFavorites(itemId);
+        }
+    });
+});
+
+// Share Button Functionality
+document.querySelectorAll('.share-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const itemId = btn.dataset.id;
+        shareItem(itemId);
+    });
+});
+
+// Quick Actions Buttons
+document.getElementById('reservation-btn').addEventListener('click', () => {
+    // Implement reservation functionality
+    window.location.href = '/reservation/';
+});
+
+document.getElementById('catering-btn').addEventListener('click', () => {
+    // Implement catering services functionality
+    window.location.href = '/catering/';
+});
+
+document.getElementById('gift-card-btn').addEventListener('click', () => {
+    // Implement gift card functionality
+    window.location.href = '/gift-cards/';
+});
+
+// Helper Functions
+function showQuickViewModal(itemId) {
+    // Implement quick view modal
+    console.log('Quick view for item:', itemId);
+}
+
+function addToFavorites(itemId) {
+    // Implement add to favorites
+    console.log('Added to favorites:', itemId);
+}
+
+function removeFromFavorites(itemId) {
+    // Implement remove from favorites
+    console.log('Removed from favorites:', itemId);
+}
+
+function shareItem(itemId) {
+    // Implement share functionality
+    if (navigator.share) {
+        navigator.share({
+            title: 'Check out this delicious item!',
+            text: 'I found this amazing dish on our restaurant website!',
+            url: window.location.href
+        })
+        .catch(error => console.log('Error sharing:', error));
+    } else {
+        // Fallback for browsers that don't support Web Share API
+        const dummy = document.createElement('input');
+        document.body.appendChild(dummy);
+        dummy.value = window.location.href;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+        alert('Link copied to clipboard!');
+    }
+}
+
+// Category Filter Animation
+document.querySelectorAll('.category-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        // Remove active class from all buttons
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        // Add active class to clicked button
+        btn.classList.add('active');
+    });
+});
+
+// Search Animation
+const searchInput = document.getElementById('menu-search');
+const searchFeedback = document.getElementById('search-feedback');
+
+searchInput.addEventListener('input', () => {
+    if (searchInput.value.length > 0) {
+        searchFeedback.style.display = 'block';
+    } else {
+        searchFeedback.style.display = 'none';
+    }
+});
