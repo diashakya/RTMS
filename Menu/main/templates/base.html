@@ -136,10 +136,34 @@
             >
               <i class="fa-brands fa-instagram"></i>
             </a>
+            {% if request.user.is_authenticated %}
+            <!-- Cart Icon -->
+            <div class="cart-dropdown-wrapper" style="position: relative; display: inline-block; margin-left: 18px; margin-right: 18px;">
+              <button id="cart-btn" style="background: none; border: none; position: relative;">
+                <i class="fa fa-shopping-cart" style="font-size: 28px; color: #f76d37;"></i>
+                <span id="cart-count" style="position: absolute; top: -8px; right: -10px; background: #f76d37; color: #fff; border-radius: 50%; padding: 2px 7px; font-size: 13px; font-weight: bold;">0</span>
+              </button>
+              <div id="cart-dropdown" style="display: none; position: absolute; right: 0; top: 40px; background: #fff; min-width: 320px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); border-radius: 8px; z-index: 1000; padding: 18px 12px;">
+                <h5 style="font-weight: bold; color: #f76d37; margin-bottom: 10px;">Your Cart</h5>
+                <div id="cart-items-list">
+                  <p style="color: #888;">Cart is empty.</p>
+                </div>
+                <div id="cart-total-section" style="margin-top: 10px; display: none;">
+                  <hr />
+                  <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                    <span>Total:</span>
+                    <span id="cart-total">Rs 0</span>
+                  </div>
+                  <button id="checkout-btn" style="margin-top: 12px; width: 100%; background: #f76d37; color: #fff; border: none; border-radius: 5px; padding: 8px 0; font-weight: bold;">Checkout</button>
+                </div>
+              </div>
+            </div>
+            {% endif %}
           </div>
+          
 
           <a href="{% url 'contact' %}"
-            ><button class="custom-btn btn-1">Contact Us</button></a
+            ><button class="custom-btn btn-1" style="margin-left: 10px;">Contact Us</button></a
           >
 
           <!-- <form class="d-flex" role="search">
@@ -161,7 +185,7 @@
             <p class="footer_text">
               We at <b style="font: bold">AMDIA</b> believe that dining is more
               than just a meal — it's an experience. From the moment you step
-              through our doors, you’re welcomed into an atmosphere of warmth,
+              through our doors, you're welcomed into an atmosphere of warmth,
               elegance, and exceptional hospitality.
             </p>
           </div>

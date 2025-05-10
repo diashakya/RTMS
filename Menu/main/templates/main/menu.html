@@ -4,6 +4,11 @@
 {% block title %}Menu{% endblock title %}
 
 {% block content %}
+<!-- Cart Notification Popup and Confetti -->
+<div id="cart-notification" style="display:none;position:fixed;top:30px;left:50%;transform:translateX(-50%);background:#f76d37;color:#fff;padding:16px 32px;border-radius:8px;z-index:2000;font-weight:bold;font-size:1.2em;box-shadow:0 4px 16px rgba(0,0,0,0.12);transition:opacity 0.3s;">
+  <span id="cart-notification-msg">Added to cart!</span>
+</div>
+<canvas id="confetti-canvas" style="display:none;position:fixed;pointer-events:none;top:0;left:0;width:100vw;height:100vh;z-index:2100;"></canvas>
 
 <!-- Hero Section (now main visual focus) -->
 <div class="hero-section" style="background: #f76d37; display: flex; align-items: center; justify-content: center; height: 40vh; text-align: center; border-bottom: 6px solid #d35400;">
@@ -151,6 +156,11 @@
                         {% if food.calories %}
                         <span class="calories">{{ food.calories }} cal</span>
                         {% endif %}
+                    </div>
+                    <div class="quantity-controls">
+                        <button class="quantity-btn minus">-</button>
+                        <span class="quantity">1</span>
+                        <button class="quantity-btn plus">+</button>
                     </div>
                     <div class="action-buttons">
                         <button class="add-to-cart-btn" data-id="{{ food.id }}">
