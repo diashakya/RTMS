@@ -107,8 +107,7 @@
           <div class="d-flex gap-3 px-3 mx-auto">
             {% if request.user.is_authenticated %}
             <div class="user-greeting">
-              <span class="greeting-text">Hello,</span>
-              <span class="username">{{ request.user.username }}</span>
+              <span>👋 </span> <h3 class="text-decoration-underline fs-6 welcome-text">Welcome, {{ request.user.username }}!</h3>
             </div>
             <a href="{% url 'log_out' %}">
               <button class="btn custom-signup-btn">LogOut</button>
@@ -138,26 +137,9 @@
             </a>
             {% if request.user.is_authenticated %}
             <!-- Cart Icon -->
-            <div class="cart-dropdown-wrapper" style="position: relative; display: inline-block; margin-left: 18px; margin-right: 18px;">
-              <button id="cart-btn" style="background: none; border: none; position: relative;">
-                <i class="fa fa-shopping-cart" style="font-size: 28px; color: #f76d37;"></i>
-                <span id="cart-count" style="position: absolute; top: -8px; right: -10px; background: #f76d37; color: #fff; border-radius: 50%; padding: 2px 7px; font-size: 13px; font-weight: bold;">0</span>
-              </button>
-              <div id="cart-dropdown" style="display: none; position: absolute; right: 0; top: 40px; background: #fff; min-width: 320px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); border-radius: 8px; z-index: 1000; padding: 18px 12px;">
-                <h5 style="font-weight: bold; color: #f76d37; margin-bottom: 10px;">Your Cart</h5>
-                <div id="cart-items-list">
-                  <p style="color: #888;">Cart is empty.</p>
-                </div>
-                <div id="cart-total-section" style="margin-top: 10px; display: none;">
-                  <hr />
-                  <div style="display: flex; justify-content: space-between; font-weight: bold;">
-                    <span>Total:</span>
-                    <span id="cart-total">Rs 0</span>
-                  </div>
-                  <button id="checkout-btn" style="margin-top: 12px; width: 100%; background: #f76d37; color: #fff; border: none; border-radius: 5px; padding: 8px 0; font-weight: bold;">Checkout</button>
-                </div>
-              </div>
-            </div>
+             <a class="btn text-light" href="">
+              <i class="fa-solid fa-cart-shopping"></i>
+             </a>
             {% endif %}
           </div>
           
