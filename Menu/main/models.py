@@ -3,12 +3,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.core.validators import MinLengthValidator, RegexValidator
 
-class BaseModel(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        abstract = True
+
 
 class Special(models.Model):
     name = models.CharField(max_length=100)
@@ -53,6 +48,10 @@ class Foods(models.Model):
     image = models.ImageField(upload_to="Foods")
     is_spicy = models.BooleanField(default=False)
     rating = models.DecimalField(max_digits=3, decimal_places=1, default=0)
+
+    def __str__(self):
+        return self.title
+    
 
 class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
