@@ -14,19 +14,46 @@ class OrderItemInline(admin.TabularInline):
 # Enhanced Order Admin
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'customer_info', 'user', 'status', 'total', 'created_at', 'order_actions')
-    list_filter = ('status', 'created_at', 'customer')
-    search_fields = ('id', 'customer__customer_firstname', 'customer__customer_lastname', 'customer__customer_mobileno')
+    list_display = ('id', 'customer_info', 'order_type_display', 'user', 'status', 'total', 'created_at', 'order_actions')
+    list_filter = ('status', 'order_type', 'created_at', 'customer')
+    search_fields = ('id', 'customer__customer_firstname', 'customer__customer_lastname', 'customer__customer_mobileno', 'table_number', 'customer_name')
     readonly_fields = ('created_at', 'total')
     inlines = [OrderItemInline]
     list_per_page = 25
     ordering = ('-created_at',)
     
+    fieldsets = (
+        ('Order Information', {
+            'fields': ('customer', 'user', 'status', 'total', 'created_at')
+        }),
+        ('Order Type & Location', {
+            'fields': ('order_type', 'delivery_address', 'table_number')
+        }),
+        ('Customer Details', {
+            'fields': ('customer_name', 'customer_phone')
+        }),
+        ('Additional Information', {
+            'fields': ('notes',)
+        }),
+    )
+    
     def customer_info(self, obj):
         if obj.customer:
             return f"{obj.customer.customer_firstname} {obj.customer.customer_lastname}"
+        elif obj.customer_name:
+            return obj.customer_name
         return "Guest"
     customer_info.short_description = "Customer"
+    
+    def order_type_display(self, obj):
+        if obj.order_type == 'delivery':
+            return format_html('<span style="color: #007cba;"><i class="fas fa-truck"></i> Delivery</span>')
+        elif obj.order_type == 'dine_in':
+            location = f" (Table: {obj.table_number})" if obj.table_number else ""
+            return format_html('<span style="color: #e68900;"><i class="fas fa-utensils"></i> Dine In{}</span>', location)
+        return obj.get_order_type_display()
+    order_type_display.short_description = "Order Type"
+    order_type_display.allow_tags = True
     
     def order_actions(self, obj):
         return format_html(
