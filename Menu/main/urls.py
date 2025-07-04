@@ -17,6 +17,20 @@ urlpatterns = [
     path('change_password/', change_password, name='change_password'),
     
 
+    # ---------------------------cart and order urls---------------------------------
+    path('cart/', cart_view, name='cart'),
+    path('checkout/', checkout, name='checkout'),
+    path('orders/', order_history, name='order_history'),
+    path('thank-you/', thank_you, name='thank_you'),
+    path('update-order-status/<int:order_id>/', update_order_status, name='update_order_status'),
+    
+    # ---------------------------admin dashboard urls-----------------------------
+    path('admin-dashboard/', admin_dashboard, name='admin_dashboard'),
+    path('manage-orders/', manage_orders, name='manage_orders'),
+    path('generate-qr-codes/', generate_qr_codes, name='generate_qr_codes'),
+    path('table-menu/', table_menu, name='table_menu'),
+    path('call-waiter/', call_waiter, name='call_waiter'),
+
      path('reset_password/', 
          auth_views.PasswordResetView.as_view(
              template_name="authenticate/password_reset.html"

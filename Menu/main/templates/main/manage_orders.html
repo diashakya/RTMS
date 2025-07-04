@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Manage Orders{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="margin-top: 20px;">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar" style="height: 100vh; position: fixed; top: 0; left: 0; padding-top: 80px;">
+            <div class="position-sticky pt-3">
+                <h5 class="text-center mb-4" style="color: #f76d37; font-weight: bold;">Admin Panel</h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'admin_dashboard' %}" style="color: #333;">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'manage_orders' %}" style="color: #f76d37;">
+                            <i class="fas fa-shopping-cart"></i> Manage Orders
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'generate_qr_codes' %}" style="color: #333;">
+                            <i class="fas fa-qrcode"></i> QR Codes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/" style="color: #333;">
+                            <i class="fas fa-utensils"></i> Manage Menu
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'index' %}" style="color: #333;">
+                            <i class="fas fa-home"></i> Back to Website
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4" style="margin-left: 16.666667%;">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2" style="color: #f76d37;">Manage Orders</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()">Print</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Options -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="GET" class="d-flex align-items-center">
+                                <label for="status" class="me-2"><strong>Filter by Status:</strong></label>
+                                <select name="status" id="status" class="form-select me-3" style="width: auto;">
+                                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Orders</option>
+                                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary">Filter</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold" style="color: #f76d37;">
+                        Orders 
+                        {% if status_filter != 'all' %}
+                        - {{ status_filter|title }}
+                        {% endif %}
+                        ({{ orders.count }} total)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                            <thead style="background-color: #f8f9fa;">
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Notes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td><strong>#{{ order.id }}</strong></td>
+                                    <td>
+                                        {% if order.user %}
+                                            {{ order.user.first_name }} {{ order.user.last_name }}
+                                            <br><small class="text-muted">{{ order.user.email }}</small>
+                                        {% elif order.customer %}
+                                            {{ order.customer.customer_firstname }} {{ order.customer.customer_lastname }}
+                                            <br><small class="text-muted">{{ order.customer.customer_email }}</small>
+                                        {% else %}
+                                            <span class="text-muted">Guest User</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#orderModal{{ order.id }}">
+                                            View Items ({{ order.items.count }})
+                                        </button>
+                                    </td>
+                                    <td><strong>Rs {{ order.total|floatformat:2 }}</strong></td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if order.status == 'pending' %}bg-warning text-dark
+                                            {% elif order.status == 'completed' %}bg-success
+                                            {% else %}bg-danger{% endif %}">
+                                            {{ order.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        {% if order.notes %}
+                                            <span title="{{ order.notes }}">{{ order.notes|truncatechars:30 }}</span>
+                                        {% else %}
+                                            <span class="text-muted">No notes</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            {% if order.status == 'pending' %}
+                                                <button class="btn btn-sm btn-success" data-order-id="{{ order.id }}" data-status="completed" onclick="updateOrderStatus(this.dataset.orderId, this.dataset.status)">
+                                                    Complete
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" data-order-id="{{ order.id }}" data-status="cancelled" onclick="updateOrderStatus(this.dataset.orderId, this.dataset.status)">
+                                                    Cancel
+                                                </button>
+                                            {% elif order.status == 'cancelled' %}
+                                                <button class="btn btn-sm btn-warning" data-order-id="{{ order.id }}" data-status="pending" onclick="updateOrderStatus(this.dataset.orderId, this.dataset.status)">
+                                                    Reopen
+                                                </button>
+                                            {% else %}
+                                                <span class="text-muted">No actions</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Order Items Modal -->
+                                <div class="modal fade" id="orderModal{{ order.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Order #{{ order.id }} - Items</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Item</th>
+                                                                <th>Quantity</th>
+                                                                <th>Price</th>
+                                                                <th>Total</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for item in order.items.all %}
+                                                            <tr>
+                                                                <td>
+                                                                    {% if item.food %}
+                                                                        {{ item.food.title }}
+                                                                    {% elif item.special %}
+                                                                        {{ item.special.name }} <span class="badge bg-warning">Special</span>
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td>{{ item.quantity }}</td>
+                                                                <td>Rs {{ item.price }}</td>
+                                                                <td>Rs {{ item.total_price|floatformat:2 }}</td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                        <tfoot>
+                                                            <tr class="fw-bold">
+                                                                <td colspan="3">Total:</td>
+                                                                <td>Rs {{ order.total|floatformat:2 }}</td>
+                                                            </tr>
+                                                        </tfoot>
+                                                    </table>
+                                                </div>
+                                                {% if order.notes %}
+                                                <div class="mt-3">
+                                                    <strong>Notes:</strong>
+                                                    <p class="text-muted">{{ order.notes }}</p>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">
+                                        <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                                        <h5 class="text-muted">No orders found</h5>
+                                        <p class="text-muted">Orders will appear here when customers place them.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+function updateOrderStatus(orderId, status) {
+    if (!confirm(`Are you sure you want to mark this order as ${status}?`)) {
+        return;
+    }
+
+    fetch(`/update-order-status/${orderId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({status: status})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Order status updated successfully!');
+            location.reload();
+        } else {
+            alert('Error updating order status: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating order status.');
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+<style>
+.sidebar {
+    box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+}
+
+.nav-link {
+    padding: 12px 20px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    transition: all 0.3s;
+}
+
+.nav-link:hover {
+    background-color: #f8f9fa;
+    color: #f76d37 !important;
+}
+
+.nav-link.active {
+    background-color: #f76d37;
+    color: white !important;
+}
+
+.card {
+    border: none;
+    border-radius: 8px;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+}
+
+.btn-group .btn {
+    margin-right: 5px;
+}
+</style>
+{% endblock %}

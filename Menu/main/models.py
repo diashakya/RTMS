@@ -75,5 +75,10 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=8, decimal_places=2)  # price at time of order
 
+    @property
+    def total_price(self):
+        """Calculate total price for this item (price * quantity)"""
+        return self.price * self.quantity
+
     def __str__(self):
         return f"{self.quantity} x {self.food or self.special} (Order #{self.order.id})"

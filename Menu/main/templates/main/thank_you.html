@@ -1,9 +1,116 @@
 {% extends "base.html" %}
 {% block title %}Thank You{% endblock %}
 {% block content %}
-<div class="container" style="max-width: 600px; margin: 60px auto; text-align:center;">
-    <h2 style="color: #f76d37; font-weight: bold;">Thank You!</h2>
-    <p>Your order has been placed successfully. We appreciate your business!</p>
-    <a href="{% url 'order_history' %}" class="btn btn-primary" style="background:#f76d37; border:none;">View Order History</a>
+<div class="container" style="max-width: 700px; margin: 60px auto; text-align:center;">
+    <div class="success-animation" style="margin-bottom: 30px;">
+        <i class="fas fa-check-circle" style="color: #28a745; font-size: 5rem; margin-bottom: 20px;"></i>
+    </div>
+    
+    <h1 style="color: #f76d37; font-weight: bold; margin-bottom: 20px;">Thank You for Your Order!</h1>
+    
+    {% if order %}
+    <div class="order-details" style="background: #f8f9fa; padding: 30px; border-radius: 10px; margin: 30px 0; text-align: left;">
+        <h4 style="color: #333; margin-bottom: 20px; text-align: center;">Order Details</h4>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Order ID:</strong> #{{ order.id }}</p>
+                <p><strong>Status:</strong> 
+                    <span class="badge bg-warning text-dark">{{ order.status|title }}</span>
+                </p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Total Amount:</strong> Rs {{ order.total|floatformat:2 }}</p>
+                <p><strong>Order Date:</strong> {{ order.created_at|date:"M d, Y H:i" }}</p>
+            </div>
+        </div>
+        
+        {% if order.items.all %}
+        <div class="order-items" style="margin-top: 20px;">
+            <h6><strong>Items Ordered:</strong></h6>
+            <ul style="list-style: none; padding: 0;">
+                {% for item in order.items.all %}
+                <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                    <span>{{ item.quantity }}x 
+                    {% if item.food %}
+                        {{ item.food.title }}
+                    {% elif item.special %}
+                        {{ item.special.name }} <small class="text-warning">(Special)</small>
+                    {% endif %}
+                    </span>
+                    <span style="float: right; font-weight: bold;">Rs {{ item.price|mul:item.quantity|floatformat:2 }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        {% if order.notes %}
+        <div class="order-notes" style="margin-top: 20px; padding: 15px; background: #fff; border-radius: 5px;">
+            <h6><strong>Special Notes:</strong></h6>
+            <p style="margin: 0; color: #666;">{{ order.notes }}</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <p style="font-size: 1.1em; color: #666; margin: 30px 0;">
+        Your order has been placed successfully and is being prepared. 
+        {% if order %}
+        You will receive updates on your order status.
+        {% endif %}
+    </p>
+    
+    <div class="action-buttons" style="margin-top: 40px;">
+        {% if user.is_authenticated %}
+        <a href="{% url 'order_history' %}" class="btn btn-primary me-3" style="background:#f76d37; border:none; padding: 12px 30px;">
+            <i class="fas fa-history"></i> View Order History
+        </a>
+        {% endif %}
+        <a href="{% url 'menu' %}" class="btn btn-outline-primary" style="border-color:#f76d37; color:#f76d37; padding: 12px 30px;">
+            <i class="fas fa-utensils"></i> Order More
+        </a>
+        <a href="{% url 'index' %}" class="btn btn-outline-secondary" style="padding: 12px 30px; margin-left: 10px;">
+            <i class="fas fa-home"></i> Back to Home
+        </a>
+    </div>
+    
+    <div class="additional-info" style="margin-top: 50px; padding: 20px; background: linear-gradient(135deg, #f76d37, #e55829); color: white; border-radius: 10px;">
+        <h5 style="margin-bottom: 15px;">What's Next?</h5>
+        <div class="row text-center">
+            <div class="col-md-4">
+                <i class="fas fa-clock" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                <p style="margin: 0; font-size: 0.9em;">Your order is being prepared</p>
+            </div>
+            <div class="col-md-4">
+                <i class="fas fa-bell" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                <p style="margin: 0; font-size: 0.9em;">You'll get notified when ready</p>
+            </div>
+            <div class="col-md-4">
+                <i class="fas fa-smile" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                <p style="margin: 0; font-size: 0.9em;">Enjoy your delicious meal!</p>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+.success-animation i {
+    animation: checkmark 0.6s ease-in-out;
+}
+
+@keyframes checkmark {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+</style>
 {% endblock %}

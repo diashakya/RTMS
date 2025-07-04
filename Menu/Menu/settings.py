@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 'channels',  # Temporarily commented out until installed
     'rest_framework',
     'allauth',
     'allauth.account',
@@ -80,6 +81,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'Menu.wsgi.application'
+# ASGI_APPLICATION = 'Menu.asgi.application'  # Temporarily commented out
+
+# Channel layer configuration for WebSockets (temporarily commented out)
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             "hosts": [('127.0.0.1', 6379)],
+#         },
+#     },
+# }
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
