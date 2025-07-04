@@ -57,16 +57,33 @@ class Foods(models.Model):
     
 
 class Order(models.Model):
+    ORDER_TYPE_CHOICES = [
+        ('delivery', 'Delivery'),
+        ('dine_in', 'Dine In'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('preparing', 'Preparing'),
+        ('ready', 'Ready'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)  # for registered users
     created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=[
-        ('pending', 'Pending'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled'),
-    ], default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     notes = models.TextField(blank=True, null=True)
+    
+    # Order type and location fields
+    order_type = models.CharField(max_length=20, choices=ORDER_TYPE_CHOICES, default='delivery')
+    delivery_address = models.TextField(blank=True, null=True)  # For delivery orders
+    table_number = models.CharField(max_length=10, blank=True, null=True)  # For dine-in orders
+    customer_name = models.CharField(max_length=100, blank=True, null=True)  # For guest orders
+    customer_phone = models.CharField(max_length=15, blank=True, null=True)  # For contact
 
     def __str__(self):
         return f"Order #{self.id} by {self.customer or self.user or 'Guest'}"

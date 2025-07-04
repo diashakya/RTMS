@@ -626,15 +626,19 @@ def order_history(request):
     }
     return render(request, 'main/order_history.html', context)
 
-def thank_you(request):
+def thank_you(request, order_id=None):
     """Thank you page after successful order."""
-    order_id = request.GET.get('order_id')
+    # Try to get order_id from URL parameter first, then from GET parameter
+    if not order_id:
+        order_id = request.GET.get('order_id')
+    
     order = None
     if order_id:
         try:
             order = Order.objects.get(id=order_id)
         except Order.DoesNotExist:
             pass
+    
     return render(request, 'main/thank_you.html', {'order': order})
 
 @csrf_exempt
@@ -969,7 +973,7 @@ def handle_remove_item(request, cart):
     return redirect('cart')
 
 def handle_checkout(request, cart):
-    """Handle checkout form submission"""
+    """Handle checkout form submission with support for delivery and dine-in orders"""
     form = CheckoutForm(request.POST)
     if form.is_valid():
         # Get cart items
@@ -978,12 +982,16 @@ def handle_checkout(request, cart):
             messages.error(request, 'Your cart is empty.')
             return redirect('cart')
         
+        # Get order type and related data
+        order_type = form.cleaned_data['order_type']
+        table_number = form.cleaned_data.get('table_number', '')
+        
         # Create or get customer
         customer_data = {
             'customer_firstname': form.cleaned_data['customer_firstname'],
             'customer_lastname': form.cleaned_data['customer_lastname'],
             'customer_mobileno': form.cleaned_data['customer_mobileno'],
-            'customer_address': form.cleaned_data['customer_address'],
+            'customer_address': form.cleaned_data['customer_address'] if order_type == 'delivery' else '',
             'customer_email': form.cleaned_data['customer_email'],
             'customer_dob': timezone.now().date()  # Default DOB, you may want to add this to the form
         }
@@ -992,14 +1000,26 @@ def handle_checkout(request, cart):
             defaults=customer_data
         )
         
-        # Create order
+        # Create order with order type information
         payment_method = form.cleaned_data['payment_method']
         order_notes = form.cleaned_data['order_notes']
+        
+        # Prepare order notes with payment method and order type info
+        notes_parts = [f"Payment Method: {payment_method.title()}"]
+        if order_type == 'dine_in':
+            notes_parts.append(f"Table Number: {table_number}")
+        if order_notes:
+            notes_parts.append(order_notes)
         
         order = Order.objects.create(
             customer=customer,
             user=request.user if request.user.is_authenticated else None,
-            notes=f"Payment Method: {payment_method.title()}\n{order_notes}".strip(),
+            order_type=order_type,
+            delivery_address=form.cleaned_data['customer_address'] if order_type == 'delivery' else '',
+            table_number=table_number if order_type == 'dine_in' else '',
+            customer_name=f"{customer_data['customer_firstname']} {customer_data['customer_lastname']}",
+            customer_phone=customer_data['customer_mobileno'],
+            notes="\n".join(notes_parts),
             status='pending',
             total=cart.total_price
         )
@@ -1033,10 +1053,18 @@ def handle_checkout(request, cart):
         if order.user:
             send_order_status_notification(order, 'pending')
         
-        messages.success(request, f'Order #{order.id} placed successfully!')
+        # Success message based on order type
+        if order_type == 'delivery':
+            messages.success(request, f'Delivery order #{order.id} placed successfully! Your order will be delivered to your address.')
+        else:
+            messages.success(request, f'Dine-in order #{order.id} placed successfully! Please wait at table {table_number}.')
+        
         return redirect('thank_you', order_id=order.id)
     else:
-        messages.error(request, 'Please fill in all required fields correctly.')
+        # Show form errors
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f'{field}: {error}')
         return redirect('cart')
 
 def add_to_cart_form(request):

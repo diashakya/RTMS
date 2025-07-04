@@ -163,6 +163,42 @@ def test_api_endpoints():
     
     return True
 
+def test_order_types():
+    """Test the new order type functionality"""
+    print("\n🍽️ Testing Order Type Functionality...")
+    
+    # Test delivery order
+    delivery_order = Order.objects.create(
+        customer_name="Test Delivery Customer",
+        customer_phone="9876543210",
+        order_type='delivery',
+        delivery_address="123 Test Street, Test City",
+        total=500.00,
+        status='pending'
+    )
+    print(f"   ✅ Created delivery order: #{delivery_order.id}")
+    print(f"      📍 Address: {delivery_order.delivery_address}")
+    
+    # Test dine-in order
+    dine_in_order = Order.objects.create(
+        customer_name="Test Dine-In Customer", 
+        customer_phone="9876543211",
+        order_type='dine_in',
+        table_number="T-05",
+        total=350.00,
+        status='pending'
+    )
+    print(f"   ✅ Created dine-in order: #{dine_in_order.id}")
+    print(f"      🪑 Table: {dine_in_order.table_number}")
+    
+    # Test order type filtering
+    delivery_orders = Order.objects.filter(order_type='delivery').count()
+    dine_in_orders = Order.objects.filter(order_type='dine_in').count()
+    print(f"   ✅ Total delivery orders: {delivery_orders}")
+    print(f"   ✅ Total dine-in orders: {dine_in_orders}")
+    
+    return True
+
 def main():
     """Run all tests"""
     print("🚀 Restaurant Management System - Functionality Test")
@@ -172,6 +208,7 @@ def main():
         test_database_connectivity()
         test_cart_functionality()
         test_order_functionality()
+        test_order_types()  # Add new test
         test_favorites_functionality()
         test_api_endpoints()
         
@@ -181,12 +218,14 @@ def main():
         print("   • Database connectivity and models")
         print("   • Cart operations (add/update/calculate)")
         print("   • Order management")
+        print("   • Order types (Delivery & Dine-In)")  # Add new feature
         print("   • Favorites system")
         print("   • API endpoints")
         print("\n🔧 Manual Testing Recommended:")
         print("   • Visit http://127.0.0.1:8000/")
         print("   • Test user registration/login")
         print("   • Test adding items to cart")
+        print("   • Test order type selection (delivery vs dine-in)")  # Add new test
         print("   • Test Quick View modal")
         print("   • Test WebSocket notifications")
         print("   • Test order placement")

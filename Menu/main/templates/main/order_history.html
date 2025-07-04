@@ -116,6 +116,38 @@
                         </span>
                     </div>
                     
+                    <!-- Order Type Information -->
+                    <div class="order-type-info" style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            {% if order.order_type == 'delivery' %}
+                                <i class="fas fa-truck text-primary" style="font-size: 1.2em;"></i>
+                                <div>
+                                    <strong style="color: #333;">Delivery Order</strong>
+                                    {% if order.delivery_address %}
+                                        <div style="font-size: 0.9em; color: #666; margin-top: 3px;">
+                                            <i class="fas fa-map-marker-alt" style="margin-right: 5px;"></i>
+                                            {{ order.delivery_address|truncatechars:50 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% elif order.order_type == 'dine_in' %}
+                                <i class="fas fa-utensils text-warning" style="font-size: 1.2em;"></i>
+                                <div>
+                                    <strong style="color: #333;">Dine In Order</strong>
+                                    {% if order.table_number %}
+                                        <div style="font-size: 0.9em; color: #666; margin-top: 3px;">
+                                            <i class="fas fa-chair" style="margin-right: 5px;"></i>
+                                            Table: {{ order.table_number }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <i class="fas fa-shopping-bag text-info" style="font-size: 1.2em;"></i>
+                                <strong style="color: #333;">Order</strong>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
                     <div class="order-items" style="margin: 15px 0;">
                         <h6 style="color: #666; font-size: 0.9em; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Items Ordered:</h6>
                         <ul style="list-style: none; padding: 0; margin: 0;">

@@ -37,7 +37,7 @@
                         {{ item.special.name }} <small class="text-warning">(Special)</small>
                     {% endif %}
                     </span>
-                    <span style="float: right; font-weight: bold;">Rs {{ item.price|mul:item.quantity|floatformat:2 }}</span>
+                    <span style="float: right; font-weight: bold;">Rs {{ item.total_price|floatformat:2 }}</span>
                 </li>
                 {% endfor %}
             </ul>

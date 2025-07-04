@@ -86,6 +86,66 @@
         margin-right: 10px;
     }
     
+    /* Order Type & Payment Method Styling */
+    .order-type-option, .payment-option {
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 10px 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: #fff;
+        position: relative;
+    }
+    
+    .order-type-option:hover, .payment-option:hover {
+        border-color: #f76d37;
+        box-shadow: 0 2px 8px rgba(247, 109, 55, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    .order-type-option input[type="radio"], .payment-option input[type="radio"] {
+        width: 20px;
+        height: 20px;
+        margin-right: 15px;
+        accent-color: #f76d37;
+        cursor: pointer;
+    }
+    
+    .order-type-option label, .payment-option label {
+        width: 100%;
+        cursor: pointer;
+        margin: 0;
+    }
+    
+    .order-type-option.selected, .payment-option.selected {
+        border-color: #f76d37;
+        background-color: #fff5f0;
+        box-shadow: 0 4px 12px rgba(247, 109, 55, 0.3);
+    }
+    
+    /* Form Field Styling */
+    #id_table_number, #id_customer_address {
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        transition: border-color 0.3s ease;
+    }
+    
+    #id_table_number:focus, #id_customer_address:focus {
+        border-color: #f76d37;
+        box-shadow: 0 0 0 0.2rem rgba(247, 109, 55, 0.25);
+    }
+    
+    /* Section Headers */
+    .section-header {
+        color: #333;
+        font-weight: bold;
+        margin-bottom: 15px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #f76d37;
+        display: inline-block;
+    }
+    
     .checkout-btn {
         background: linear-gradient(45deg, #f76d37, #e55829);
         color: white;
@@ -197,7 +257,43 @@
             <form method="post">
                 {% csrf_token %}
                 
+                <!-- Order Type Selection -->
+                <div class="mb-4">
+                    <h5 class="section-header">
+                        <i class="fas fa-map-marker-alt" style="margin-right: 10px;"></i>Order Type *
+                    </h5>
+                    <div class="order-type-selection">
+                        {% for choice in checkout_form.order_type %}
+                            <div class="order-type-option" data-order-type="{{ choice.choice_value }}">
+                                <label class="d-flex align-items-center" style="cursor: pointer; margin-bottom: 0;">
+                                    {{ choice.tag }}
+                                    <div class="ms-3">
+                                        {% if choice.choice_value == 'delivery' %}
+                                            <i class="fas fa-truck text-primary" style="font-size: 1.5em; margin-right: 10px;"></i>
+                                            <div>
+                                                <strong>Delivery</strong>
+                                                <p class="mb-0 text-muted">Get your order delivered to your address</p>
+                                            </div>
+                                        {% elif choice.choice_value == 'dine_in' %}
+                                            <i class="fas fa-utensils text-warning" style="font-size: 1.5em; margin-right: 10px;"></i>
+                                            <div>
+                                                <strong>Dine In</strong>
+                                                <p class="mb-0 text-muted">Order for your table at the restaurant</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
                 <!-- Customer Details -->
+                <div class="mb-4">
+                    <h5 class="section-header">
+                        <i class="fas fa-user" style="margin-right: 10px;"></i>Customer Information *
+                    </h5>
+                </div>
                 <div class="row mb-4">
                     <div class="col-md-6 mb-3">
                         <label class="form-label" style="font-weight: bold;">First Name *</label>
@@ -215,36 +311,48 @@
                         <label class="form-label" style="font-weight: bold;">Email Address *</label>
                         {{ checkout_form.customer_email }}
                     </div>
-                    <div class="col-12 mb-3">
+                    <div class="col-12 mb-3" id="delivery-address-section">
                         <label class="form-label" style="font-weight: bold;">Delivery Address *</label>
                         {{ checkout_form.customer_address }}
+                    </div>
+                    <div class="col-12 mb-3" id="table-number-section" style="display: none;">
+                        <label class="form-label" style="font-weight: bold;">Table Number *</label>
+                        {{ checkout_form.table_number }}
                     </div>
                 </div>
                 
                 <!-- Payment Method -->
                 <div class="mb-4">
-                    <label class="form-label" style="font-weight: bold; margin-bottom: 15px;">Payment Method *</label>
+                    <h5 class="section-header">
+                        <i class="fas fa-credit-card" style="margin-right: 10px;"></i>Payment Method *
+                    </h5>
                     <div class="payment-methods">
                         {% for choice in checkout_form.payment_method %}
                             <div class="payment-option">
-                                <div class="d-flex align-items-center">
+                                <label class="d-flex align-items-center" style="cursor: pointer; margin-bottom: 0;">
                                     {{ choice.tag }}
                                     <div class="ms-3">
                                         {% if choice.choice_value == 'cash' %}
                                             <i class="fas fa-money-bill-wave text-success" style="font-size: 1.5em; margin-right: 10px;"></i>
-                                            <strong>Cash on Delivery</strong>
-                                            <p class="mb-0 text-muted">Pay when order arrives</p>
+                                            <div>
+                                                <strong>Cash Payment</strong>
+                                                <p class="mb-0 text-muted">Pay with cash</p>
+                                            </div>
                                         {% elif choice.choice_value == 'card' %}
                                             <i class="fas fa-credit-card text-primary" style="font-size: 1.5em; margin-right: 10px;"></i>
-                                            <strong>Card Payment</strong>
-                                            <p class="mb-0 text-muted">Pay with debit/credit card</p>
+                                            <div>
+                                                <strong>Card Payment</strong>
+                                                <p class="mb-0 text-muted">Pay with debit/credit card</p>
+                                            </div>
                                         {% elif choice.choice_value == 'wallet' %}
                                             <i class="fas fa-wallet text-info" style="font-size: 1.5em; margin-right: 10px;"></i>
-                                            <strong>Digital Wallet</strong>
-                                            <p class="mb-0 text-muted">eSewa, Khalti, etc.</p>
+                                            <div>
+                                                <strong>Digital Wallet</strong>
+                                                <p class="mb-0 text-muted">eSewa, Khalti, etc.</p>
+                                            </div>
                                         {% endif %}
                                     </div>
-                                </div>
+                                </label>
                             </div>
                         {% endfor %}
                     </div>
@@ -276,4 +384,116 @@
         </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle order type selection
+    const orderTypeRadios = document.querySelectorAll('input[name="order_type"]');
+    const deliverySection = document.getElementById('delivery-address-section');
+    const tableSection = document.getElementById('table-number-section');
+    const addressField = document.querySelector('#id_customer_address');
+    const tableField = document.querySelector('#id_table_number');
+    const orderTypeOptions = document.querySelectorAll('.order-type-option');
+    const paymentOptions = document.querySelectorAll('.payment-option');
+    const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
+    
+    // Function to toggle fields based on order type
+    function toggleOrderTypeFields() {
+        const selectedRadio = document.querySelector('input[name="order_type"]:checked');
+        if (!selectedRadio) return;
+        
+        const selectedType = selectedRadio.value;
+        
+        if (selectedType === 'delivery') {
+            deliverySection.style.display = 'block';
+            tableSection.style.display = 'none';
+            if (addressField) addressField.required = true;
+            if (tableField) tableField.required = false;
+        } else if (selectedType === 'dine_in') {
+            deliverySection.style.display = 'none';
+            tableSection.style.display = 'block';
+            if (addressField) addressField.required = false;
+            if (tableField) tableField.required = true;
+        }
+        
+        // Update visual feedback
+        updateOrderTypeVisual();
+    }
+    
+    // Update visual feedback for order type selection
+    function updateOrderTypeVisual() {
+        const selectedRadio = document.querySelector('input[name="order_type"]:checked');
+        orderTypeOptions.forEach(option => {
+            option.style.borderColor = '#ddd';
+            option.style.backgroundColor = '#fff';
+        });
+        
+        if (selectedRadio) {
+            const selectedOption = selectedRadio.closest('.order-type-option');
+            if (selectedOption) {
+                selectedOption.style.borderColor = '#f76d37';
+                selectedOption.style.backgroundColor = '#fff5f0';
+            }
+        }
+    }
+    
+    // Update visual feedback for payment method selection
+    function updatePaymentVisual() {
+        const selectedRadio = document.querySelector('input[name="payment_method"]:checked');
+        paymentOptions.forEach(option => {
+            option.style.borderColor = '#ddd';
+            option.style.backgroundColor = '#fff';
+        });
+        
+        if (selectedRadio) {
+            const selectedOption = selectedRadio.closest('.payment-option');
+            if (selectedOption) {
+                selectedOption.style.borderColor = '#f76d37';
+                selectedOption.style.backgroundColor = '#fff5f0';
+            }
+        }
+    }
+    
+    // Add event listeners to order type radios
+    orderTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            toggleOrderTypeFields();
+            updateOrderTypeVisual();
+        });
+    });
+    
+    // Add event listeners to payment method radios
+    paymentRadios.forEach(radio => {
+        radio.addEventListener('change', updatePaymentVisual);
+    });
+    
+    // Add click handlers for better UX (clicking anywhere on the option)
+    orderTypeOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio && !radio.checked) {
+                radio.checked = true;
+                toggleOrderTypeFields();
+                updateOrderTypeVisual();
+            }
+        });
+    });
+    
+    paymentOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio && !radio.checked) {
+                radio.checked = true;
+                updatePaymentVisual();
+            }
+        });
+    });
+    
+    // Initialize on page load
+    toggleOrderTypeFields();
+    updateOrderTypeVisual();
+    updatePaymentVisual();
+});
+</script>
+
 {% endblock %}
