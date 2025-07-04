@@ -405,8 +405,10 @@
         let notificationSocket = null;
         
         function connectNotifications() {
+            console.log('Attempting to connect to WebSocket...');
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = protocol + '//' + window.location.host + '/ws/notifications/{{ request.user.id }}/';
+            const wsUrl = protocol + '//' + window.location.host + '/ws/notifications/';
+            console.log('WebSocket URL:', wsUrl);
             
             notificationSocket = new WebSocket(wsUrl);
             

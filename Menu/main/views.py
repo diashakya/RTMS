@@ -252,18 +252,7 @@ def remove_favorite(request):
     except Favorite.DoesNotExist:
         return Response({'success': False, 'error': 'Not favorited'}, status=400)
 
-@api_view(['GET'])
-def food_detail(request, pk):
-    try:
-        food = Foods.objects.get(pk=pk)
-    except Foods.DoesNotExist:
-        return Response({'error': 'Not found'}, status=404)
-    serializer = FoodsSerializer(food)
-    data = serializer.data
-    # Convert image field to absolute URL
-    if data.get('image'):
-        data['image'] = request.build_absolute_uri(data['image'])
-    return Response(data)
+
 
 # ......................................................Cart & Order Views.......................
 
@@ -931,6 +920,7 @@ def food_detail(request, pk):
             'category': food.category.name if food.category else None,
             'description': food.description or '',
             'is_spicy': food.is_spicy,
+            'is_vegetarian': food.is_vegetarian,
             'rating': float(food.rating) if food.rating else 0,
         }
         return JsonResponse(food_data)

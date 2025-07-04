@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", function() {
     initTodaysSpecial();
     initCartSystem();
     initFavorites();
+    initQuickView();
     updateCartBadge();
     updateFavoritesBadge();
 });
@@ -229,85 +230,282 @@ if (backToTopBtn) {
     });
 }
 
-// Quick View Functionality
-document.querySelectorAll('.quick-view-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const itemId = btn.dataset.id;
-        // Implement quick view modal functionality
-        showQuickViewModal(itemId);
-    });
-});
-
-// Favorite Button Functionality
-document.querySelectorAll('.favorite-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const itemId = btn.dataset.id;
-        const icon = btn.querySelector('i');
-        
-        if (icon.classList.contains('far')) {
-            icon.classList.remove('far');
-            icon.classList.add('fas');
-            // Add to favorites
-            addToFavorites(itemId);
-        } else {
-            icon.classList.remove('fas');
-            icon.classList.add('far');
-            // Remove from favorites
-            removeFromFavorites(itemId);
-        }
-    });
-});
-
-// Share Button Functionality
-document.querySelectorAll('.share-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const itemId = btn.dataset.id;
-        shareItem(itemId);
-    });
-});
-
-// Quick Actions Buttons
-const reservationBtn = document.getElementById('reservation-btn');
-if (reservationBtn) {
-    reservationBtn.addEventListener('click', () => {
-        // Implement reservation functionality
-        window.location.href = '/reservation/';
+/* ---------------------------------------- Quick View Functionality ---------------------------------------- */
+function initQuickView() {
+    document.querySelectorAll('.quick-view-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const itemId = btn.dataset.id;
+            showQuickViewModal(itemId);
+        });
     });
 }
 
-const cateringBtn = document.getElementById('catering-btn');
-if (cateringBtn) {
-    cateringBtn.addEventListener('click', () => {
-        // Implement catering services functionality
-        window.location.href = '/catering/';
+/* ---------------------------------------- Favorite Button Functionality ---------------------------------------- */
+function initFavorites() {
+    document.querySelectorAll('.favorite-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const itemId = btn.dataset.id;
+            const icon = btn.querySelector('i');
+            
+            if (icon.classList.contains('far')) {
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                // Add to favorites
+                addToFavorites(itemId);
+            } else {
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+                // Remove from favorites
+                removeFromFavorites(itemId);
+            }
+        });
     });
 }
 
-const giftCardBtn = document.getElementById('gift-card-btn');
-if (giftCardBtn) {
-    giftCardBtn.addEventListener('click', () => {
-        // Implement gift card functionality
-        window.location.href = '/gift-cards/';
+/* ---------------------------------------- Share Button Functionality ---------------------------------------- */
+function initShareButtons() {
+    document.querySelectorAll('.share-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const itemId = btn.dataset.id;
+            shareItem(itemId);
+        });
     });
 }
 
-// Helper Functions
+/* ---------------------------------------- Quick Actions Buttons ---------------------------------------- */
+function initQuickActions() {
+    const reservationBtn = document.getElementById('reservation-btn');
+    if (reservationBtn) {
+        reservationBtn.addEventListener('click', () => {
+            // Implement reservation functionality
+            window.location.href = '/reservation/';
+        });
+    }
+
+    const cateringBtn = document.getElementById('catering-btn');
+    if (cateringBtn) {
+        cateringBtn.addEventListener('click', () => {
+            // Implement catering services functionality
+            window.location.href = '/catering/';
+        });
+    }
+
+    const giftCardBtn = document.getElementById('gift-card-btn');
+    if (giftCardBtn) {
+        giftCardBtn.addEventListener('click', () => {
+            // Implement gift card functionality
+            window.location.href = '/gift-cards/';
+        });
+    }
+}
+
+/* ---------------------------------------- Helper Functions ---------------------------------------- */
 function showQuickViewModal(itemId) {
-    // Implement quick view modal
-    console.log('Quick view for item:', itemId);
+    // Fetch item details from server
+    fetch(`/api/foods/${itemId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showNotification('Error loading item details', 'error');
+                return;
+            }
+            populateQuickViewModal(data);
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('quickViewModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error fetching item details:', error);
+            showNotification('Error loading item details', 'error');
+        });
+}
+
+function populateQuickViewModal(itemData) {
+    // Populate modal with item data
+    document.getElementById('quick-view-title').textContent = itemData.title;
+    document.getElementById('quick-view-description').textContent = itemData.description || 'No description available';
+    document.getElementById('quick-view-price').textContent = `Rs ${itemData.price}`;
+    document.getElementById('quick-view-item-id').value = itemData.id;
+    
+    // Set image
+    const imageElement = document.getElementById('quick-view-image');
+    if (itemData.image) {
+        imageElement.src = itemData.image;
+        imageElement.alt = itemData.title;
+    } else {
+        // Use a CSS-based placeholder
+        imageElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgdmlld0JveD0iMCAwIDQwMCA0MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiBmaWxsPSIjRjhGOUZBIi8+CjxwYXRoIGQ9Ik0xNjAgMTgwSDI0MFYyMjBIMTYwVjE4MFoiIGZpbGw9IiNERUUyRTYiLz4KPHBhdGggZD0iTTE4MCAyMDBIMjIwVjI0MEgxODBWMjAwWiIgZmlsbD0iI0RFRTJFNiIvPgo8dGV4dCB4PSIyMDAiIHk9IjI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzZCNzI4MCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2Ij5ObyBJbWFnZTwvdGV4dD4KPC9zdmc+';
+        imageElement.alt = 'No image available';
+    }
+    
+    // Set category
+    const categoryElement = document.getElementById('quick-view-category');
+    categoryElement.textContent = itemData.category || 'Uncategorized';
+    
+    // Set rating
+    const ratingElement = document.getElementById('quick-view-rating');
+    ratingElement.textContent = itemData.rating || '4.5';
+    
+    // Set calories if available
+    const caloriesElement = document.getElementById('quick-view-calories');
+    if (itemData.calories) {
+        caloriesElement.textContent = `${itemData.calories} cal`;
+        caloriesElement.style.display = 'inline';
+    } else {
+        caloriesElement.style.display = 'none';
+    }
+    
+    // Set dietary badges
+    const dietaryInfoElement = document.getElementById('quick-view-dietary-info');
+    let dietaryBadges = '';
+    if (itemData.is_vegetarian) {
+        dietaryBadges += '<span class="badge bg-success me-2"><i class="fas fa-leaf"></i> Vegetarian</span>';
+    }
+    if (itemData.is_spicy) {
+        dietaryBadges += '<span class="badge bg-warning me-2"><i class="fas fa-pepper-hot"></i> Spicy</span>';
+    }
+    dietaryInfoElement.innerHTML = dietaryBadges;
+    
+    // Reset quantity to 1
+    document.getElementById('modal-quantity').value = 1;
+    
+    // Reset favorite status (you could enhance this to check actual favorite status)
+    updateModalFavoriteButton(false);
+}
+
+function updateModalQuantity(change) {
+    const quantityInput = document.getElementById('modal-quantity');
+    let currentQuantity = parseInt(quantityInput.value) || 1;
+    let newQuantity = currentQuantity + change;
+    
+    // Ensure quantity stays within bounds
+    if (newQuantity < 1) newQuantity = 1;
+    if (newQuantity > 50) newQuantity = 50;
+    
+    quantityInput.value = newQuantity;
+}
+
+function toggleModalFavorite() {
+    const icon = document.getElementById('modal-favorite-icon');
+    const text = document.getElementById('modal-favorite-text');
+    const itemId = document.getElementById('quick-view-item-id').value;
+    
+    if (icon.classList.contains('far') || text.textContent === 'Add to Favorites') {
+        // Add to favorites
+        addToFavorites(itemId);
+        updateModalFavoriteButton(true);
+    } else {
+        // Remove from favorites
+        removeFromFavorites(itemId);
+        updateModalFavoriteButton(false);
+    }
+}
+
+function updateModalFavoriteButton(isFavorite) {
+    const icon = document.getElementById('modal-favorite-icon');
+    const text = document.getElementById('modal-favorite-text');
+    
+    if (isFavorite) {
+        icon.className = 'fas fa-heart';
+        text.textContent = 'Remove from Favorites';
+    } else {
+        icon.className = 'far fa-heart';
+        text.textContent = 'Add to Favorites';
+    }
+}
+
+function shareModalItem() {
+    const title = document.getElementById('quick-view-title').textContent;
+    const itemId = document.getElementById('quick-view-item-id').value;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: `Check out ${title}!`,
+            text: `I found this delicious ${title} on our restaurant website!`,
+            url: `${window.location.origin}/menu/?item=${itemId}`
+        }).catch(err => console.log('Error sharing:', err));
+    } else {
+        // Fallback: copy to clipboard
+        const url = `${window.location.origin}/menu/?item=${itemId}`;
+        navigator.clipboard.writeText(url).then(() => {
+            showNotification('Link copied to clipboard!', 'success');
+        }).catch(() => {
+            showNotification('Unable to share. Try again later.', 'error');
+        });
+    }
 }
 
 function addToFavorites(itemId) {
-    // Implement add to favorites
-    console.log('Added to favorites:', itemId);
+    if (!checkAuthentication()) return;
+    
+    fetch('/api/toggle-favorite/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({
+            food_id: itemId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.action === 'added') {
+                showNotification(data.message, 'success');
+                updateFavoritesBadge(data.favorites_count);
+            }
+        } else {
+            showNotification('Error: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error adding to favorites', 'error');
+    });
 }
 
 function removeFromFavorites(itemId) {
-    // Implement remove from favorites
-    console.log('Removed from favorites:', itemId);
+    if (!checkAuthentication()) return;
+    
+    fetch('/api/toggle-favorite/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({
+            food_id: itemId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.action === 'removed') {
+                showNotification(data.message, 'success');
+                updateFavoritesBadge(data.favorites_count);
+            }
+        } else {
+            showNotification('Error: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error removing from favorites', 'error');
+    });
+}
+
+function checkAuthentication() {
+    // Simple check - you could enhance this
+    const userGreeting = document.querySelector('.user-greeting');
+    if (!userGreeting) {
+        showNotification('Please login to add favorites', 'warning');
+        return false;
+    }
+    return true;
 }
 
 function shareItem(itemId) {
@@ -504,29 +702,11 @@ function initFavorites() {
     });
 }
 
-function updateFavoritesBadge(count = null) {
-    const favCount = document.getElementById('favorites-count');
-    if (!favCount) return;
-    
-    if (count !== null) {
-        favCount.textContent = count;
-        return;
+function updateFavoritesBadge(count) {
+    const badge = document.getElementById('favorites-count');
+    if (badge) {
+        badge.textContent = count || 0;
     }
-    
-    // Fetch current count
-    fetch('/api/favorites/', {
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Not authenticated');
-        return response.json();
-    })
-    .then(data => {
-        favCount.textContent = data.length;
-    })
-    .catch(() => {
-        favCount.textContent = '0';
-    });
 }
 
 // Notification system

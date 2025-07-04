@@ -53,9 +53,9 @@ def send_user_notification(user_id, title, message, notification_type='info'):
     channel_layer = get_channel_layer()
     if channel_layer:
         async_to_sync(channel_layer.group_send)(
-            f'notifications_{user_id}',
+            f'user_{user_id}',
             {
-                'type': 'user_notification',
+                'type': 'notification',
                 'title': title,
                 'message': message,
                 'notification_type': notification_type,

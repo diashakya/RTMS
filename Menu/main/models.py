@@ -47,7 +47,9 @@ class Foods(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     price = models.DecimalField(decimal_places=2,max_digits=8)
     image = models.ImageField(upload_to="Foods")
+    description = models.TextField(blank=True, null=True)
     is_spicy = models.BooleanField(default=False)
+    is_vegetarian = models.BooleanField(default=False)
     rating = models.DecimalField(max_digits=3, decimal_places=1, default=0)
 
     def __str__(self):
