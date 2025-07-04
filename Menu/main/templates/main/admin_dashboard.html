@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="margin-top: 20px;">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar" style="height: 100vh; position: fixed; top: 0; left: 0; padding-top: 80px;">
+            <div class="position-sticky pt-3">
+                <h5 class="text-center mb-4" style="color: #f76d37; font-weight: bold;">Admin Panel</h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'admin_dashboard' %}" style="color: #f76d37;">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'manage_orders' %}" style="color: #333;">
+                            <i class="fas fa-shopping-cart"></i> Manage Orders
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'generate_qr_codes' %}" style="color: #333;">
+                            <i class="fas fa-qrcode"></i> QR Codes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/" style="color: #333;">
+                            <i class="fas fa-utensils"></i> Manage Menu
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'index' %}" style="color: #333;">
+                            <i class="fas fa-home"></i> Back to Website
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4" style="margin-left: 16.666667%;">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2" style="color: #f76d37;">Restaurant Dashboard</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-start-primary shadow h-100 py-2" style="border-left: 4px solid #f76d37;">
+                        <div class="card-body">
+                            <div class="row g-0 align-items-center">
+                                <div class="col me-2">
+                                    <div class="text-xs fw-bold text-primary text-uppercase mb-1" style="color: #f76d37 !important;">
+                                        Total Orders</div>
+                                    <div class="h5 mb-0 fw-bold text-gray-800">{{ total_orders }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-start-warning shadow h-100 py-2" style="border-left: 4px solid #f39c12;">
+                        <div class="card-body">
+                            <div class="row g-0 align-items-center">
+                                <div class="col me-2">
+                                    <div class="text-xs fw-bold text-warning text-uppercase mb-1">
+                                        Pending Orders</div>
+                                    <div class="h5 mb-0 fw-bold text-gray-800">{{ pending_orders }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-clock fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-start-success shadow h-100 py-2" style="border-left: 4px solid #28a745;">
+                        <div class="card-body">
+                            <div class="row g-0 align-items-center">
+                                <div class="col me-2">
+                                    <div class="text-xs fw-bold text-success text-uppercase mb-1">
+                                        Completed Orders</div>
+                                    <div class="h5 mb-0 fw-bold text-gray-800">{{ completed_orders }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-start-info shadow h-100 py-2" style="border-left: 4px solid #17a2b8;">
+                        <div class="card-body">
+                            <div class="row g-0 align-items-center">
+                                <div class="col me-2">
+                                    <div class="text-xs fw-bold text-info text-uppercase mb-1">
+                                        Total Revenue</div>
+                                    <div class="h5 mb-0 fw-bold text-gray-800">Rs {{ total_revenue|floatformat:2 }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Orders Table -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 fw-bold" style="color: #f76d37;">Recent Orders</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td>#{{ order.id }}</td>
+                                    <td>
+                                        {% if order.user %}
+                                            {{ order.user.first_name }} {{ order.user.last_name }}
+                                        {% elif order.customer %}
+                                            {{ order.customer.customer_firstname }} {{ order.customer.customer_lastname }}
+                                        {% else %}
+                                            Guest
+                                        {% endif %}
+                                    </td>
+                                    <td>Rs {{ order.total|floatformat:2 }}</td>
+                                    <td>
+                                        <span class="badge {% if order.status == 'pending' %}bg-warning{% elif order.status == 'completed' %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ order.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                Actions
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#" data-order-id="{{ order.id }}" data-status="pending" onclick="updateOrderStatus(this.dataset.orderId, this.dataset.status)">Mark Pending</a></li>
+                                                <li><a class="dropdown-item" href="#" data-order-id="{{ order.id }}" data-status="completed" onclick="updateOrderStatus(this.dataset.orderId, this.dataset.status)">Mark Completed</a></li>
+                                                <li><a class="dropdown-item" href="#" data-order-id="{{ order.id }}" data-status="cancelled" onclick="updateOrderStatus(this.dataset.orderId, this.dataset.status)">Cancel Order</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No orders found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+function updateOrderStatus(orderId, status) {
+    fetch(`/update-order-status/${orderId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({status: status})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Order status updated successfully!');
+            location.reload();
+        } else {
+            alert('Error updating order status: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating order status.');
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+<style>
+.sidebar {
+    box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+}
+
+.nav-link {
+    padding: 12px 20px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    transition: all 0.3s;
+}
+
+.nav-link:hover {
+    background-color: #f8f9fa;
+    color: #f76d37 !important;
+}
+
+.nav-link.active {
+    background-color: #f76d37;
+    color: white !important;
+}
+
+.card {
+    border: none;
+    border-radius: 8px;
+}
+
+.bg-warning {
+    background-color: #f39c12 !important;
+}
+
+.bg-success {
+    background-color: #28a745 !important;
+}
+
+.bg-danger {
+    background-color: #dc3545 !important;
+}
+</style>
+{% endblock %}

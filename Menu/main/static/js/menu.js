@@ -16,6 +16,10 @@ document.addEventListener("DOMContentLoaded", function() {
     initAddToCart();
     initTodaysSpecial();
     initCartSystem();
+    initFavorites();
+    initQuickView();
+    updateCartBadge();
+    updateFavoritesBadge();
 });
 
 /* ---------------------------------------- Category Filtering ---------------------------------------- */
@@ -85,20 +89,73 @@ function initSearchFunctionality() {
 
 /* ---------------------------------------- Add to Cart Functionality ---------------------------------------- */
 function initAddToCart() {
-    const addToCartBtns = document.querySelectorAll(".add-to-cart-btn");
+    // Forms will submit normally to the server, no AJAX needed
+    // Quantity controls are handled by the updateQuantity function
+}
 
-    addToCartBtns.forEach(btn => {
-        btn.addEventListener("click", function() {
-            const itemCard = this.closest(".menu-item-card, .special-item-card");
-            const itemId = this.dataset.id;
-            const itemName = itemCard.querySelector("h3").textContent;
-            const itemPrice = itemCard.querySelector(".item-price").textContent;
-            const quantity = itemCard.querySelector(".quantity")?.textContent || "1";
-
-            console.log(`Added to cart: ${quantity}x ${itemName} - ${itemPrice}`);
-            // TODO: Implement actual cart functionality
-        });
+function addToCartAjax(itemType, itemId, quantity) {
+    const csrfToken = getCookie('csrftoken');
+    
+    fetch('/api/add-to-cart/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+        },
+        body: JSON.stringify({
+            type: itemType,
+            id: itemId,
+            quantity: quantity
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            updateCartBadge(data.cart_count);
+            shakeCartIcon();
+        } else {
+            showNotification('Error adding to cart: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error adding to cart', 'error');
     });
+}
+
+function updateCartBadge(count) {
+    const badge = document.getElementById('cart-count');
+    if (badge) {
+        badge.textContent = count || 0;
+    }
+}
+function showCartNotification(message, quantity) {
+    const notif = document.getElementById('cart-notification');
+    const msg = document.getElementById('cart-notification-msg');
+    if (notif && msg) {
+        msg.textContent = message;
+        notif.style.display = 'block';
+        setTimeout(() => { notif.style.display = 'none'; }, 1500);
+    }
+}
+
+/* ---------------------------------------- Quantity Controls ---------------------------------------- */
+function updateQuantity(button, change) {
+    const container = button.closest(".quantity-controls");
+    if (!container) return;
+    
+    const quantityInput = container.querySelector(".quantity");
+    if (!quantityInput) return;
+    
+    let currentQuantity = parseInt(quantityInput.value) || 1;
+    let newQuantity = currentQuantity + change;
+    
+    // Ensure quantity stays within bounds
+    if (newQuantity < 1) newQuantity = 1;
+    if (newQuantity > 50) newQuantity = 50;
+    
+    quantityInput.value = newQuantity;
 }
 
 /* ---------------------------------------- Today's Special Section ---------------------------------------- */
@@ -107,7 +164,11 @@ function initTodaysSpecial() {
     document.querySelectorAll(".quantity-btn").forEach(btn => {
         btn.addEventListener("click", function() {
             const container = this.closest(".quantity-controls");
+            if (!container) return; // Exit if no container found
+            
             const quantityElement = container.querySelector(".quantity");
+            if (!quantityElement) return; // Exit if no quantity element found
+            
             let quantity = parseInt(quantityElement.textContent);
 
             if (this.classList.contains("minus") && quantity > 1) {
@@ -120,17 +181,15 @@ function initTodaysSpecial() {
         });
     });
 
-    // Special items add to cart
+    // Special items add to cart - now handled by server-side forms
+    // This section has been updated to use Django forms instead of JavaScript
     document.querySelectorAll(".special-item-card .add-to-cart-btn").forEach(btn => {
         btn.addEventListener("click", function() {
+            // Cart addition is now handled by Django forms in the template
+            // This event listener is kept for any additional UI feedback
             const card = this.closest(".special-item-card");
-            const itemId = this.dataset.id;
             const itemName = card.querySelector("h3").textContent;
-            const quantity = parseInt(card.querySelector(".quantity").textContent);
-            const price = parseFloat(card.querySelector(".item-price").textContent.replace("Rs ", ""));
-
-            console.log(`Added to cart: ${quantity}x ${itemName} - Rs ${(price * quantity).toFixed(2)}`);
-            // TODO: Implement actual cart functionality
+            console.log(`Adding to cart: ${itemName} (handled by Django form)`);
         });
     });
 }
@@ -154,91 +213,299 @@ function getCookie(name) {
 // Back to Top Button
 const backToTopBtn = document.getElementById('back-to-top');
 
-window.addEventListener('scroll', () => {
-    if (window.pageYOffset > 300) {
-        backToTopBtn.style.display = 'flex';
-    } else {
-        backToTopBtn.style.display = 'none';
-    }
-});
-
-backToTopBtn.addEventListener('click', () => {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
-});
-
-// Quick View Functionality
-document.querySelectorAll('.quick-view-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const itemId = btn.dataset.id;
-        // Implement quick view modal functionality
-        showQuickViewModal(itemId);
-    });
-});
-
-// Favorite Button Functionality
-document.querySelectorAll('.favorite-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const itemId = btn.dataset.id;
-        const icon = btn.querySelector('i');
-        
-        if (icon.classList.contains('far')) {
-            icon.classList.remove('far');
-            icon.classList.add('fas');
-            // Add to favorites
-            addToFavorites(itemId);
+if (backToTopBtn) {
+    window.addEventListener('scroll', () => {
+        if (window.pageYOffset > 300) {
+            backToTopBtn.style.display = 'flex';
         } else {
-            icon.classList.remove('fas');
-            icon.classList.add('far');
-            // Remove from favorites
-            removeFromFavorites(itemId);
+            backToTopBtn.style.display = 'none';
         }
     });
-});
 
-// Share Button Functionality
-document.querySelectorAll('.share-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const itemId = btn.dataset.id;
-        shareItem(itemId);
+    backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     });
-});
+}
 
-// Quick Actions Buttons
-document.getElementById('reservation-btn').addEventListener('click', () => {
-    // Implement reservation functionality
-    window.location.href = '/reservation/';
-});
+/* ---------------------------------------- Quick View Functionality ---------------------------------------- */
+function initQuickView() {
+    document.querySelectorAll('.quick-view-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const itemId = btn.dataset.id;
+            showQuickViewModal(itemId);
+        });
+    });
+}
 
-document.getElementById('catering-btn').addEventListener('click', () => {
-    // Implement catering services functionality
-    window.location.href = '/catering/';
-});
+/* ---------------------------------------- Favorite Button Functionality ---------------------------------------- */
+function initFavorites() {
+    document.querySelectorAll('.favorite-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const itemId = btn.dataset.id;
+            const icon = btn.querySelector('i');
+            
+            if (icon.classList.contains('far')) {
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                // Add to favorites
+                addToFavorites(itemId);
+            } else {
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+                // Remove from favorites
+                removeFromFavorites(itemId);
+            }
+        });
+    });
+}
 
-document.getElementById('gift-card-btn').addEventListener('click', () => {
-    // Implement gift card functionality
-    window.location.href = '/gift-cards/';
-});
+/* ---------------------------------------- Share Button Functionality ---------------------------------------- */
+function initShareButtons() {
+    document.querySelectorAll('.share-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const itemId = btn.dataset.id;
+            shareItem(itemId);
+        });
+    });
+}
 
-// Helper Functions
+/* ---------------------------------------- Quick Actions Buttons ---------------------------------------- */
+function initQuickActions() {
+    const reservationBtn = document.getElementById('reservation-btn');
+    if (reservationBtn) {
+        reservationBtn.addEventListener('click', () => {
+            // Implement reservation functionality
+            window.location.href = '/reservation/';
+        });
+    }
+
+    const cateringBtn = document.getElementById('catering-btn');
+    if (cateringBtn) {
+        cateringBtn.addEventListener('click', () => {
+            // Implement catering services functionality
+            window.location.href = '/catering/';
+        });
+    }
+
+    const giftCardBtn = document.getElementById('gift-card-btn');
+    if (giftCardBtn) {
+        giftCardBtn.addEventListener('click', () => {
+            // Implement gift card functionality
+            window.location.href = '/gift-cards/';
+        });
+    }
+}
+
+/* ---------------------------------------- Helper Functions ---------------------------------------- */
 function showQuickViewModal(itemId) {
-    // Implement quick view modal
-    console.log('Quick view for item:', itemId);
+    // Fetch item details from server
+    fetch(`/api/foods/${itemId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showNotification('Error loading item details', 'error');
+                return;
+            }
+            populateQuickViewModal(data);
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('quickViewModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error fetching item details:', error);
+            showNotification('Error loading item details', 'error');
+        });
+}
+
+function populateQuickViewModal(itemData) {
+    // Populate modal with item data
+    document.getElementById('quick-view-title').textContent = itemData.title;
+    document.getElementById('quick-view-description').textContent = itemData.description || 'No description available';
+    document.getElementById('quick-view-price').textContent = `Rs ${itemData.price}`;
+    document.getElementById('quick-view-item-id').value = itemData.id;
+    
+    // Set image
+    const imageElement = document.getElementById('quick-view-image');
+    if (itemData.image) {
+        imageElement.src = itemData.image;
+        imageElement.alt = itemData.title;
+    } else {
+        // Use a CSS-based placeholder
+        imageElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgdmlld0JveD0iMCAwIDQwMCA0MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiBmaWxsPSIjRjhGOUZBIi8+CjxwYXRoIGQ9Ik0xNjAgMTgwSDI0MFYyMjBIMTYwVjE4MFoiIGZpbGw9IiNERUUyRTYiLz4KPHBhdGggZD0iTTE4MCAyMDBIMjIwVjI0MEgxODBWMjAwWiIgZmlsbD0iI0RFRTJFNiIvPgo8dGV4dCB4PSIyMDAiIHk9IjI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzZCNzI4MCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2Ij5ObyBJbWFnZTwvdGV4dD4KPC9zdmc+';
+        imageElement.alt = 'No image available';
+    }
+    
+    // Set category
+    const categoryElement = document.getElementById('quick-view-category');
+    categoryElement.textContent = itemData.category || 'Uncategorized';
+    
+    // Set rating
+    const ratingElement = document.getElementById('quick-view-rating');
+    ratingElement.textContent = itemData.rating || '4.5';
+    
+    // Set calories if available
+    const caloriesElement = document.getElementById('quick-view-calories');
+    if (itemData.calories) {
+        caloriesElement.textContent = `${itemData.calories} cal`;
+        caloriesElement.style.display = 'inline';
+    } else {
+        caloriesElement.style.display = 'none';
+    }
+    
+    // Set dietary badges
+    const dietaryInfoElement = document.getElementById('quick-view-dietary-info');
+    let dietaryBadges = '';
+    if (itemData.is_vegetarian) {
+        dietaryBadges += '<span class="badge bg-success me-2"><i class="fas fa-leaf"></i> Vegetarian</span>';
+    }
+    if (itemData.is_spicy) {
+        dietaryBadges += '<span class="badge bg-warning me-2"><i class="fas fa-pepper-hot"></i> Spicy</span>';
+    }
+    dietaryInfoElement.innerHTML = dietaryBadges;
+    
+    // Reset quantity to 1
+    document.getElementById('modal-quantity').value = 1;
+    
+    // Reset favorite status (you could enhance this to check actual favorite status)
+    updateModalFavoriteButton(false);
+}
+
+function updateModalQuantity(change) {
+    const quantityInput = document.getElementById('modal-quantity');
+    let currentQuantity = parseInt(quantityInput.value) || 1;
+    let newQuantity = currentQuantity + change;
+    
+    // Ensure quantity stays within bounds
+    if (newQuantity < 1) newQuantity = 1;
+    if (newQuantity > 50) newQuantity = 50;
+    
+    quantityInput.value = newQuantity;
+}
+
+function toggleModalFavorite() {
+    const icon = document.getElementById('modal-favorite-icon');
+    const text = document.getElementById('modal-favorite-text');
+    const itemId = document.getElementById('quick-view-item-id').value;
+    
+    if (icon.classList.contains('far') || text.textContent === 'Add to Favorites') {
+        // Add to favorites
+        addToFavorites(itemId);
+        updateModalFavoriteButton(true);
+    } else {
+        // Remove from favorites
+        removeFromFavorites(itemId);
+        updateModalFavoriteButton(false);
+    }
+}
+
+function updateModalFavoriteButton(isFavorite) {
+    const icon = document.getElementById('modal-favorite-icon');
+    const text = document.getElementById('modal-favorite-text');
+    
+    if (isFavorite) {
+        icon.className = 'fas fa-heart';
+        text.textContent = 'Remove from Favorites';
+    } else {
+        icon.className = 'far fa-heart';
+        text.textContent = 'Add to Favorites';
+    }
+}
+
+function shareModalItem() {
+    const title = document.getElementById('quick-view-title').textContent;
+    const itemId = document.getElementById('quick-view-item-id').value;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: `Check out ${title}!`,
+            text: `I found this delicious ${title} on our restaurant website!`,
+            url: `${window.location.origin}/menu/?item=${itemId}`
+        }).catch(err => console.log('Error sharing:', err));
+    } else {
+        // Fallback: copy to clipboard
+        const url = `${window.location.origin}/menu/?item=${itemId}`;
+        navigator.clipboard.writeText(url).then(() => {
+            showNotification('Link copied to clipboard!', 'success');
+        }).catch(() => {
+            showNotification('Unable to share. Try again later.', 'error');
+        });
+    }
 }
 
 function addToFavorites(itemId) {
-    // Implement add to favorites
-    console.log('Added to favorites:', itemId);
+    if (!checkAuthentication()) return;
+    
+    fetch('/api/toggle-favorite/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({
+            food_id: itemId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.action === 'added') {
+                showNotification(data.message, 'success');
+                updateFavoritesBadge(data.favorites_count);
+            }
+        } else {
+            showNotification('Error: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error adding to favorites', 'error');
+    });
 }
 
 function removeFromFavorites(itemId) {
-    // Implement remove from favorites
-    console.log('Removed from favorites:', itemId);
+    if (!checkAuthentication()) return;
+    
+    fetch('/api/toggle-favorite/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({
+            food_id: itemId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.action === 'removed') {
+                showNotification(data.message, 'success');
+                updateFavoritesBadge(data.favorites_count);
+            }
+        } else {
+            showNotification('Error: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error removing from favorites', 'error');
+    });
+}
+
+function checkAuthentication() {
+    // Simple check - you could enhance this
+    const userGreeting = document.querySelector('.user-greeting');
+    if (!userGreeting) {
+        showNotification('Please login to add favorites', 'warning');
+        return false;
+    }
+    return true;
 }
 
 function shareItem(itemId) {
@@ -276,249 +543,198 @@ document.querySelectorAll('.category-btn').forEach(btn => {
 const searchInput = document.getElementById('menu-search');
 const searchFeedback = document.getElementById('search-feedback');
 
-searchInput.addEventListener('input', () => {
-    if (searchInput.value.length > 0) {
-        searchFeedback.style.display = 'block';
-    } else {
-        searchFeedback.style.display = 'none';
-    }
-});
+if (searchInput && searchFeedback) {
+    searchInput.addEventListener('input', () => {
+        if (searchInput.value.length > 0) {
+            searchFeedback.style.display = 'block';
+        } else {
+            searchFeedback.style.display = 'none';
+        }
+    });
+}
 
 // === CART SYSTEM ===
 
 function initCartSystem() {
-    // Cart button and dropdown
-    const cartBtn = document.getElementById('cart-btn');
-    const cartDropdown = document.getElementById('cart-dropdown');
-    const cartCount = document.getElementById('cart-count');
-    const cartItemsList = document.getElementById('cart-items-list');
-    const cartTotalSection = document.getElementById('cart-total-section');
-    const cartTotal = document.getElementById('cart-total');
-
-    // Toggle cart dropdown
-    if (cartBtn && cartDropdown) {
-        cartBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            cartDropdown.style.display = cartDropdown.style.display === 'block' ? 'none' : 'block';
-            renderCartDropdown();
-        });
-        // Hide dropdown on outside click
-        document.addEventListener('click', function(e) {
-            if (!cartDropdown.contains(e.target) && e.target !== cartBtn) {
-                cartDropdown.style.display = 'none';
-            }
-        });
-    }
-
-    // Render cart dropdown
-    function renderCartDropdown() {
-        const cart = getCart();
-        if (cart.length === 0) {
-            cartItemsList.innerHTML = '<p style="color: #888;">Cart is empty.</p>';
-            cartTotalSection.style.display = 'none';
-            cartCount.textContent = '0';
-            return;
-        }
-        let html = '';
-        let total = 0;
-        cart.forEach((item, idx) => {
-            const itemTotal = item.price * item.quantity;
-            total += itemTotal;
-            html += `
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                    <div style="flex: 1;">
-                        <div style="font-weight: bold; color: #222;">${item.name}</div>
-                        <div style="font-size: 0.95em; color: #888;">Rs ${item.price} x 
-                            <button class="cart-qty-btn" data-idx="${idx}" data-action="minus" style="border:none;background:none;font-weight:bold;color:#f76d37;">-</button>
-                            <span style="margin:0 6px;">${item.quantity}</span>
-                            <button class="cart-qty-btn" data-idx="${idx}" data-action="plus" style="border:none;background:none;font-weight:bold;color:#f76d37;">+</button>
-                        </div>
-                    </div>
-                    <div style="margin-left: 10px; font-weight: bold; color: #f76d37;">Rs ${itemTotal}</div>
-                    <button class="cart-remove-btn" data-idx="${idx}" style="margin-left: 10px; background: none; border: none; color: #d32f2f; font-size: 1.2em;">&times;</button>
-                </div>
-            `;
-        });
-        cartItemsList.innerHTML = html;
-        cartTotal.textContent = `Rs ${total}`;
-        cartTotalSection.style.display = 'block';
-        cartCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
-
-        // Remove item
-        cartItemsList.querySelectorAll('.cart-remove-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const idx = parseInt(this.dataset.idx);
-                removeFromCart(idx);
-                renderCartDropdown();
-            });
-        });
-        // Quantity change
-        cartItemsList.querySelectorAll('.cart-qty-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const idx = parseInt(this.dataset.idx);
-                const action = this.dataset.action;
-                updateCartQuantity(idx, action);
-                renderCartDropdown();
-            });
-        });
-    }
-
-    // Add to cart from menu or specials
-    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const itemCard = this.closest('.menu-item-card, .special-item-card');
-            const itemId = this.dataset.id;
-            const itemName = itemCard.querySelector('h3').textContent;
-            const itemPrice = parseFloat(itemCard.querySelector('.item-price').textContent.replace('Rs ', ''));
-            const quantity = parseInt(itemCard.querySelector('.quantity')?.textContent || '1');
-            addToCart({ id: itemId, name: itemName, price: itemPrice, quantity });
-            renderCartDropdown && renderCartDropdown();
-            showCartNotification(itemName, quantity);
-            shakeCartIcon();
-            launchConfetti();
-        });
-    });
-
-    // Cart logic
-    function getCart() {
-        return JSON.parse(localStorage.getItem('cart') || '[]');
-    }
-    function setCart(cart) {
-        localStorage.setItem('cart', JSON.stringify(cart));
-    }
-    function addToCart(item) {
-        let cart = getCart();
-        const idx = cart.findIndex(i => i.id === item.id);
-        if (idx > -1) {
-            cart[idx].quantity += item.quantity;
-        } else {
-            cart.push(item);
-        }
-        setCart(cart);
-    }
-    function removeFromCart(idx) {
-        let cart = getCart();
-        cart.splice(idx, 1);
-        setCart(cart);
-    }
-    function updateCartQuantity(idx, action) {
-        let cart = getCart();
-        if (action === 'plus') {
-            cart[idx].quantity += 1;
-        } else if (action === 'minus' && cart[idx].quantity > 1) {
-            cart[idx].quantity -= 1;
-        }
-        setCart(cart);
-    }
-
-    // Update cart badge on page load
-    function updateCartBadge() {
-        const cart = getCart();
-        cartCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
-    }
+    // Initialize cart badge update
     updateCartBadge();
-
-    // Hide dropdown on scroll or navigation
-    window.addEventListener('scroll', () => { cartDropdown.style.display = 'none'; });
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', () => { cartDropdown.style.display = 'none'; });
-    });
-
-    // Notification popup
-    function showCartNotification(itemName, quantity) {
-        const notif = document.getElementById('cart-notification');
-        const msg = document.getElementById('cart-notification-msg');
-        if (!notif || !msg) return;
-        msg.textContent = `Added ${quantity} × ${itemName} to cart!`;
-        notif.style.display = 'block';
-        notif.style.opacity = '1';
-        setTimeout(() => {
-            notif.style.opacity = '0';
-            setTimeout(() => { notif.style.display = 'none'; }, 400);
-        }, 1500);
-    }
-    // Cart icon shake
-    function shakeCartIcon() {
-        const cartBtn = document.getElementById('cart-btn');
-        if (!cartBtn) return;
-        cartBtn.classList.add('cart-shake');
-        setTimeout(() => { cartBtn.classList.remove('cart-shake'); }, 500);
-    }
-    // Confetti effect
-    function launchConfetti() {
-        const canvas = document.getElementById('confetti-canvas');
-        if (!canvas) return;
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        canvas.style.display = 'block';
-        const ctx = canvas.getContext('2d');
-        const confetti = [];
-        for (let i = 0; i < 40; i++) {
-            confetti.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * -canvas.height,
-                r: 6 + Math.random() * 8,
-                d: 2 + Math.random() * 4,
-                color: `hsl(${Math.random()*360},90%,60%)`,
-                tilt: Math.random() * 10 - 5
-            });
-        }
-        let frame = 0;
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            confetti.forEach(c => {
-                ctx.beginPath();
-                ctx.arc(c.x, c.y, c.r, 0, 2 * Math.PI);
-                ctx.fillStyle = c.color;
-                ctx.fill();
-            });
-        }
-        function update() {
-            confetti.forEach(c => {
-                c.y += c.d;
-                c.x += Math.sin(frame/10 + c.tilt) * 2;
-                if (c.y > canvas.height) c.y = -10;
-            });
-            frame++;
-        }
-        let count = 0;
-        function animate() {
-            draw();
-            update();
-            count++;
-            if (count < 40) {
-                requestAnimationFrame(animate);
-            } else {
-                canvas.style.display = 'none';
-            }
-        }
-        animate();
-    }
-    // Add shake animation CSS
+    
+    // Add shake animation CSS for cart icon
     const style = document.createElement('style');
     style.innerHTML = `.cart-shake { animation: cartshake 0.5s; } @keyframes cartshake { 0% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } 100% { transform: translateX(0); } }`;
     document.head.appendChild(style);
 }
 
+// Cart icon shake animation
+function shakeCartIcon() {
+    const cartBtn = document.getElementById('cart-btn');
+    if (!cartBtn) return;
+    cartBtn.classList.add('cart-shake');
+    setTimeout(() => { cartBtn.classList.remove('cart-shake'); }, 500);
+}
 
-document.getElementById('cart-page-checkout-btn').addEventListener('click', function() {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    fetch('/checkout/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({cart: cart, notes: ''})
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            localStorage.removeItem('cart');
-            alert('Order placed successfully! Order ID: ' + data.order_id);
-            window.location.href = '/orders/'; // or a thank you page
+// Confetti effect for cart additions
+function launchConfetti() {
+    const canvas = document.getElementById('confetti-canvas');
+    if (!canvas) return;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.display = 'block';
+    const ctx = canvas.getContext('2d');
+    const confetti = [];
+    for (let i = 0; i < 40; i++) {
+        confetti.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * -canvas.height,
+            r: 6 + Math.random() * 8,
+            d: 2 + Math.random() * 4,
+            color: `hsl(${Math.random()*360},90%,60%)`,
+            tilt: Math.random() * 10 - 5
+        });
+    }
+    let frame = 0;
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        confetti.forEach(c => {
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, c.r, 0, 2 * Math.PI);
+            ctx.fillStyle = c.color;
+            ctx.fill();
+        });
+    }
+    function update() {
+        confetti.forEach(c => {
+            c.y += c.d;
+            c.x += Math.sin(frame/10 + c.tilt) * 2;
+            if (c.y > canvas.height) c.y = -10;
+        });
+        frame++;
+    }
+    let count = 0;
+    function animate() {
+        draw();
+        update();
+        count++;
+        if (count < 40) {
+            requestAnimationFrame(animate);
         } else {
-            alert('Error placing order.');
+            canvas.style.display = 'none';
         }
+    }
+    animate();
+}
+
+function setupCartItemHandlers() {
+    // Cart logic has been moved to server-side Django views
+    // This function is kept for compatibility but cart operations
+    // are now handled via Django forms and AJAX endpoints
+    
+    // Update cart badge on page load
+    updateCartBadge();
+}
+
+function initFavorites() {
+    const favoriteBtns = document.querySelectorAll('.favorite-btn');
+    const csrftoken = getCookie('csrftoken');
+
+    // Fetch user's favorites and update icons
+    fetch('/api/favorites/', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Not authenticated or error fetching favorites');
+        return response.json();
+    })
+    .then(data => {
+        const favoriteIds = data.map(fav => fav.food);
+        updateFavoritesBadge(data.length); // Update badge count
+        favoriteBtns.forEach(btn => {
+            const icon = btn.querySelector('i');
+            if (favoriteIds.includes(parseInt(btn.dataset.id))) {
+                icon.classList.remove('fa-regular');
+                icon.classList.add('fa-solid');
+                btn.classList.add('favorited');
+            } else {
+                icon.classList.remove('fa-solid');
+                icon.classList.add('fa-regular');
+                btn.classList.remove('favorited');
+            }
+        });
+    })
+    .catch(() => {
+        // Not logged in or error, just leave as is
+        updateFavoritesBadge(0);
     });
-});
+
+    // Click handler
+    favoriteBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const itemId = btn.dataset.id;
+            const icon = btn.querySelector('i');
+            const isFavorited = btn.classList.contains('favorited');
+            const url = isFavorited ? '/api/favorites/remove/' : '/api/favorites/add/';
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ food_id: itemId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    icon.classList.toggle('fa-solid');
+                    icon.classList.toggle('fa-regular');
+                    btn.classList.toggle('favorited');
+                    // Update favorites badge count
+                    updateFavoritesBadge();
+                } else {
+                    alert(data.error || 'Could not update favorite.');
+                }
+            })
+            .catch(() => {
+                alert('Error updating favorite.');
+            });
+        });
+    });
+}
+
+function updateFavoritesBadge(count) {
+    const badge = document.getElementById('favorites-count');
+    if (badge) {
+        badge.textContent = count || 0;
+    }
+}
+
+// Notification system
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 8px;
+        color: white;
+        font-weight: bold;
+        z-index: 10000;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        ${type === 'success' ? 'background: #28a745;' : 'background: #dc3545;'}
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            if (document.body.contains(notification)) {
+                document.body.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
+}

@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Favorites{% endblock %}
+
+{% block content %}
+<style>
+    .favorite-item {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .favorite-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+    .remove-btn {
+        transition: all 0.2s ease;
+    }
+    .remove-btn:hover {
+        background-color: #dc3545 !important;
+        transform: scale(1.1);
+    }
+</style>
+
+<div class="container" style="max-width: 900px; margin: 40px auto;">
+    {% csrf_token %}
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px;">
+        <h2 style="font-weight: bold; color: #f76d37; margin: 0;">
+            <i class="fas fa-heart" style="margin-right: 10px;"></i>My Favorites
+        </h2>
+        <div style="color: #666;">
+            <span id="favorites-count">{{ total_favorites }}</span> item{{ total_favorites|pluralize }}
+        </div>
+    </div>
+    
+    <!-- Favorites Items -->
+    {% if favorites %}
+        <div id="favorites-items" class="row">
+            {% for favorite in favorites %}
+            <div class="col-md-6 col-lg-4 mb-4" id="favorite-{{ favorite.id }}">
+                <div class="favorite-item" style="background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); height: 100%;">
+                    <div style="position: relative;">
+                        <img src="{{ favorite.food.image.url }}" alt="{{ favorite.food.title }}" style="width: 100%; height: 200px; object-fit: cover;">
+                        <button class="remove-favorite-btn" data-favorite-id="{{ favorite.id }}" 
+                                style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #dc3545;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        {% if favorite.food.is_spicy %}
+                        <span style="position: absolute; top: 10px; left: 10px; background: #ff4444; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold;">
+                            🌶️ Spicy
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div style="padding: 20px;">
+                        <h5 style="margin: 0 0 8px 0; color: #333; font-weight: bold;">{{ favorite.food.title }}</h5>
+                        <p style="color: #666; font-size: 0.9em; margin: 0 0 12px 0;">{{ favorite.food.category.name }}</p>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="font-weight: bold; color: #f76d37; font-size: 1.2em;">
+                                Rs {{ favorite.food.price }}
+                            </div>
+                            {% if favorite.food.rating > 0 %}
+                            <div style="color: #ffc107;">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= favorite.food.rating %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                                <span style="margin-left: 5px; color: #666; font-size: 0.9em;">{{ favorite.food.rating }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button class="add-to-cart-btn" data-id="food-{{ favorite.food.id }}" 
+                                    style="flex: 1; background: #f76d37; color: white; border: none; border-radius: 6px; padding: 10px; font-weight: bold; cursor: pointer;">
+                                <i class="fas fa-shopping-cart" style="margin-right: 5px;"></i>Add to Cart
+                            </button>
+                            <a href="{% url 'menu' %}#food-{{ favorite.food.id }}" 
+                               style="background: #f8f9fa; color: #666; border: 1px solid #ddd; border-radius: 6px; padding: 10px 15px; text-decoration: none; display: flex; align-items: center;">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div id="favorites-empty" style="text-align: center; padding: 60px 20px; color: #888;">
+            <i class="far fa-heart" style="font-size: 4em; margin-bottom: 20px; opacity: 0.3;"></i>
+            <h4 style="margin-bottom: 15px; color: #666;">No favorites yet</h4>
+            <p style="margin-bottom: 25px;">Start adding items to your favorites by clicking the heart icon on any food item.</p>
+            <a href="{% url 'menu' %}" style="background: #f76d37; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                <i class="fas fa-utensils" style="margin-right: 8px;"></i>Browse Menu
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Favorites functionality with AJAX
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // Remove favorite handlers
+    document.querySelectorAll('.remove-favorite-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const favoriteId = this.dataset.favoriteId;
+            removeFavorite(favoriteId, csrfToken);
+        });
+    });
+    
+    // Add to cart handlers for favorite items
+    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const itemId = this.dataset.id;
+            let itemType, actualId;
+            if (itemId.startsWith('food-')) {
+                itemType = 'food';
+                actualId = itemId.replace('food-', '');
+            } else if (itemId.startsWith('special-')) {
+                itemType = 'special';
+                actualId = itemId.replace('special-', '');
+            } else {
+                console.error('Unknown item type for ID:', itemId);
+                return;
+            }
+            
+            addToCartFromFavorites(itemType, actualId, 1, csrfToken);
+        });
+    });
+});
+
+function removeFavorite(favoriteId, csrfToken) {
+    fetch('/api/remove-favorite/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+        },
+        body: JSON.stringify({
+            favorite_id: favoriteId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the item from the page
+            const favoriteElement = document.getElementById(`favorite-${favoriteId}`);
+            if (favoriteElement) {
+                favoriteElement.style.transition = 'all 0.3s ease';
+                favoriteElement.style.opacity = '0';
+                favoriteElement.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    favoriteElement.remove();
+                }, 300);
+            }
+            
+            // Update favorites count
+            const countElement = document.getElementById('favorites-count');
+            if (countElement) {
+                countElement.textContent = data.favorites_count;
+            }
+            
+            // Show empty state if no favorites left
+            if (data.favorites_count === 0) {
+                setTimeout(() => {
+                    location.reload();
+                }, 400);
+            }
+            
+            // Show success message
+            showNotification(data.message, 'success');
+        } else {
+            showNotification('Error removing favorite: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error removing favorite', 'error');
+    });
+}
+
+function addToCartFromFavorites(itemType, itemId, quantity, csrfToken) {
+    fetch('/api/add-to-cart/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+        },
+        body: JSON.stringify({
+            type: itemType,
+            id: itemId,
+            quantity: quantity
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            // Update cart badge if it exists
+            const cartBadge = document.getElementById('cart-count');
+            if (cartBadge) {
+                cartBadge.textContent = data.cart_count;
+            }
+        } else {
+            showNotification('Error adding to cart: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error adding to cart', 'error');
+    });
+}
+
+function showNotification(message, type) {
+    // Create a simple notification
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 6px;
+        color: white;
+        font-weight: bold;
+        z-index: 10000;
+        transition: all 0.3s ease;
+        ${type === 'success' ? 'background: #28a745;' : 'background: #dc3545;'}
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+</script>
+{% endblock %}

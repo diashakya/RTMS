@@ -1,26 +1,275 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block title %}Order History{% endblock %}
+
 {% block content %}
-<div class="container" style="max-width: 800px; margin: 40px auto;">
-    <h2 style="color: #f76d37; font-weight: bold;">Your Orders</h2>
+<style>
+    .order-card {
+        border: 1px solid #eee;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .order-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    
+    .order-header {
+        background: linear-gradient(45deg, #f76d37, #e55829);
+        color: white;
+        padding: 15px;
+        border-radius: 12px 12px 0 0;
+    }
+    
+    .status-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: bold;
+    }
+    
+    .status-pending { background: #ffc107; color: #000; }
+    .status-completed { background: #28a745; color: #fff; }
+    .status-cancelled { background: #dc3545; color: #fff; }
+    
+    .filter-tabs {
+        border-bottom: 2px solid #f76d37;
+        margin-bottom: 30px;
+    }
+    
+    .filter-tab {
+        display: inline-block;
+        padding: 10px 20px;
+        margin-right: 10px;
+        text-decoration: none;
+        color: #666;
+        border-bottom: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .filter-tab.active, .filter-tab:hover {
+        color: #f76d37;
+        border-bottom-color: #f76d37;
+    }
+    
+    .order-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #f5f5f5;
+    }
+    
+    .order-item:last-child {
+        border-bottom: none;
+    }
+    
+    .item-image {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        object-fit: cover;
+        margin-right: 15px;
+    }
+</style>
+
+<div class="container" style="max-width: 900px; margin: 40px auto;">
+    <h2 style="font-weight: bold; color: #f76d37; margin-bottom: 30px;">
+        <i class="fas fa-history" style="margin-right: 15px;"></i>Order History
+    </h2>
+    
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <a href="{% url 'order_history' %}" class="filter-tab {% if not status_filter %}active{% endif %}">
+            All Orders ({{ total_orders }})
+        </a>
+        <a href="{% url 'order_history' %}?status=pending" class="filter-tab {% if status_filter == 'pending' %}active{% endif %}">
+            Pending
+        </a>
+        <a href="{% url 'order_history' %}?status=completed" class="filter-tab {% if status_filter == 'completed' %}active{% endif %}">
+            Completed
+        </a>
+        <a href="{% url 'order_history' %}?status=cancelled" class="filter-tab {% if status_filter == 'cancelled' %}active{% endif %}">
+            Cancelled
+        </a>
+    </div>
+    
     {% if orders %}
-        {% for order in orders %}
-            <div style="border:1px solid #eee; border-radius:8px; margin:20px 0; padding:18px;">
-                <div>
-                    <b>Order #{{ order.id }}</b> | {{ order.created_at|date:'Y-m-d H:i' }} | Status: <span style="color:#f76d37;">{{ order.status }}</span>
+        <div class="row">
+            {% for order in orders %}
+            <div class="col-md-6 mb-4">
+                <div class="order-card" style="border: 1px solid #eee; border-radius: 12px; padding: 25px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s;">
+                    <div class="order-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div>
+                            <h5 style="margin: 0; color: #333; font-weight: bold;">Order #{{ order.id }}</h5>
+                            <small class="text-muted">{{ order.created_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                        <span class="badge 
+                            {% if order.status == 'pending' %}bg-warning text-dark
+                            {% elif order.status == 'completed' %}bg-success
+                            {% else %}bg-danger{% endif %}" 
+                            style="font-size: 0.8em; padding: 8px 12px;">
+                            {{ order.status|title }}
+                        </span>
+                    </div>
+                    
+                    <div class="order-items" style="margin: 15px 0;">
+                        <h6 style="color: #666; font-size: 0.9em; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Items Ordered:</h6>
+                        <ul style="list-style: none; padding: 0; margin: 0;">
+                            {% for item in order.items.all %}
+                            <li style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f5f5f5;">
+                                <div>
+                                    <span style="font-weight: 500; color: #333;">
+                                        {% if item.food %}
+                                            {{ item.food.title }}
+                                        {% elif item.special %}
+                                            {{ item.special.name }}
+                                            <small class="text-warning">(Special)</small>
+                                        {% endif %}
+                                    </span>
+                                    <div style="font-size: 0.85em; color: #666;">
+                                        Qty: {{ item.quantity }} × Rs {{ item.price }}
+                                    </div>
+                                </div>
+                                <span style="font-weight: bold; color: #f76d37;">
+                                    Rs {{ item.total_price|floatformat:2 }}
+                                </span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    
+                    {% if order.notes %}
+                    <div class="order-notes" style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #f76d37;">
+                        <small style="color: #666; font-weight: 500;">Special Notes:</small>
+                        <p style="margin: 5px 0 0 0; color: #555; font-size: 0.9em;">{{ order.notes }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="order-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 15px; border-top: 2px solid #f5f5f5;">
+                        <div>
+                            <span style="font-size: 1.1em; font-weight: bold; color: #333;">Total: </span>
+                            <span style="font-size: 1.2em; font-weight: bold; color: #f76d37;">Rs {{ order.total|floatformat:2 }}</span>
+                        </div>
+                        <div>
+                            {% if order.status == 'pending' %}
+                                <button class="btn btn-sm btn-outline-danger" data-order-id="{{ order.id }}" onclick="cancelOrder(this.dataset.orderId)" style="margin-right: 8px;">
+                                    Cancel
+                                </button>
+                            {% endif %}
+                            <button class="btn btn-sm btn-outline-primary" data-order-id="{{ order.id }}" onclick="reorderItems(this.dataset.orderId)" style="border-color: #f76d37; color: #f76d37;">
+                                Reorder
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <ul style="margin-top:10px;">
-                    {% for item in order.items.all %}
-                        <li>
-                            {{ item.quantity }} × {{ item.food|default:item.special }} — Rs {{ item.price }} each
-                        </li>
-                    {% endfor %}
-                </ul>
-                <div style="margin-top:10px;"><b>Total:</b> Rs {{ order.total }}</div>
             </div>
-        {% endfor %}
+            {% endfor %}
+        </div>
+        
+        {% if orders.count > 6 %}
+        <div class="text-center mt-4">
+            <button class="btn btn-outline-secondary" id="load-more-orders" style="padding: 10px 30px;">
+                Load More Orders
+            </button>
+        </div>
+        {% endif %}
+        
     {% else %}
-        <p style="color:#888;">You have no orders yet.</p>
+        <div class="empty-state" style="text-align: center; padding: 60px 20px; background: #f8f9fa; border-radius: 12px;">
+            <i class="fas fa-shopping-bag" style="font-size: 4rem; color: #ddd; margin-bottom: 20px;"></i>
+            <h4 style="color: #666; margin-bottom: 15px;">No Orders Yet</h4>
+            <p style="color: #888; margin-bottom: 30px;">You haven't placed any orders yet. Start exploring our delicious menu!</p>
+            <a href="{% url 'menu' %}" class="btn btn-primary" style="background: #f76d37; border: none; padding: 12px 30px;">
+                <i class="fas fa-utensils"></i> Browse Menu
+            </a>
+        </div>
     {% endif %}
 </div>
+
+<script>
+function cancelOrder(orderId) {
+    if (!confirm('Are you sure you want to cancel this order?')) {
+        return;
+    }
+    
+    fetch(`/update-order-status/${orderId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({status: 'cancelled'})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Order cancelled successfully!');
+            location.reload();
+        } else {
+            alert('Error cancelling order: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error cancelling order.');
+    });
+}
+
+function reorderItems(orderId) {
+    // This would add the items from this order back to the cart
+    alert('Reorder functionality will be implemented soon!');
+    // TODO: Implement reorder functionality
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+<style>
+.order-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.order-card .btn {
+    transition: all 0.2s;
+}
+
+.order-card .btn:hover {
+    transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+    .order-card {
+        margin-bottom: 20px;
+    }
+    
+    .order-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .order-footer > div:last-child {
+        margin-top: 10px;
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
 {% endblock %}

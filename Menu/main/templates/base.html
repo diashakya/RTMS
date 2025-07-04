@@ -28,10 +28,6 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
     />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-    />
 
     <!-- cdnjs intl-tel link -->
     <link
@@ -49,6 +45,75 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
     <link rel="stylesheet" href="{% static 'css/s.css' %}" />
     <link rel="stylesheet" href="{% static 'css/menu.css'%}" />
+
+    <!-- Custom Messages Styling -->
+    <style>
+      .messages-container {
+        animation: slideInRight 0.3s ease-out;
+      }
+      
+      @keyframes slideInRight {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      
+      .message-alert {
+        border-left: 4px solid;
+        font-weight: 500;
+      }
+      
+      .alert-success {
+        border-left-color: #28a745;
+        background-color: #d4edda;
+        color: #155724;
+      }
+      
+      .alert-error {
+        border-left-color: #dc3545;
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      
+      .alert-warning {
+        border-left-color: #ffc107;
+        background-color: #fff3cd;
+        color: #856404;
+      }
+      
+      .alert-info {
+        border-left-color: #17a2b8;
+        background-color: #d1ecf1;
+        color: #0c5460;
+      }
+      
+      /* Cart shake animation */
+      .cart-shake {
+        animation: shake 0.6s ease-in-out;
+      }
+      
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+      }
+      
+      /* Cart pulse animation */
+      .cart-pulse {
+        animation: pulse 0.6s ease-in-out;
+      }
+      
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+      }
+    </style>
   </head>
 
   <body>
@@ -109,9 +174,6 @@
             <div class="user-greeting">
               <span>👋 </span> <h3 class="text-decoration-underline fs-6 welcome-text">Welcome, {{ request.user.username }}!</h3>
             </div>
-            <a href="{% url 'log_out' %}">
-              <button class="btn custom-signup-btn">LogOut</button>
-            </a>
             {% else %}
             <a href="{% url 'login' %}">
               <button class="btn custom-login-btn">Login</button>
@@ -137,9 +199,39 @@
             </a>
             {% if request.user.is_authenticated %}
             <!-- Cart Icon -->
-             <a class="btn text-light" href="">
-              <i class="fa-solid fa-cart-shopping"></i>
-             </a>
+            <div class="cart-container" style="position: relative; display: inline-block;">
+              <a class="btn text-light" href="{% url 'cart' %}" id="cart-btn" style="position: relative;">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span id="cart-count" class="badge bg-danger" style="position: absolute; top: -5px; right: -5px; font-size: 0.7em; min-width: 18px; height: 18px; line-height: 18px; border-radius: 50%;">{{ cart_count|default:0 }}</span>
+              </a>
+            </div>
+            
+            <!-- Favorites Icon -->
+            <div class="favorites-container" style="position: relative; display: inline-block; margin-left: 10px;">
+              <a class="btn text-light" href="{% url 'favorites' %}" style="position: relative;">
+                <i class="fa-solid fa-heart"></i>
+                <span id="favorites-count" class="badge bg-danger" style="position: absolute; top: -5px; right: -5px; font-size: 0.7em; min-width: 18px; height: 18px; line-height: 18px; border-radius: 50%;">{{ favorites_count|default:0 }}</span>
+              </a>
+            </div>
+            
+            <!-- User Menu -->
+            <div class="dropdown" style="display: inline-block; margin-left: 10px;">
+              <a class="btn text-light dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-user"></i> {{ request.user.first_name|default:request.user.username }}
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'order_history' %}"><i class="fas fa-history"></i> Order History</a></li>
+                <li><a class="dropdown-item" href="{% url 'favorites' %}"><i class="fas fa-heart"></i> Favorites</a></li>
+                <li><a class="dropdown-item" href="{% url 'change_password' %}"><i class="fas fa-key"></i> Change Password</a></li>
+                {% if request.user.is_staff %}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Admin Dashboard</a></li>
+                <li><a class="dropdown-item" href="{% url 'manage_orders' %}"><i class="fas fa-shopping-cart"></i> Manage Orders</a></li>
+                {% endif %}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'log_out' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+              </ul>
+            </div>
             {% endif %}
           </div>
           
@@ -155,6 +247,30 @@
         </div>
       </div>
     </nav>
+
+    <!-- Messages Section -->
+    {% if messages %}
+    <div class="messages-container" style="position: fixed; top: 80px; right: 20px; z-index: 9999; max-width: 400px;">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show message-alert" 
+           style="margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px;">
+        <strong>
+          {% if message.tags == 'success' %}
+            <i class="fas fa-check-circle"></i>
+          {% elif message.tags == 'error' %}
+            <i class="fas fa-exclamation-circle"></i>
+          {% elif message.tags == 'warning' %}
+            <i class="fas fa-exclamation-triangle"></i>
+          {% else %}
+            <i class="fas fa-info-circle"></i>
+          {% endif %}
+        </strong>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
 
     {% block content %} {% endblock content %}
 
@@ -260,19 +376,13 @@
     ></script>
 
     <!-- custom js -->
-
     <script src="{% static 'js/script.js' %}"></script>
     <script src="{% static 'js/menu.js' %}"></script>
 
-    <!-- sidebar -->
+    <!-- jQuery for Bootstrap 5 compatibility -->
     <script
-      src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
-      integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
+      src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
       crossorigin="anonymous"
     ></script>
 
@@ -287,5 +397,110 @@
     <script>
       AOS.init();
     </script>
+
+    <!-- Real-time WebSocket notifications -->
+    {% if request.user.is_authenticated %}
+    <script>
+        // WebSocket for real-time notifications
+        let notificationSocket = null;
+        
+        function connectNotifications() {
+            console.log('Attempting to connect to WebSocket...');
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = protocol + '//' + window.location.host + '/ws/notifications/';
+            console.log('WebSocket URL:', wsUrl);
+            
+            notificationSocket = new WebSocket(wsUrl);
+            
+            notificationSocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                showNotification(data.title, data.message, data.notification_type);
+            };
+            
+            notificationSocket.onclose = function(e) {
+                console.log('Notification socket closed. Attempting to reconnect...');
+                setTimeout(connectNotifications, 5000);
+            };
+            
+            notificationSocket.onerror = function(e) {
+                console.error('WebSocket error:', e);
+            };
+        }
+        
+        function showNotification(title, message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = `
+                top: 20px; right: 20px; z-index: 9999; max-width: 350px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            notification.innerHTML = `
+                <strong>${title}</strong><br>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+        
+        // Connect when page loads
+        document.addEventListener('DOMContentLoaded', connectNotifications);
+    </script>
+    {% endif %}
+
+    <!-- Auto-dismiss messages after 4 seconds -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-dismiss messages after 4 seconds
+            const messageAlerts = document.querySelectorAll('.message-alert');
+            messageAlerts.forEach(function(alert) {
+                // Check if it's a success message about cart
+                if (alert.classList.contains('alert-success') && 
+                    alert.textContent.toLowerCase().includes('cart')) {
+                    // Animate the cart icon
+                    const cartIcon = document.getElementById('cart-btn');
+                    if (cartIcon) {
+                        cartIcon.classList.add('cart-pulse');
+                        setTimeout(() => {
+                            cartIcon.classList.remove('cart-pulse');
+                        }, 600);
+                    }
+                }
+                
+                setTimeout(function() {
+                    if (alert && alert.parentNode) {
+                        // Use Bootstrap's dismiss method if available
+                        if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+                            const bootstrapAlert = bootstrap.Alert.getInstance(alert);
+                            if (bootstrapAlert) {
+                                bootstrapAlert.close();
+                            } else {
+                                // Create new instance and close
+                                new bootstrap.Alert(alert).close();
+                            }
+                        } else {
+                            // Fallback: manual removal with fade effect
+                            alert.style.transition = 'opacity 0.3s ease';
+                            alert.style.opacity = '0';
+                            setTimeout(() => {
+                                if (alert.parentNode) {
+                                    alert.remove();
+                                }
+                            }, 300);
+                        }
+                    }
+                }, 4000); // 4 seconds
+            });
+        });
+    </script>
+
   </body>
 </html>

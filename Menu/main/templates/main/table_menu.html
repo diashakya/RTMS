@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Table {{ table_number|default:"" }} Menu{% endblock title %}
+
+{% block content %}
+<!-- Table Info Bar -->
+{% if table_number %}
+<div class="table-info-bar" style="background: linear-gradient(135deg, #f76d37, #e55829); color: white; padding: 15px 0; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+    <div class="container">
+        <h4 class="fw-bold" style="margin: 0;">
+            <i class="fas fa-table"></i> Table {{ table_number }} | AMDIA Restaurant
+        </h4>
+        <p style="margin: 5px 0 0 0; font-size: 0.9em; opacity: 0.9;">
+            Welcome! Browse our menu and order directly to your table.
+        </p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Cart Notification Popup and Confetti -->
+<div id="cart-notification" class="fw-bold" style="display:none;position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#f76d37;color:#fff;padding:16px 32px;border-radius:8px;z-index:2000;font-size:1.2em;box-shadow:0 4px 16px rgba(0,0,0,0.12);transition:opacity 0.3s;">
+  <span id="cart-notification-msg">Added to cart!</span>
+</div>
+<canvas id="confetti-canvas" style="display:none;position:fixed;pointer-events:none;top:0;left:0;width:100vw;height:100vh;z-index:2100;"></canvas>
+
+<!-- Hero Section -->
+<div class="hero-section" style="background: #f76d37; display: flex; align-items: center; justify-content: center; height: 30vh; text-align: center; border-bottom: 6px solid #d35400;">
+    <div class="hero-content" style="width: 100%;">
+        <h1 class="fw-bold" style="font-size: 2.5rem; color: #fff; margin-bottom: 1rem; letter-spacing: 2px;">
+            {% if table_number %}
+                Table {{ table_number }} Menu
+            {% else %}
+                Our Menu
+            {% endif %}
+        </h1>
+        <p class="fw-semibold" style="font-size: 1.2rem; color: #fff; margin-bottom: 2rem;">Order directly to your table with just a few taps!</p>
+    </div>
+</div>
+
+<!-- Today's Special Section -->
+{% if todays_specials %}
+<div class="specials-container" style="padding: 50px 0; background: #f8f9fa;">
+    <div class="container">
+        <h1 class="text-center" style="color: #f76d37; margin-bottom: 40px;">Today's Special</h1>
+        
+        <div class="row">
+            {% for special in todays_specials %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="special-item-card" data-category="{{ special.category.name }}" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.3s;">
+                    <div class="special-item-img" style="position: relative; height: 200px; overflow: hidden;">
+                        <img src="{{ special.image.url }}" alt="{{ special.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% if special.is_vegetarian %}
+                        <span class="veg-indicator veg" style="position: absolute; top: 10px; left: 10px; background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em;">VEG</span>
+                        {% else %}
+                        <span class="veg-indicator non-veg" style="position: absolute; top: 10px; left: 10px; background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em;">NON-VEG</span>
+                        {% endif %}
+                        <div class="special-badge" style="position: absolute; top: 10px; right: 10px; background: #f76d37; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold;">Today's Special</div>
+                    </div>
+                    <div class="special-item-details" style="padding: 20px;">
+                        <h3 style="color: #333; margin-bottom: 10px;">{{ special.name }}</h3>
+                        <p class="item-description" style="color: #666; margin-bottom: 15px; font-size: 0.9em;">{{ special.description }}</p>
+                        <div class="price-addcart" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="price-container">
+                                {% if special.discounted_price %}
+                                <span class="original-price" style="text-decoration: line-through; color: #999; margin-right: 10px;">Rs {{ special.price }}</span>
+                                <span class="item-price" style="font-weight: bold; color: #f76d37; font-size: 1.2em;">Rs {{ special.discounted_price }}</span>
+                                {% else %}
+                                <span class="item-price" style="font-weight: bold; color: #f76d37; font-size: 1.2em;">Rs {{ special.price }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="quantity-controls" style="display: flex; align-items: center; margin-right: 10px;">
+                                <button class="quantity-btn minus" style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">-</button>
+                                <span class="quantity" style="margin: 0 10px; font-weight: bold; min-width: 20px; text-align: center;">1</span>
+                                <button class="quantity-btn plus" style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">+</button>
+                            </div>
+                            <button class="add-to-cart-btn" data-id="special-{{ special.id }}" style="background: #f76d37; color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: bold; cursor: pointer;">
+                                <i class="fas fa-shopping-cart"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Regular Menu Section -->
+<div class="menu-section" style="padding: 50px 0;" id="menu-section">
+    <div class="container">
+        <h1 class="text-center" style="color: #f76d37; margin-bottom: 40px;">Our Menu</h1>
+        
+        <!-- Category Filter -->
+        <div class="category-filter" style="text-align: center; margin-bottom: 40px;">
+            <button class="category-btn active" data-category="all" style="background: #f76d37; color: white; border: none; border-radius: 25px; padding: 10px 20px; margin: 5px; cursor: pointer; transition: all 0.3s;">All Items</button>
+            {% for category in categories %}
+            <button class="category-btn" data-category="{{ category.name }}" style="background: #f8f9fa; color: #333; border: 1px solid #ddd; border-radius: 25px; padding: 10px 20px; margin: 5px; cursor: pointer; transition: all 0.3s;">{{ category.name }}</button>
+            {% endfor %}
+        </div>
+        
+        <!-- Menu Items -->
+        <div class="row">
+            {% for food in foods %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="menu-item-card" data-category="{{ food.category.name }}" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.3s;">
+                    <div class="menu-item-img" style="position: relative; height: 180px; overflow: hidden;">
+                        <img src="{{ food.image.url }}" alt="{{ food.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% if food.is_spicy %}
+                        <span class="spicy-indicator" style="position: absolute; top: 10px; left: 10px; background: #ff6b35; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em;">🌶️ SPICY</span>
+                        {% endif %}
+                        {% if food.rating > 0 %}
+                        <div class="rating-badge" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em;">
+                            ⭐ {{ food.rating }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="menu-item-details" style="padding: 20px;">
+                        <h3 style="color: #333; margin-bottom: 10px;">{{ food.title }}</h3>
+                        <div class="price-addcart" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="item-price" style="font-weight: bold; color: #f76d37; font-size: 1.2em;">Rs {{ food.price }}</span>
+                            <div class="quantity-controls" style="display: flex; align-items: center; margin-right: 10px;">
+                                <button class="quantity-btn minus" style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">-</button>
+                                <span class="quantity" style="margin: 0 10px; font-weight: bold; min-width: 20px; text-align: center;">1</span>
+                                <button class="quantity-btn plus" style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">+</button>
+                            </div>
+                            <button class="add-to-cart-btn" data-id="food-{{ food.id }}" style="background: #f76d37; color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: bold; cursor: pointer;">
+                                <i class="fas fa-shopping-cart"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Sticky Cart Button for Mobile -->
+{% if table_number %}
+<div class="sticky-cart-mobile" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+    <a href="{% url 'cart' %}?table={{ table_number }}" class="btn btn-primary" style="background: #f76d37; border: none; border-radius: 50px; padding: 15px 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-decoration: none;">
+        <i class="fas fa-shopping-cart"></i> 
+        View Cart (<span id="mobile-cart-count">0</span>)
+    </a>
+</div>
+{% endif %}
+
+<!-- Call Waiter Button -->
+{% if table_number %}
+<div class="call-waiter-btn" style="position: fixed; bottom: 20px; left: 20px; z-index: 1000;">
+    <button class="btn btn-warning" onclick="callWaiter()" style="border-radius: 50px; padding: 15px 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-weight: bold;">
+        <i class="fas fa-bell"></i> Call Waiter
+    </button>
+</div>
+{% endif %}
+
+{% if table_number %}
+<script>
+// Set table number for cart functionality
+localStorage.setItem('tableNumber', '{{ table_number }}');
+
+// Global variables for table functionality
+window.TABLE_NUMBER = '{{ table_number }}';
+window.HAS_TABLE = true;
+</script>
+{% else %}
+<script>
+// Global variables for table functionality
+window.TABLE_NUMBER = null;
+window.HAS_TABLE = false;
+</script>
+{% endif %}
+
+<script>
+function callWaiter() {
+    if (window.HAS_TABLE && window.TABLE_NUMBER) {
+        // Send notification to staff
+        fetch('/call-waiter/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                table_number: window.TABLE_NUMBER,
+                message: `Customer at table ${window.TABLE_NUMBER} is requesting assistance`
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Waiter has been notified! Someone will be with you shortly.');
+            } else {
+                alert('Sorry, there was an error. Please try again or wave to get attention.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Sorry, there was an error. Please try again or wave to get attention.');
+        });
+    } else {
+        alert('Please scan the QR code from your table to use this feature.');
+    }
+}
+
+// Update mobile cart count
+function updateMobileCartCount() {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const mobileCount = document.getElementById('mobile-cart-count');
+    if (mobileCount) {
+        mobileCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+    }
+}
+
+// Initialize mobile cart count
+updateMobileCartCount();
+
+// Override cart functions to include table number
+const originalSetCart = localStorage.setItem;
+localStorage.setItem = function(key, value) {
+    originalSetCart.call(this, key, value);
+    if (key === 'cart') {
+        updateMobileCartCount();
+    }
+};
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+<style>
+.special-item-card:hover,
+.menu-item-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.category-btn:hover {
+    background: #f76d37 !important;
+    color: white !important;
+    transform: translateY(-2px);
+}
+
+.category-btn.active {
+    background: #f76d37 !important;
+    color: white !important;
+}
+
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2rem !important;
+    }
+    
+    .sticky-cart-mobile {
+        bottom: 80px !important;
+    }
+    
+    .call-waiter-btn {
+        bottom: 80px !important;
+        left: 10px !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/menu.js' %}"></script>
+{% endblock %}

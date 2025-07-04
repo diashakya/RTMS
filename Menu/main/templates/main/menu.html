@@ -4,7 +4,10 @@
 {% block title %}Menu{% endblock title %}
 
 {% block content %}
-<!-- Cart Notification Popup and Confetti -->
+<!-- Cart Not                    <button class="quick-view-btn" data-id="food-{{ food.id }}">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                    <button class="favorite-btn" data-id="food-{{ food.id }}">ation Popup and Confetti -->
 <div id="cart-notification" style="display:none;position:fixed;top:30px;left:50%;transform:translateX(-50%);background:#f76d37;color:#fff;padding:16px 32px;border-radius:8px;z-index:2000;font-weight:bold;font-size:1.2em;box-shadow:0 4px 16px rgba(0,0,0,0.12);transition:opacity 0.3s;">
   <span id="cart-notification-msg">Added to cart!</span>
 </div>
@@ -51,14 +54,19 @@
                         <span class="item-price">Rs {{ special.price }}</span>
                         {% endif %}
                     </div>
-                    <div class="quantity-controls">
-                        <button class="quantity-btn minus">-</button>
-                        <span class="quantity">1</span>
-                        <button class="quantity-btn plus">+</button>
-                    </div>
-                    <button class="add-to-cart-btn" data-id="{{ special.id }}">
-                        <i class="fas fa-shopping-cart"></i> Add
-                    </button>
+                    <form method="post" action="{% url 'add_to_cart_form' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="item_type" value="special">
+                        <input type="hidden" name="item_id" value="{{ special.id }}">
+                        <div class="quantity-controls">
+                            <button type="button" class="quantity-btn minus" onclick="updateQuantity(this, -1)">-</button>
+                            <input type="number" name="quantity" class="quantity" value="1" min="1" max="50" readonly style="border: none; text-align: center; width: 40px; background: transparent; font-weight: bold;">
+                            <button type="button" class="quantity-btn plus" onclick="updateQuantity(this, 1)">+</button>
+                        </div>
+                        <button type="submit" class="add-to-cart-btn">
+                            <i class="fas fa-shopping-cart"></i> Add to Cart
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -157,16 +165,21 @@
                         <span class="calories">{{ food.calories }} cal</span>
                         {% endif %}
                     </div>
-                    <div class="quantity-controls">
-                        <button class="quantity-btn minus">-</button>
-                        <span class="quantity">1</span>
-                        <button class="quantity-btn plus">+</button>
-                    </div>
-                    <div class="action-buttons">
-                        <button class="add-to-cart-btn" data-id="{{ food.id }}">
-                            <i class="fas fa-shopping-cart"></i> Add to Cart
-                        </button>
-                    </div>
+                    <form method="post" action="{% url 'add_to_cart_form' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="item_type" value="food">
+                        <input type="hidden" name="item_id" value="{{ food.id }}">
+                        <div class="quantity-controls">
+                            <button type="button" class="quantity-btn minus" onclick="updateQuantity(this, -1)">-</button>
+                            <input type="number" name="quantity" class="quantity" value="1" min="1" max="50" readonly style="border: none; text-align: center; width: 40px; background: transparent; font-weight: bold;">
+                            <button type="button" class="quantity-btn plus" onclick="updateQuantity(this, 1)">+</button>
+                        </div>
+                        <div class="action-buttons">
+                            <button type="submit" class="add-to-cart-btn">
+                                <i class="fas fa-shopping-cart"></i> Add to Cart
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -175,6 +188,166 @@
             <p>No food items available in this category.</p>
         </div>
         {% endfor %}
+    </div>
+</div>
+
+<!-- Quick View Modal -->
+<style>
+.quick-view-image-container {
+    background: #f8f9fa;
+}
+
+.quick-view-image-container img {
+    transition: transform 0.3s ease;
+}
+
+.quick-view-image-container:hover img {
+    transform: scale(1.05);
+}
+
+.modal-content {
+    border-radius: 15px;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #f76d37, #d35400);
+    color: white;
+}
+
+.modal-header .btn-close {
+    filter: invert(1);
+}
+
+.quantity-controls button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quantity-controls input {
+    border: 2px solid #f76d37;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.dietary-badge {
+    font-size: 0.8em;
+    padding: 4px 8px;
+    border-radius: 15px;
+}
+
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 10px;
+        max-width: calc(100% - 20px);
+    }
+    
+    .quick-view-image-container {
+        height: 250px !important;
+    }
+}
+</style>
+
+<div class="modal fade" id="quickViewModal" tabindex="-1" aria-labelledby="quickViewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="quickViewModalLabel">Quick View</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="row g-0">
+                    <!-- Image Section -->
+                    <div class="col-md-6">
+                        <div class="quick-view-image-container" style="position: relative; height: 400px; overflow: hidden;">
+                            <img id="quick-view-image" src="" alt="" class="img-fluid w-100 h-100" style="object-fit: cover;">
+                            <div class="image-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.3));">
+                                <div id="quick-view-badges" class="position-absolute top-0 start-0 p-3">
+                                    <!-- Badges will be inserted here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Details Section -->
+                    <div class="col-md-6">
+                        <div class="p-4">
+                            <div class="mb-3">
+                                <h3 id="quick-view-title" class="mb-2" style="color: #f76d37; font-weight: bold;"></h3>
+                                <div id="quick-view-category" class="text-muted mb-2"></div>
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="rating me-3">
+                                        <i class="fas fa-star text-warning"></i>
+                                        <span id="quick-view-rating">4.5</span>
+                                    </div>
+                                    <div id="quick-view-dietary-info">
+                                        <!-- Dietary badges will be inserted here -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <p id="quick-view-description" class="text-muted"></p>
+                            </div>
+                            
+                            <div class="price-section mb-4">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <span id="quick-view-price" class="h4 text-primary fw-bold"></span>
+                                        <span id="quick-view-calories" class="text-muted ms-2"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Add to Cart Form -->
+                            <form id="quick-view-cart-form" method="post" action="{% url 'add_to_cart_form' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="item_type" value="food">
+                                <input type="hidden" id="quick-view-item-id" name="item_id" value="">
+                                
+                                <div class="quantity-section mb-3">
+                                    <label class="form-label fw-bold">Quantity:</label>
+                                    <div class="quantity-controls d-flex align-items-center">
+                                        <button type="button" class="btn btn-outline-secondary quantity-btn minus" onclick="updateModalQuantity(-1)">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <input type="number" name="quantity" id="modal-quantity" class="form-control mx-2 text-center" value="1" min="1" max="50" style="width: 80px;">
+                                        <button type="button" class="btn btn-outline-secondary quantity-btn plus" onclick="updateModalQuantity(1)">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="action-buttons d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary btn-lg" style="background: #f76d37; border-color: #f76d37;">
+                                        <i class="fas fa-cart-plus"></i> Add to Cart
+                                    </button>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <button type="button" class="btn btn-outline-danger w-100" onclick="toggleModalFavorite()">
+                                                <i id="modal-favorite-icon" class="fas fa-heart"></i> 
+                                                <span id="modal-favorite-text">Add to Favorites</span>
+                                            </button>
+                                        </div>
+                                        <div class="col-6">
+                                            <button type="button" class="btn btn-outline-info w-100" onclick="shareModalItem()">
+                                                <i class="fas fa-share"></i> Share
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
