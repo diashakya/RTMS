@@ -1,21 +1,136 @@
 from django.contrib import admin
-from .models import Special, Foods, Category
-from unfold.admin import ModelAdmin as UnfoldModelAdmin
+from django.utils.html import format_html
+from django.urls import reverse
+from django.http import HttpResponseRedirect
+from .models import Special, Foods, Category, Favorite, Order, OrderItem, Customer, Cart, CartItem
 
-# Option 1: Using the decorator for each model
+# Enhanced Order Item Inline
+class OrderItemInline(admin.TabularInline):
+    model = OrderItem
+    extra = 0
+    readonly_fields = ('total_price',)
+    fields = ('food', 'special', 'quantity', 'price', 'total_price')
+
+# Enhanced Order Admin
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ('id', 'customer_info', 'user', 'status', 'total', 'created_at', 'order_actions')
+    list_filter = ('status', 'created_at', 'customer')
+    search_fields = ('id', 'customer__customer_firstname', 'customer__customer_lastname', 'customer__customer_mobileno')
+    readonly_fields = ('created_at', 'total')
+    inlines = [OrderItemInline]
+    list_per_page = 25
+    ordering = ('-created_at',)
+    
+    def customer_info(self, obj):
+        if obj.customer:
+            return f"{obj.customer.customer_firstname} {obj.customer.customer_lastname}"
+        return "Guest"
+    customer_info.short_description = "Customer"
+    
+    def order_actions(self, obj):
+        return format_html(
+            '<a class="button" href="{}">View Receipt</a>&nbsp;'
+            '<a class="button" href="{}">Send Status Email</a>',
+            reverse('order_receipt', args=[obj.id]),
+            reverse('admin:send_status_email', args=[obj.id])
+        )
+    order_actions.short_description = "Actions"
+    order_actions.allow_tags = True
+    
+    actions = ['mark_completed', 'mark_cancelled', 'send_confirmation_emails']
+    
+    def mark_completed(self, request, queryset):
+        count = queryset.update(status='completed')
+        # Send emails for each order
+        for order in queryset:
+            from .views import send_order_status_email
+            send_order_status_email(order, 'completed')
+        self.message_user(request, f'{count} orders marked as completed and emails sent.')
+    mark_completed.short_description = "Mark selected orders as completed"
+    
+    def mark_cancelled(self, request, queryset):
+        count = queryset.update(status='cancelled')
+        # Send emails for each order
+        for order in queryset:
+            from .views import send_order_status_email
+            send_order_status_email(order, 'cancelled')
+        self.message_user(request, f'{count} orders cancelled and emails sent.')
+    mark_cancelled.short_description = "Cancel selected orders"
+    
+    def send_confirmation_emails(self, request, queryset):
+        for order in queryset:
+            from .views import send_order_confirmation_email
+            send_order_confirmation_email(order)
+        self.message_user(request, f'Confirmation emails sent for {queryset.count()} orders.')
+    send_confirmation_emails.short_description = "Send confirmation emails"
+
+# Enhanced Customer Admin
+@admin.register(Customer)
+class CustomerAdmin(admin.ModelAdmin):
+    list_display = ('customer_firstname', 'customer_lastname', 'customer_mobileno', 'customer_email', 'order_count')
+    search_fields = ('customer_firstname', 'customer_lastname', 'customer_mobileno', 'customer_email')
+    list_filter = ('customer_dob',)
+    
+    def order_count(self, obj):
+        count = obj.order_set.count()
+        if count > 0:
+            return format_html('<a href="{}?customer__id__exact={}">{} orders</a>',
+                             reverse('admin:main_order_changelist'), obj.id, count)
+        return "0 orders"
+    order_count.short_description = "Orders"
+    order_count.allow_tags = True
+
+# Cart Item Inline
+class CartItemInline(admin.TabularInline):
+    model = CartItem
+    extra = 0
+    readonly_fields = ('total_price', 'added_at')
+
+# Cart Admin
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'session_key', 'total_items', 'total_price', 'created_at')
+    list_filter = ('created_at', 'updated_at')
+    search_fields = ('user__username', 'session_key')
+    readonly_fields = ('created_at', 'updated_at', 'total_price', 'total_items')
+    inlines = [CartItemInline]
+
 @admin.register(Special)
-class SpecialAdmin(UnfoldModelAdmin):
-    pass
+class SpecialAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category', 'price', 'discounted_price', 'active', 'date')
+    list_filter = ('category', 'active', 'date', 'is_vegetarian')
+    search_fields = ('name', 'description')
+    list_editable = ('active', 'price', 'discounted_price')
+    date_hierarchy = 'date'
 
 @admin.register(Foods)
-class FoodsAdmin(UnfoldModelAdmin):
-    pass
+class FoodsAdmin(admin.ModelAdmin):
+    list_display = ('title', 'price', 'category', 'is_spicy', 'rating')
+    list_filter = ('category', 'is_spicy')
+    search_fields = ('title',)
+    list_editable = ('price', 'is_spicy', 'rating')
 
 @admin.register(Category)
-class CategoryAdmin(UnfoldModelAdmin):
-    pass
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'food_count', 'special_count')
+    search_fields = ('name',)
+    
+    def food_count(self, obj):
+        return obj.foods_set.count()
+    food_count.short_description = "Foods"
+    
+    def special_count(self, obj):
+        return obj.special_set.count()
+    special_count.short_description = "Specials"
 
-# Option 2: Using admin.site.register() - equivalent to the decorator approach
-# admin.site.register(Special, UnfoldModelAdmin)
-# admin.site.register(Foods, UnfoldModelAdmin)
-# admin.site.register(Category, UnfoldModelAdmin)
+@admin.register(Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = ('user', 'food', 'created_at')
+    list_filter = ('created_at', 'user')
+    search_fields = ('user__username', 'food__title')
+
+# Admin site customization
+admin.site.site_header = "Restaurant Management System"
+admin.site.site_title = "Restaurant Admin"
+admin.site.index_title = "Welcome to Restaurant Management"

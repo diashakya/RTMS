@@ -1,11 +1,99 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block title %}Order History{% endblock %}
+
 {% block content %}
+<style>
+    .order-card {
+        border: 1px solid #eee;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .order-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    
+    .order-header {
+        background: linear-gradient(45deg, #f76d37, #e55829);
+        color: white;
+        padding: 15px;
+        border-radius: 12px 12px 0 0;
+    }
+    
+    .status-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: bold;
+    }
+    
+    .status-pending { background: #ffc107; color: #000; }
+    .status-completed { background: #28a745; color: #fff; }
+    .status-cancelled { background: #dc3545; color: #fff; }
+    
+    .filter-tabs {
+        border-bottom: 2px solid #f76d37;
+        margin-bottom: 30px;
+    }
+    
+    .filter-tab {
+        display: inline-block;
+        padding: 10px 20px;
+        margin-right: 10px;
+        text-decoration: none;
+        color: #666;
+        border-bottom: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .filter-tab.active, .filter-tab:hover {
+        color: #f76d37;
+        border-bottom-color: #f76d37;
+    }
+    
+    .order-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #f5f5f5;
+    }
+    
+    .order-item:last-child {
+        border-bottom: none;
+    }
+    
+    .item-image {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        object-fit: cover;
+        margin-right: 15px;
+    }
+</style>
+
 <div class="container" style="max-width: 900px; margin: 40px auto;">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 style="color: #f76d37; font-weight: bold; margin: 0;">Your Order History</h2>
-        <a href="{% url 'menu' %}" class="btn btn-primary" style="background: #f76d37; border: none;">
-            <i class="fas fa-plus"></i> Order Again
+    <h2 style="font-weight: bold; color: #f76d37; margin-bottom: 30px;">
+        <i class="fas fa-history" style="margin-right: 15px;"></i>Order History
+    </h2>
+    
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <a href="{% url 'order_history' %}" class="filter-tab {% if not status_filter %}active{% endif %}">
+            All Orders ({{ total_orders }})
+        </a>
+        <a href="{% url 'order_history' %}?status=pending" class="filter-tab {% if status_filter == 'pending' %}active{% endif %}">
+            Pending
+        </a>
+        <a href="{% url 'order_history' %}?status=completed" class="filter-tab {% if status_filter == 'completed' %}active{% endif %}">
+            Completed
+        </a>
+        <a href="{% url 'order_history' %}?status=cancelled" class="filter-tab {% if status_filter == 'cancelled' %}active{% endif %}">
+            Cancelled
         </a>
     </div>
     

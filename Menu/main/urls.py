@@ -7,6 +7,7 @@ urlpatterns = [
     path('about/',about,name="about"),
     path('contact/',contact,name="contact"),
     path('menu/',menu,name="menu"),
+    path('favorites/',favorites_view,name="favorites"),
     path('services/',services,name="services"),
 
 
@@ -19,9 +20,18 @@ urlpatterns = [
 
     # ---------------------------cart and order urls---------------------------------
     path('cart/', cart_view, name='cart'),
+    path('add-to-cart-form/', add_to_cart_form, name='add_to_cart_form'),
+    path('api/add-to-cart/', add_to_cart, name='add_to_cart'),
+    path('api/update-cart-item/', update_cart_item, name='update_cart_item'),
+    path('api/remove-from-cart/', remove_from_cart, name='remove_from_cart'),
+    path('api/checkout/', checkout_api, name='checkout_api'),
     path('checkout/', checkout, name='checkout'),
     path('orders/', order_history, name='order_history'),
+    path('api/cancel-order/<int:order_id>/', cancel_order, name='cancel_order'),
+    path('api/reorder/<int:order_id>/', reorder, name='reorder'),
+    path('order-receipt/<int:order_id>/', order_receipt, name='order_receipt'),
     path('thank-you/', thank_you, name='thank_you'),
+    path('thank-you/<int:order_id>/', thank_you, name='thank_you'),
     path('update-order-status/<int:order_id>/', update_order_status, name='update_order_status'),
     
     # ---------------------------admin dashboard urls-----------------------------
@@ -58,4 +68,10 @@ urlpatterns = [
 # --------------------api urls--------------------
     path('specials/', special_list, name='special_list'),
     path('users/', user_list, name='user_list'),
+    path('api/toggle-favorite/', toggle_favorite, name='toggle_favorite'),
+    path('api/remove-favorite/', remove_favorite, name='remove_favorite_api'),
+    path('api/favorites/', list_favorites, name='list_favorites'),
+    path('api/favorites/add/', toggle_favorite, name='add_favorite'),
+    path('api/favorites/remove/', toggle_favorite, name='remove_favorite_toggle'),
+    path('api/foods/<int:pk>/', food_detail, name='food_detail'),
 ]

@@ -4,7 +4,10 @@
 {% block title %}Menu{% endblock title %}
 
 {% block content %}
-<!-- Cart Notification Popup and Confetti -->
+<!-- Cart Not                    <button class="quick-view-btn" data-id="food-{{ food.id }}">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                    <button class="favorite-btn" data-id="food-{{ food.id }}">ation Popup and Confetti -->
 <div id="cart-notification" style="display:none;position:fixed;top:30px;left:50%;transform:translateX(-50%);background:#f76d37;color:#fff;padding:16px 32px;border-radius:8px;z-index:2000;font-weight:bold;font-size:1.2em;box-shadow:0 4px 16px rgba(0,0,0,0.12);transition:opacity 0.3s;">
   <span id="cart-notification-msg">Added to cart!</span>
 </div>
@@ -51,14 +54,19 @@
                         <span class="item-price">Rs {{ special.price }}</span>
                         {% endif %}
                     </div>
-                    <div class="quantity-controls">
-                        <button class="quantity-btn minus">-</button>
-                        <span class="quantity">1</span>
-                        <button class="quantity-btn plus">+</button>
-                    </div>
-                    <button class="add-to-cart-btn" data-id="{{ special.id }}">
-                        <i class="fas fa-shopping-cart"></i> Add
-                    </button>
+                    <form method="post" action="{% url 'add_to_cart_form' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="item_type" value="special">
+                        <input type="hidden" name="item_id" value="{{ special.id }}">
+                        <div class="quantity-controls">
+                            <button type="button" class="quantity-btn minus" onclick="updateQuantity(this, -1)">-</button>
+                            <input type="number" name="quantity" class="quantity" value="1" min="1" max="50" readonly style="border: none; text-align: center; width: 40px; background: transparent; font-weight: bold;">
+                            <button type="button" class="quantity-btn plus" onclick="updateQuantity(this, 1)">+</button>
+                        </div>
+                        <button type="submit" class="add-to-cart-btn">
+                            <i class="fas fa-shopping-cart"></i> Add to Cart
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -157,16 +165,21 @@
                         <span class="calories">{{ food.calories }} cal</span>
                         {% endif %}
                     </div>
-                    <div class="quantity-controls">
-                        <button class="quantity-btn minus">-</button>
-                        <span class="quantity">1</span>
-                        <button class="quantity-btn plus">+</button>
-                    </div>
-                    <div class="action-buttons">
-                        <button class="add-to-cart-btn" data-id="{{ food.id }}">
-                            <i class="fas fa-shopping-cart"></i> Add to Cart
-                        </button>
-                    </div>
+                    <form method="post" action="{% url 'add_to_cart_form' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="item_type" value="food">
+                        <input type="hidden" name="item_id" value="{{ food.id }}">
+                        <div class="quantity-controls">
+                            <button type="button" class="quantity-btn minus" onclick="updateQuantity(this, -1)">-</button>
+                            <input type="number" name="quantity" class="quantity" value="1" min="1" max="50" readonly style="border: none; text-align: center; width: 40px; background: transparent; font-weight: bold;">
+                            <button type="button" class="quantity-btn plus" onclick="updateQuantity(this, 1)">+</button>
+                        </div>
+                        <div class="action-buttons">
+                            <button type="submit" class="add-to-cart-btn">
+                                <i class="fas fa-shopping-cart"></i> Add to Cart
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

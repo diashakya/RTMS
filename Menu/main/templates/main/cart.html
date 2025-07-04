@@ -2,34 +2,278 @@
 {% load static %}
 
 {% block title %}Cart{% endblock %}
+
+{% block content %}
 <style>
-    /* Add to your CSS */
-    .loading {
-        opacity: 0.7;
-        pointer-events: none;
+    .cart-item-card {
+        border: 1px solid #eee;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .cart-item-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    
+    .quantity-form {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .quantity-input {
+        width: 70px;
+        text-align: center;
+        border: 2px solid #f76d37;
+        border-radius: 6px;
+        padding: 8px;
+        font-weight: bold;
+    }
+    
+    .btn-cart {
+        border: none;
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .btn-update {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-update:hover {
+        background: #218838;
+        transform: translateY(-2px);
+    }
+    
+    .btn-remove {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-remove:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+    }
+    
+    .payment-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 25px;
+        margin-top: 30px;
+    }
+    
+    .payment-option {
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 10px 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .payment-option:hover {
+        border-color: #f76d37;
+    }
+    
+    .payment-option input[type="radio"] {
+        margin-right: 10px;
+    }
+    
+    .checkout-btn {
+        background: linear-gradient(45deg, #f76d37, #e55829);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 15px 30px;
+        font-size: 1.2em;
+        font-weight: bold;
+        width: 100%;
+        margin-top: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .checkout-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(247, 109, 55, 0.4);
     }
 </style>
-{% block content %}
-<div class="container" style="max-width: 700px; margin: 40px auto;">
-    {% csrf_token %}
-    <h2 style="font-weight: bold; color: #f76d37; margin-bottom: 30px;">Your Cart</h2>
-    <div id="cart-page-items"></div>
-    <div id="cart-page-total-section" style="margin-top: 20px; display: none;">
-        <hr />
-        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2em;">
-            <span>Total:</span>
-            <span id="cart-page-total">Rs 0</span>
-        </div>
-        <button id="cart-page-checkout-btn" style="margin-top: 18px; width: 100%; background: #f76d37; color: #fff; border: none; border-radius: 5px; padding: 12px 0; font-weight: bold; font-size: 1.1em;">Proceed to Checkout</button>
-        <div id="payment-options" style="display:none; margin-top: 20px; text-align:center;">
-            <button id="pay-cash-btn" style="background:#f76d37; color:#fff; border:none; border-radius:5px; padding:10px 30px; font-weight:bold; margin-right:20px;">Pay with Cash</button>
-            <button id="pay-wallet-btn" style="background:#222; color:#fff; border:none; border-radius:5px; padding:10px 30px; font-weight:bold;">Pay with Wallet</button>
-        </div>
-    </div>
-    <div id="cart-page-empty" style="color: #888; font-size: 1.1em;">Your cart is empty.</div>
-</div>
-{% endblock %}
 
-{% block extra_js %}
-<script src="{% static 'js/cart.js' %}"></script>
+<div class="container" style="max-width: 800px; margin: 40px auto;">
+    <h2 style="font-weight: bold; color: #f76d37; margin-bottom: 30px;">
+        <i class="fas fa-shopping-cart" style="margin-right: 15px;"></i>Your Cart
+    </h2>
+    
+    <!-- Display Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Cart Items -->
+    {% if cart_items %}
+        <div class="cart-items-section">
+            {% for item in cart_items %}
+            <div class="cart-item-card">
+                <div class="row align-items-center p-3">
+                    <!-- Item Image and Details -->
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <img src="{{ item.item_image.url }}" alt="{{ item.item_name }}" 
+                                 style="width:80px;height:80px;object-fit:cover;border-radius:10px;margin-right:20px;">
+                            <div>
+                                <h5 style="margin: 0 0 8px 0; color: #333; font-weight: bold;">{{ item.item_name }}</h5>
+                                <p style="margin: 0; color: #666; font-size: 0.95em;">Rs {{ item.item_price }} each</p>
+                                <p style="margin: 5px 0 0 0; color: #f76d37; font-weight: bold; font-size: 1.1em;">
+                                    Total: Rs {{ item.total_price }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quantity Controls -->
+                    <div class="col-md-3">
+                        <form method="post" class="quantity-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="cart_item_id" value="{{ item.id }}">
+                            <label style="font-weight: bold; margin-right: 10px;">Qty:</label>
+                            <input type="number" name="quantity" value="{{ item.quantity }}" 
+                                   min="1" max="50" class="quantity-input">
+                            <button type="submit" name="update_quantity" class="btn-cart btn-update">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Remove Button -->
+                    <div class="col-md-3 text-end">
+                        <form method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="cart_item_id" value="{{ item.id }}">
+                            <button type="submit" name="remove_item" class="btn-cart btn-remove"
+                                    onclick="return confirm('Are you sure you want to remove this item?')">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Cart Summary -->
+        <div class="cart-summary" style="border-top: 3px solid #f76d37; padding-top: 20px; margin-top: 30px;">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4 style="color: #333;">Order Summary</h4>
+                    <p style="font-size: 1.1em; margin: 10px 0;">
+                        <strong>Items ({{ total_items }}):</strong> Rs {{ total_price }}
+                    </p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <h3 style="color: #f76d37; font-weight: bold;">
+                        Total: Rs {{ total_price }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Checkout Section -->
+        <div class="payment-section">
+            <h4 style="color: #333; margin-bottom: 20px;">
+                <i class="fas fa-credit-card" style="margin-right: 10px;"></i>Checkout Details
+            </h4>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <!-- Customer Details -->
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" style="font-weight: bold;">First Name *</label>
+                        {{ checkout_form.customer_firstname }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" style="font-weight: bold;">Last Name *</label>
+                        {{ checkout_form.customer_lastname }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" style="font-weight: bold;">Phone Number *</label>
+                        {{ checkout_form.customer_mobileno }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" style="font-weight: bold;">Email Address *</label>
+                        {{ checkout_form.customer_email }}
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="form-label" style="font-weight: bold;">Delivery Address *</label>
+                        {{ checkout_form.customer_address }}
+                    </div>
+                </div>
+                
+                <!-- Payment Method -->
+                <div class="mb-4">
+                    <label class="form-label" style="font-weight: bold; margin-bottom: 15px;">Payment Method *</label>
+                    <div class="payment-methods">
+                        {% for choice in checkout_form.payment_method %}
+                            <div class="payment-option">
+                                <div class="d-flex align-items-center">
+                                    {{ choice.tag }}
+                                    <div class="ms-3">
+                                        {% if choice.choice_value == 'cash' %}
+                                            <i class="fas fa-money-bill-wave text-success" style="font-size: 1.5em; margin-right: 10px;"></i>
+                                            <strong>Cash on Delivery</strong>
+                                            <p class="mb-0 text-muted">Pay when order arrives</p>
+                                        {% elif choice.choice_value == 'card' %}
+                                            <i class="fas fa-credit-card text-primary" style="font-size: 1.5em; margin-right: 10px;"></i>
+                                            <strong>Card Payment</strong>
+                                            <p class="mb-0 text-muted">Pay with debit/credit card</p>
+                                        {% elif choice.choice_value == 'wallet' %}
+                                            <i class="fas fa-wallet text-info" style="font-size: 1.5em; margin-right: 10px;"></i>
+                                            <strong>Digital Wallet</strong>
+                                            <p class="mb-0 text-muted">eSewa, Khalti, etc.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Order Notes -->
+                <div class="mb-4">
+                    <label class="form-label" style="font-weight: bold;">Special Instructions</label>
+                    {{ checkout_form.order_notes }}
+                </div>
+                
+                <!-- Place Order Button -->
+                <button type="submit" name="checkout" class="checkout-btn">
+                    <i class="fas fa-lock" style="margin-right: 10px;"></i>
+                    Place Order - Rs {{ total_price }}
+                </button>
+            </form>
+        </div>
+        
+    {% else %}
+        <!-- Empty Cart -->
+        <div class="text-center" style="padding: 60px 20px;">
+            <i class="fas fa-shopping-cart" style="font-size: 4em; color: #ddd; margin-bottom: 20px;"></i>
+            <h4 style="color: #666; margin-bottom: 15px;">Your cart is empty</h4>
+            <p style="color: #888; margin-bottom: 30px;">Start adding items to your cart by browsing our menu.</p>
+            <a href="{% url 'menu' %}" class="btn" style="background: #f76d37; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                <i class="fas fa-utensils" style="margin-right: 10px;"></i>Browse Menu
+            </a>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

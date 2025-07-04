@@ -48,6 +48,107 @@ class OrderConsumer(AsyncWebsocketConsumer):
             'message': event['message']
         }))
 
+class OrderStatusConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.order_id = self.scope['url_route']['kwargs']['order_id']
+        self.room_group_name = f'order_{self.order_id}'
+        
+        # Join room group
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+        
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        # Leave room group
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+
+    async def order_status_update(self, event):
+        # Send message to WebSocket
+        await self.send(text_data=json.dumps({
+            'type': 'order_status_update',
+            'order_id': event['order_id'],
+            'status': event['status'],
+            'message': event['message'],
+            'timestamp': event.get('timestamp')
+        }))
+
+class AdminConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        # Only allow staff/admin users
+        user = self.scope["user"]
+        if user.is_anonymous or not user.is_staff:
+            await self.close()
+            return
+            
+        self.room_group_name = 'admin_notifications'
+        
+        # Join room group
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+        
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        # Leave room group
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+
+    async def new_order(self, event):
+        # Send new order notification to admin
+        await self.send(text_data=json.dumps({
+            'type': 'new_order',
+            'order_id': event['order_id'],
+            'customer_name': event['customer_name'],
+            'total': event['total'],
+            'message': event['message']
+        }))
+
+class NotificationConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.user_id = self.scope['url_route']['kwargs']['user_id']
+        self.room_group_name = f'notifications_{self.user_id}'
+        
+        # Only allow authenticated users to connect to their own notifications
+        user = self.scope["user"]
+        if user.is_anonymous or str(user.id) != self.user_id:
+            await self.close()
+            return
+        
+        # Join room group
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+        
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        # Leave room group
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+
+    async def user_notification(self, event):
+        # Send notification to user
+        await self.send(text_data=json.dumps({
+            'type': 'notification',
+            'title': event['title'],
+            'message': event['message'],
+            'notification_type': event.get('notification_type', 'info'),
+            'timestamp': event.get('timestamp')
+        }))
+
     async def new_order(self, event):
         # Send new order notification
         await self.send(text_data=json.dumps({

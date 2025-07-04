@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Order Confirmation</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(45deg, #f76d37, #e55829); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: #fff; padding: 30px; border: 1px solid #ddd; }
+        .footer { background: #f8f9fa; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; }
+        .order-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .total { font-size: 1.2em; font-weight: bold; color: #f76d37; text-align: right; margin-top: 15px; }
+        .btn { background: #f76d37; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Order Confirmed!</h1>
+            <p>Thank you for your order, {{ order.customer.customer_firstname }}!</p>
+        </div>
+        
+        <div class="content">
+            <h2>Order #{{ order.id }}</h2>
+            <p><strong>Order Date:</strong> {{ order.created_at|date:"F d, Y g:i A" }}</p>
+            <p><strong>Status:</strong> {{ order.get_status_display }}</p>
+            
+            <h3>Order Details:</h3>
+            {% for item in order.items.all %}
+            <div class="order-item">
+                <div>
+                    <strong>
+                        {% if item.food %}{{ item.food.title }}{% else %}{{ item.special.name }}{% endif %}
+                    </strong>
+                    <br>
+                    <small>{{ item.quantity }} × Rs {{ item.price }}</small>
+                </div>
+                <div>Rs {{ item.total_price }}</div>
+            </div>
+            {% endfor %}
+            
+            <div class="total">
+                Total Amount: Rs {{ order.total }}
+            </div>
+            
+            <h3>Delivery Information:</h3>
+            <p>
+                <strong>Name:</strong> {{ order.customer.customer_firstname }} {{ order.customer.customer_lastname }}<br>
+                <strong>Phone:</strong> {{ order.customer.customer_mobileno }}<br>
+                <strong>Address:</strong> {{ order.customer.customer_address }}
+            </p>
+            
+            {% if order.notes %}
+            <h3>Special Instructions:</h3>
+            <p>{{ order.notes }}</p>
+            {% endif %}
+            
+            <p>We'll notify you when your order is ready for delivery/pickup.</p>
+        </div>
+        
+        <div class="footer">
+            <p>Thank you for choosing our restaurant!</p>
+            <p>Questions? Contact us at <a href="mailto:support@restaurant.com">support@restaurant.com</a></p>
+        </div>
+    </div>
+</body>
+</html>
