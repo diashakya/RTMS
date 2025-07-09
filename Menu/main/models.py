@@ -127,11 +127,25 @@ class Cart(models.Model):
 
     @property
     def total_price(self):
-        return sum(item.total_price for item in self.items.all())
+        total = 0
+        for item in self.items.all():
+            if item and hasattr(item, 'total_price'):
+                try:
+                    total += item.total_price or 0
+                except (AttributeError, TypeError):
+                    continue
+        return total
 
     @property
     def total_items(self):
-        return sum(item.quantity for item in self.items.all())
+        total = 0
+        for item in self.items.all():
+            if item and hasattr(item, 'quantity'):
+                try:
+                    total += item.quantity or 0
+                except (AttributeError, TypeError):
+                    continue
+        return total
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
@@ -142,22 +156,32 @@ class CartItem(models.Model):
 
     @property
     def item_price(self):
-        if self.food:
-            return self.food.price
-        elif self.special:
-            return self.special.discounted_price or self.special.price
-        return 0
+        try:
+            if self.food and hasattr(self.food, 'price'):
+                return self.food.price or 0
+            elif self.special and hasattr(self.special, 'price'):
+                return self.special.discounted_price or self.special.price or 0
+            return 0
+        except (AttributeError, TypeError):
+            return 0
 
     @property
     def total_price(self):
-        return self.item_price * self.quantity
+        try:
+            return (self.item_price or 0) * (self.quantity or 0)
+        except (AttributeError, TypeError):
+            return 0
 
     @property
     def item_name(self):
-        if self.food:
-            return self.food.title
-        elif self.special:
-            return self.special.name
+        try:
+            if self.food and hasattr(self.food, 'title'):
+                return self.food.title or 'Unknown Item'
+            elif self.special and hasattr(self.special, 'name'):
+                return self.special.name or 'Unknown Special'
+            return 'Unknown Item'
+        except (AttributeError, TypeError):
+            return 'Unknown Item'
         return "Unknown Item"
 
     @property

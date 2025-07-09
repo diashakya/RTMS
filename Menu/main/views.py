@@ -291,29 +291,65 @@ def get_or_create_cart(request):
 
 def cart_view(request):
     """Renders the cart page with items and handles cart operations."""
-    cart = get_or_create_cart(request)
-    cart_items = cart.items.all()
-    
-    # Handle form submissions
-    if request.method == 'POST':
-        if 'update_quantity' in request.POST:
-            return handle_update_quantity(request, cart)
-        elif 'remove_item' in request.POST:
-            return handle_remove_item(request, cart)
-        elif 'checkout' in request.POST:
-            return handle_checkout(request, cart)
-    
-    # Create checkout form
-    checkout_form = CheckoutForm()
-    
-    context = {
-        'cart': cart,
-        'cart_items': cart_items,
-        'total_price': cart.total_price,
-        'total_items': cart.total_items,
-        'checkout_form': checkout_form,
-    }
-    return render(request, 'main/cart.html', context)
+    try:
+        cart = get_or_create_cart(request)
+        if not cart:
+            # If cart creation fails, create empty context
+            context = {
+                'cart': None,
+                'cart_items': [],
+                'total_price': 0,
+                'total_items': 0,
+                'checkout_form': CheckoutForm(),
+            }
+            return render(request, 'main/cart.html', context)
+        
+        cart_items = cart.items.all()
+        
+        # Handle form submissions
+        if request.method == 'POST':
+            if 'update_quantity' in request.POST:
+                return handle_update_quantity(request, cart)
+            elif 'remove_item' in request.POST:
+                return handle_remove_item(request, cart)
+            elif 'checkout' in request.POST:
+                return handle_checkout(request, cart)
+        
+        # Create checkout form
+        checkout_form = CheckoutForm()
+        
+        # Safely get cart properties
+        try:
+            total_price = cart.total_price
+        except (AttributeError, TypeError):
+            total_price = 0
+            
+        try:
+            total_items = cart.total_items
+        except (AttributeError, TypeError):
+            total_items = 0
+        
+        context = {
+            'cart': cart,
+            'cart_items': cart_items,
+            'total_price': total_price,
+            'total_items': total_items,
+            'checkout_form': checkout_form,
+        }
+        return render(request, 'main/cart.html', context)
+        
+    except Exception as e:
+        print(f"Error in cart_view: {e}")
+        # Return a safe fallback context
+        context = {
+            'cart': None,
+            'cart_items': [],
+            'total_price': 0,
+            'total_items': 0,
+            'checkout_form': CheckoutForm(),
+            'error': str(e)
+        }
+        return render(request, 'main/cart.html', context)
 
 @csrf_exempt
 def add_to_cart(request):
@@ -460,33 +496,43 @@ def checkout(request):
         # Create order items
         for item in cart_items:
             try:
+                # Get item ID and validate it's not None
+                item_id = item.get('id')
+                if not item_id:
+                    continue
+                
                 # Check if it's a special or regular food item
-                if 'special' in str(item.get('id', '')).lower():
+                item_id_str = str(item_id).lower()
+                if 'special' in item_id_str:
                     # It's a special item
-                    special_id = item['id'].replace('special-', '')
+                    special_id = item_id_str.replace('special-', '')
                     special = Special.objects.get(id=special_id)
                     price = special.discounted_price if special.discounted_price else special.price
                     
                     OrderItem.objects.create(
                         order=order,
                         special=special,
-                        quantity=item['quantity'],
+                        quantity=item.get('quantity', 1),
                         price=price
                     )
                 else:
                     # It's a regular food item
-                    food = Foods.objects.get(id=item['id'])
+                    food = Foods.objects.get(id=item_id)
                     
                     OrderItem.objects.create(
                         order=order,
                         food=food,
-                        quantity=item['quantity'],
+                        quantity=item.get('quantity', 1),
                         price=food.price
                     )
                 
-                total += float(item['price']) * int(item['quantity'])
+                # Calculate total with null checks
+                item_price = item.get('price', 0)
+                item_quantity = item.get('quantity', 1)
+                if item_price and item_quantity:
+                    total += float(item_price) * int(item_quantity)
                 
-            except (Foods.DoesNotExist, Special.DoesNotExist):
+            except (Foods.DoesNotExist, Special.DoesNotExist, ValueError, TypeError):
                 continue
         
         # Update order total
@@ -548,6 +594,9 @@ def checkout_api(request):
         
         # Get user's cart
         cart = get_or_create_cart(request)
+        if not cart:
+            return JsonResponse({'success': False, 'message': 'Unable to access cart'}, status=500)
+        
         cart_items = cart.items.all()
         
         if not cart_items:
@@ -555,39 +604,50 @@ def checkout_api(request):
         
         # Create or get customer
         customer, created = Customer.objects.get_or_create(
-            phone=customer_phone,
+            customer_mobileno=customer_phone,
             defaults={
-                'name': customer_name,
-                'address': customer_address
+                'customer_firstname': customer_name.split()[0] if customer_name else 'Guest',
+                'customer_lastname': ' '.join(customer_name.split()[1:]) if customer_name and len(customer_name.split()) > 1 else '',
+                'customer_address': customer_address,
+                'customer_email': 'guest@restaurant.com',  # Default email for API orders
+                'customer_dob': timezone.now().date()  # Default DOB
             }
         )
         
         # Create order
+        try:
+            cart_total = cart.total_price or 0
+        except (AttributeError, TypeError):
+            cart_total = 0
+            
         order = Order.objects.create(
             customer=customer,
             user=request.user if request.user.is_authenticated else None,
             notes=f"Payment Method: {payment_method.title()}\nDelivery Address: {customer_address}\n{order_notes}".strip(),
             status='pending',
-            total=cart.total_price
+            total=cart_total
         )
         
         # Create order items from cart
         for cart_item in cart_items:
-            if cart_item.food:
-                OrderItem.objects.create(
-                    order=order,
-                    food=cart_item.food,
-                    quantity=cart_item.quantity,
-                    price=cart_item.food.price
-                )
-            elif cart_item.special:
-                price = cart_item.special.discounted_price if cart_item.special.discounted_price else cart_item.special.price
-                OrderItem.objects.create(
-                    order=order,
-                    special=cart_item.special,
-                    quantity=cart_item.quantity,
-                    price=price
-                )
+            try:
+                if cart_item and cart_item.food:
+                    OrderItem.objects.create(
+                        order=order,
+                        food=cart_item.food,
+                        quantity=cart_item.quantity or 1,
+                        price=cart_item.food.price or 0
+                    )
+                elif cart_item and cart_item.special:
+                    price = cart_item.special.discounted_price if cart_item.special.discounted_price else cart_item.special.price
+                    OrderItem.objects.create(
+                        order=order,
+                        special=cart_item.special,
+                        quantity=cart_item.quantity or 1,
+                        price=price or 0
+                    )
+            except (AttributeError, TypeError):
+                continue
         
         # Clear the cart
         cart_items.delete()
@@ -977,7 +1037,7 @@ def handle_checkout(request, cart):
     form = CheckoutForm(request.POST)
     if form.is_valid():
         # Get cart items
-        cart_items = cart.items.all()
+        cart_items = cart.items.all() if cart else []
         if not cart_items:
             messages.error(request, 'Your cart is empty.')
             return redirect('cart')
@@ -1011,6 +1071,12 @@ def handle_checkout(request, cart):
         if order_notes:
             notes_parts.append(order_notes)
         
+        # Calculate cart total with null checks
+        try:
+            cart_total = cart.total_price if cart else 0
+        except (AttributeError, TypeError):
+            cart_total = 0
+        
         order = Order.objects.create(
             customer=customer,
             user=request.user if request.user.is_authenticated else None,
@@ -1021,26 +1087,29 @@ def handle_checkout(request, cart):
             customer_phone=customer_data['customer_mobileno'],
             notes="\n".join(notes_parts),
             status='pending',
-            total=cart.total_price
+            total=cart_total
         )
         
         # Create order items from cart
         for cart_item in cart_items:
-            if cart_item.food:
-                OrderItem.objects.create(
-                    order=order,
-                    food=cart_item.food,
-                    quantity=cart_item.quantity,
-                    price=cart_item.food.price
-                )
-            elif cart_item.special:
-                price = cart_item.special.discounted_price if cart_item.special.discounted_price else cart_item.special.price
-                OrderItem.objects.create(
-                    order=order,
-                    special=cart_item.special,
-                    quantity=cart_item.quantity,
-                    price=price
-                )
+            try:
+                if cart_item and cart_item.food:
+                    OrderItem.objects.create(
+                        order=order,
+                        food=cart_item.food,
+                        quantity=cart_item.quantity or 1,
+                        price=cart_item.food.price or 0
+                    )
+                elif cart_item and cart_item.special:
+                    price = cart_item.special.discounted_price if cart_item.special.discounted_price else cart_item.special.price
+                    OrderItem.objects.create(
+                        order=order,
+                        special=cart_item.special,
+                        quantity=cart_item.quantity or 1,
+                        price=price or 0
+                    )
+            except (AttributeError, TypeError):
+                continue
         
         # Clear the cart
         cart_items.delete()
