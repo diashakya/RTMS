@@ -107,12 +107,12 @@ class RestaurantSystemTestSuite:
             'password': 'testpass123'
         }
         
-        response = self.client.post('/accounts/login/', login_data)
+        response = self.client.post('/login/', login_data)
         if response.status_code in [200, 302]:  # 302 = successful redirect
             print("   ✅ User login successful")
             
             # Test logout
-            response = self.client.get('/log_out/')
+            response = self.client.get('/logout/')
             if response.status_code in [200, 302]:
                 print("   ✅ User logout successful")
                 return True
@@ -306,7 +306,7 @@ class RestaurantSystemTestSuite:
         # Login first
         self.client.login(username='testuser_comprehensive', password='testpass123')
         
-        response = self.client.get('/order-history/')
+        response = self.client.get('/orders/')
         if response.status_code == 200:
             print("   ✅ Order history page accessible")
             
