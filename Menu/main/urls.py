@@ -2,6 +2,7 @@ from django.urls import path
 from .views import *
 from django.urls import reverse_lazy
 from django.contrib.auth import views as auth_views
+from django.shortcuts import render
 urlpatterns = [
     path('',index,name="index"),
     path('about/',about,name="about"),
@@ -9,6 +10,8 @@ urlpatterns = [
     path('menu/',menu,name="menu"),
     path('favorites/',favorites_view,name="favorites"),
     path('services/',services,name="services"),
+    path('loading-demo/', lambda request: render(request, 'main/loading_demo.html'), name='loading_demo'),
+    path('form-validation-demo/', lambda request: render(request, 'main/form_validation_demo.html'), name='form_validation_demo'),
 
 
     # --------------------------------------------authentication urls-----------------------------
