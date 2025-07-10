@@ -65,40 +65,54 @@
             {% endfor %}
 
             {% endif %}
-            <form class="form" method="POST" action="{% url 'register' %}">
+            <form class="form registration-form" method="POST" action="{% url 'register' %}">
                 {% csrf_token %}
                 <div class="d-flex gap-3">
-                    <div class="input-group">
-                        <label for="username">First Name</label>
-                        <input type="text" name="firstname" id="username" placeholder="">
+                    <div class="input-group form-group-enhanced">
+                        <label for="firstname">First Name *</label>
+                        <input type="text" name="firstname" id="firstname" data-validation="first-name" required>
+                        <div class="invalid-feedback"></div>
                     </div>
-                    <div class="input-group">
-                        <label for="lastName">Last Name</label>
-                        <input type="text" name="lastname" id="lastName" placeholder="">
+                    <div class="input-group form-group-enhanced">
+                        <label for="lastname">Last Name *</label>
+                        <input type="text" name="lastname" id="lastname" data-validation="last-name" required>
+                        <div class="invalid-feedback"></div>
                     </div>
                 </div>
-                <div class="input-group">
-                    <label for="email">username</label>
-                    <input type="username" name="username" id="email" placeholder="">
+                <div class="input-group form-group-enhanced">
+                    <label for="username">Username *</label>
+                    <input type="text" name="username" id="username" placeholder="Choose a unique username" data-validation="username" required>
+                    <div class="invalid-feedback"></div>
+                    <small class="form-text text-muted">3-150 characters, letters, digits and @/./+/-/_ only</small>
                 </div>
 
-                <div class="input-group">
-                    <label for="email">Email</label>
-                    <input type="email" name="email" id="email" placeholder="">
+                <div class="input-group form-group-enhanced">
+                    <label for="email">Email *</label>
+                    <input type="email" name="email" id="email" placeholder="your@email.com" data-validation="email" required>
+                    <div class="invalid-feedback"></div>
                 </div>
-                <div class="input-group">
-                    <label for="password">Password</label>
-                    <input type="password" name="password" id="password" placeholder="">
+                <div class="input-group form-group-enhanced">
+                    <label for="password">Password *</label>
+                    <input type="password" name="password" id="password" placeholder="Enter a strong password" data-validation="password" required>
+                    <div class="invalid-feedback"></div>
+                    <small class="form-text text-muted">
+                        <ul style="margin: 5px 0; padding-left: 20px; font-size: 11px;">
+                            <li>At least 8 characters long</li>
+                            <li>Must contain letters and numbers</li>
+                            <li>Cannot be too common</li>
+                        </ul>
+                    </small>
                 </div>
-                <div class="input-group">
-                        <label for="Cpassword">Confirm Password</label>
-                        <input type="password" name="Cpassword" id="Cpassword" placeholder="">
+                <div class="input-group form-group-enhanced">
+                        <label for="Cpassword">Confirm Password *</label>
+                        <input type="password" name="Cpassword" id="Cpassword" placeholder="Confirm your password" data-validation="confirm-password" required>
+                        <div class="invalid-feedback"></div>
                     </div>
                     <div >
                         <input type="checkbox" id="show_password">
                         <label for="show_password">Show Password</label>
                     </div>
-                    <button class="sign">Sign Up</button>
+                    <button class="sign" type="submit">Sign Up</button>
                 </form>
 
                 <script>
@@ -110,6 +124,123 @@
                         const passwordType = passwordInput.type === "password" ? "text" : "password";
                         passwordInput.type = passwordType;
                         confirmPasswordInput.type = passwordType;
+                    });
+                    
+                    // Enhanced validation for registration form
+                    document.addEventListener('DOMContentLoaded', function() {
+                        if (typeof FormValidator !== 'undefined') {
+                            // Add custom validation rules for registration
+                            const registrationForm = document.querySelector('.registration-form');
+                            if (registrationForm) {
+                                const validator = new FormValidator(registrationForm, {
+                                    validateOnInput: true,
+                                    validateOnBlur: true,
+                                    showTooltips: true
+                                });
+                                
+                                // Custom validation rules for registration
+                                validator.validationRules = {
+                                    ...validator.validationRules,
+                                    'username': {
+                                        required: true,
+                                        minLength: 3,
+                                        maxLength: 150,
+                                        pattern: /^[\w.@+-]+$/,
+                                        messages: {
+                                            required: 'Username is required',
+                                            minLength: 'Username must be at least 3 characters',
+                                            maxLength: 'Username cannot exceed 150 characters',
+                                            pattern: 'Username can only contain letters, digits and @/./+/-/_ characters'
+                                        }
+                                    },
+                                    'password': {
+                                        required: true,
+                                        minLength: 8,
+                                        custom: (value) => {
+                                            // Password strength validation
+                                            const hasLetter = /[a-zA-Z]/.test(value);
+                                            const hasNumber = /\d/.test(value);
+                                            const isCommon = ['password', '12345678', 'qwerty', 'abc123'].includes(value.toLowerCase());
+                                            
+                                            if (!hasLetter || !hasNumber) {
+                                                return 'Password must contain both letters and numbers';
+                                            }
+                                            if (isCommon) {
+                                                return 'This password is too common';
+                                            }
+                                            return null;
+                                        },
+                                        messages: {
+                                            required: 'Password is required',
+                                            minLength: 'Password must be at least 8 characters long'
+                                        }
+                                    },
+                                    'confirm-password': {
+                                        required: true,
+                                        custom: (value) => {
+                                            const password = document.getElementById('password').value;
+                                            if (value !== password) {
+                                                return 'Passwords do not match';
+                                            }
+                                            return null;
+                                        },
+                                        messages: {
+                                            required: 'Please confirm your password'
+                                        }
+                                    }
+                                };
+                                
+                                // Override validateField to handle custom validation
+                                const originalValidateField = validator.validateField.bind(validator);
+                                validator.validateField = function(field, showFeedback = true) {
+                                    const validationType = field.getAttribute('data-validation');
+                                    if (!validationType || !this.validationRules[validationType]) {
+                                        return originalValidateField(field, showFeedback);
+                                    }
+                                    
+                                    const rules = this.validationRules[validationType];
+                                    const value = field.value.trim();
+                                    const errors = [];
+                                    
+                                    // Required validation
+                                    if (rules.required && !value) {
+                                        errors.push(rules.messages.required);
+                                    }
+                                    
+                                    // Only validate other rules if field has value
+                                    if (value) {
+                                        // Min/Max length validation
+                                        if (rules.minLength && value.length < rules.minLength) {
+                                            errors.push(rules.messages.minLength);
+                                        }
+                                        if (rules.maxLength && value.length > rules.maxLength) {
+                                            errors.push(rules.messages.maxLength);
+                                        }
+                                        
+                                        // Pattern validation
+                                        if (rules.pattern && !rules.pattern.test(value)) {
+                                            errors.push(rules.messages.pattern);
+                                        }
+                                        
+                                        // Custom validation
+                                        if (rules.custom) {
+                                            const customError = rules.custom(value);
+                                            if (customError) {
+                                                errors.push(customError);
+                                            }
+                                        }
+                                    }
+                                    
+                                    const isValid = errors.length === 0;
+                                    
+                                    if (showFeedback) {
+                                        this.showFieldFeedback(field, isValid, errors[0] || '');
+                                    }
+                                    
+                                    return isValid;
+                                };
+                            }
+                        }
                     });
                 </script>
 
