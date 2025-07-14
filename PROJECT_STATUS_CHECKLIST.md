@@ -85,9 +85,9 @@ A complete Django-based restaurant management system with delivery and dine-in o
 ## ⚠️ **MINOR ISSUES IDENTIFIED** 
 
 ### 🔧 **Quick Fixes Needed**
-- [ ] **Login URL Route** - Fix `/accounts/login/` vs `/login/` routing
-- [ ] **Order History URL** - Verify `/order-history/` vs `/orders/` routing  
-- [ ] **Checkout Exception** - Handle NoneType iteration in checkout process
+- [x] **Login URL Route** - ✅ FIXED: All @login_required decorators now use login_url='login'
+- [x] **Order History URL** - ✅ VERIFIED: /orders/ URL pattern is correct and working
+- [x] **Checkout Exception** - ✅ FIXED: Added null checks and error handling for NoneType iteration in checkout process
 
 ### 🎨 **UI Polish (Optional)**
 - [ ] **Loading Indicators** - Add loading spinners for AJAX calls
