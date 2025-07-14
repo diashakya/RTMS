@@ -127,24 +127,39 @@ class Cart(models.Model):
 
     @property
     def total_price(self):
+        """Calculate total price of all items in cart with null safety"""
         total = 0
-        for item in self.items.all():
-            if item and hasattr(item, 'total_price'):
-                try:
-                    total += item.total_price or 0
-                except (AttributeError, TypeError):
-                    continue
+        try:
+            # Use select_related to avoid N+1 queries and handle potential None values
+            items = self.items.select_related('food', 'special').all()
+            for item in items:
+                if item and hasattr(item, 'total_price'):
+                    try:
+                        item_total = item.total_price
+                        if item_total is not None:
+                            total += float(item_total)
+                    except (AttributeError, TypeError, ValueError):
+                        continue
+        except Exception:
+            pass
         return total
 
     @property
     def total_items(self):
+        """Calculate total number of items in cart with null safety"""
         total = 0
-        for item in self.items.all():
-            if item and hasattr(item, 'quantity'):
-                try:
-                    total += item.quantity or 0
-                except (AttributeError, TypeError):
-                    continue
+        try:
+            items = self.items.all()
+            for item in items:
+                if item and hasattr(item, 'quantity'):
+                    try:
+                        quantity = item.quantity
+                        if quantity is not None:
+                            total += int(quantity)
+                    except (AttributeError, TypeError, ValueError):
+                        continue
+        except Exception:
+            pass
         return total
 
 class CartItem(models.Model):
