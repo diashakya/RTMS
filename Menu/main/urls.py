@@ -11,7 +11,9 @@ urlpatterns = [
     path('favorites/',favorites_view,name="favorites"),
     path('services/',services,name="services"),
     path('loading-demo/', lambda request: render(request, 'main/loading_demo.html'), name='loading_demo'),
+    path('loading-indicators-demo/', lambda request: render(request, 'main/loading_indicators_demo.html'), name='loading_indicators_demo'),
     path('form-validation-demo/', lambda request: render(request, 'main/form_validation_demo.html'), name='form_validation_demo'),
+    path('realtime-tracking-demo/', lambda request: render(request, 'main/realtime_tracking_demo.html'), name='realtime_tracking_demo'),
 
 
     # --------------------------------------------authentication urls-----------------------------
@@ -33,6 +35,8 @@ urlpatterns = [
     path('api/cancel-order/<int:order_id>/', cancel_order, name='cancel_order'),
     path('api/reorder/<int:order_id>/', reorder, name='reorder'),
     path('order-receipt/<int:order_id>/', order_receipt, name='order_receipt'),
+    path('track-order/<int:order_id>/', order_tracking, name='order_tracking'),
+    path('api/track-order/<int:order_id>/', track_order_api, name='track_order_api'),
     path('thank-you/', thank_you, name='thank_you'),
     path('thank-you/<int:order_id>/', thank_you, name='thank_you'),
     path('update-order-status/<int:order_id>/', update_order_status, name='update_order_status'),

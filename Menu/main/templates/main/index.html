@@ -197,7 +197,11 @@
     {% for special in todays_specials %}
     <div class="special-item-card" data-category="{{ special.category }}">
       <div class="special-item-img">
-        <img src="{{ special.image.url }}" alt="{{ special.name }}" />
+        {% if special.image %}
+            <img src="{{ special.image.url }}" alt="{{ special.name }}" />
+        {% else %}
+            <img src="{% static 'images/sample_food.jpg' %}" alt="{{ special.name }}" />
+        {% endif %}
         {% if special.is_vegetarian %}
         <span class="veg-indicator veg">VEG</span>
         {% else %}
@@ -357,7 +361,8 @@
     <div class="row">
       <div class="col-md-6 padding_0">
         <div class="form-container form-container-1">
-          <form method="#" action="#">
+          <form method="post" action="{% url 'contact' %}">
+            {% csrf_token %}
             <h1
               style="
                 color: white;

@@ -34,7 +34,11 @@
         {% for special in todays_specials %}
         <div class="special-item-card" data-category="{{ special.category.name }}">
             <div class="special-item-img">
-                <img src="{{ special.image.url }}" alt="{{ special.name }}">
+                {% if special.image %}
+                    <img src="{{ special.image.url }}" alt="{{ special.name }}">
+                {% else %}
+                    <img src="{% static 'images/sample_food.jpg' %}" alt="{{ special.name }}">
+                {% endif %}
                 {% if special.is_vegetarian %}
                 <span class="veg-indicator veg">VEG</span>
                 {% else %}
@@ -99,6 +103,7 @@
 
     <!-- Search Bar -->
     <form action="{% url 'menu' %}" method="get" class="search-container">
+        {% csrf_token %}
         <input type="text" id="menu-search" name="q" placeholder="Search for dishes..." class="search-input" value="{{ search_query }}">
         <button type="submit" class="search-btn"><i class="fas fa-search"></i></button>
     </form>
@@ -128,7 +133,11 @@
         {% for food in foods %}
         <div class="menu-item-card" data-category="{% if food.category %}{{ food.category.name }}{% else %}uncategorized{% endif %}">
             <div class="menu-item-img">
-                <img src="{{ food.image.url }}" alt="{{ food.title }}">
+                {% if food.image %}
+                    <img src="{{ food.image.url }}" alt="{{ food.title }}">
+                {% else %}
+                    <img src="{% static 'images/sample_food.jpg' %}" alt="{{ food.title }}">
+                {% endif %}
                 {% if food.category %}
                 <span class="category-badge">{{ food.category.name }}</span>
                 {% endif %}

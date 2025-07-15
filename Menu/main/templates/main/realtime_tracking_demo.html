@@ -1,0 +1,607 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Real-time Order Tracking Demo{% endblock %}
+
+{% block extra_css %}
+<style>
+.demo-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.demo-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+}
+
+.demo-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.demo-subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.demo-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+    border-left: 4px solid #007bff;
+    transition: transform 0.3s ease;
+}
+
+.demo-card:hover {
+    transform: translateY(-5px);
+}
+
+.demo-card.customer { border-color: #28a745; }
+.demo-card.admin { border-color: #dc3545; }
+.demo-card.features { border-color: #ffc107; }
+
+.card-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.card-description {
+    color: #666;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.feature-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 1.5rem;
+}
+
+.feature-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+}
+
+.feature-list li:last-child {
+    border-bottom: none;
+}
+
+.feature-list i {
+    color: #28a745;
+    margin-right: 0.75rem;
+    width: 16px;
+}
+
+.demo-button {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.demo-button:hover {
+    background: #0056b3;
+    transform: translateY(-2px);
+    color: white;
+    text-decoration: none;
+}
+
+.demo-button.success {
+    background: #28a745;
+}
+
+.demo-button.success:hover {
+    background: #1e7e34;
+}
+
+.demo-button.danger {
+    background: #dc3545;
+}
+
+.demo-button.danger:hover {
+    background: #c82333;
+}
+
+.connection-demo {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    border-left: 4px solid #17a2b8;
+}
+
+.status-indicator {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-left: 0.5rem;
+}
+
+.status-connected { background: #d4edda; color: #155724; }
+.status-connecting { background: #d1ecf1; color: #0c5460; }
+.status-disconnected { background: #f8d7da; color: #721c24; }
+
+.demo-order {
+    background: #fff;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    transition: border-color 0.3s ease;
+}
+
+.demo-order.active {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.order-id {
+    font-weight: bold;
+    color: #007bff;
+}
+
+.order-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-pending { background: #fff3cd; color: #856404; }
+.status-confirmed { background: #d1ecf1; color: #0c5460; }
+.status-preparing { background: #d4edda; color: #155724; }
+.status-ready { background: #f8d7da; color: #721c24; }
+.status-completed { background: #d4edda; color: #155724; }
+
+.instructions {
+    background: #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.instructions h3 {
+    color: #495057;
+    margin-bottom: 1rem;
+}
+
+.instructions ol {
+    color: #6c757d;
+    line-height: 1.6;
+}
+
+.instructions li {
+    margin-bottom: 0.5rem;
+}
+
+.tech-stack {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-top: 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.tech-item {
+    text-align: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.tech-icon {
+    font-size: 2rem;
+    color: #007bff;
+    margin-bottom: 0.5rem;
+}
+
+.tech-name {
+    font-weight: 600;
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    .demo-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .demo-header {
+        padding: 1rem;
+    }
+    
+    .demo-title {
+        font-size: 2rem;
+    }
+    
+    .order-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="demo-container">
+    <!-- Demo Header -->
+    <div class="demo-header">
+        <h1 class="demo-title">🚀 Real-time Order Tracking</h1>
+        <p class="demo-subtitle">Experience live order updates with WebSocket technology</p>
+        <div class="connection-demo">
+            <strong>Connection Status:</strong>
+            <span class="status-indicator status-connecting" id="connection-status">Connecting...</span>
+        </div>
+    </div>
+
+    <!-- Demo Cards Grid -->
+    <div class="demo-grid">
+        <!-- Customer Experience -->
+        <div class="demo-card customer">
+            <h2 class="card-title">👤 Customer Experience</h2>
+            <p class="card-description">
+                Track your order in real-time with beautiful progress indicators and instant notifications.
+            </p>
+            <ul class="feature-list">
+                <li><i class="fas fa-check"></i> Live order status updates</li>
+                <li><i class="fas fa-check"></i> Progress bar visualization</li>
+                <li><i class="fas fa-check"></i> Instant notifications</li>
+                <li><i class="fas fa-check"></i> Mobile responsive design</li>
+                <li><i class="fas fa-check"></i> Auto-reconnection on network issues</li>
+            </ul>
+            <a href="{% url 'menu' %}" class="demo-button success">Place Demo Order</a>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div class="demo-card admin">
+            <h2 class="card-title">⚙️ Admin Dashboard</h2>
+            <p class="card-description">
+                Manage orders in real-time with instant updates and one-click status changes.
+            </p>
+            <ul class="feature-list">
+                <li><i class="fas fa-check"></i> Live order notifications</li>
+                <li><i class="fas fa-check"></i> One-click status updates</li>
+                <li><i class="fas fa-check"></i> Real-time statistics</li>
+                <li><i class="fas fa-check"></i> Sound notifications</li>
+                <li><i class="fas fa-check"></i> Filter and sort orders</li>
+            </ul>
+            {% if user.is_staff %}
+            <a href="{% url 'admin_dashboard' %}" class="demo-button danger">Open Admin Dashboard</a>
+            {% else %}
+            <button class="demo-button" disabled>Admin Access Required</button>
+            {% endif %}
+        </div>
+
+        <!-- Technical Features -->
+        <div class="demo-card features">
+            <h2 class="card-title">⚡ Technical Features</h2>
+            <p class="card-description">
+                Built with modern web technologies for reliable real-time communication.
+            </p>
+            <ul class="feature-list">
+                <li><i class="fas fa-check"></i> Django Channels WebSocket</li>
+                <li><i class="fas fa-check"></i> Automatic reconnection</li>
+                <li><i class="fas fa-check"></i> Event-driven architecture</li>
+                <li><i class="fas fa-check"></i> Error handling & recovery</li>
+                <li><i class="fas fa-check"></i> Production-ready scaling</li>
+            </ul>
+            <button class="demo-button" onclick="testConnection()">Test Connection</button>
+        </div>
+    </div>
+
+    <!-- Live Demo Section -->
+    <div class="demo-card">
+        <h2 class="card-title">📱 Live Demo</h2>
+        <p class="card-description">
+            Watch real-time order updates in action. The orders below will update automatically when status changes occur.
+        </p>
+
+        <!-- Sample Orders -->
+        <div class="demo-order" id="demo-order-1">
+            <div class="order-header">
+                <span class="order-id">Order #1001</span>
+                <span class="order-status status-pending">🕐 Pending</span>
+            </div>
+            <div class="order-details">
+                <strong>Customer:</strong> John Doe<br>
+                <strong>Items:</strong> 2x Margherita Pizza, 1x Caesar Salad<br>
+                <strong>Total:</strong> $34.99
+            </div>
+        </div>
+
+        <div class="demo-order" id="demo-order-2">
+            <div class="order-header">
+                <span class="order-id">Order #1002</span>
+                <span class="order-status status-preparing">👨‍🍳 Preparing</span>
+            </div>
+            <div class="order-details">
+                <strong>Customer:</strong> Jane Smith<br>
+                <strong>Items:</strong> 1x Chicken Burger, 1x Fries<br>
+                <strong>Total:</strong> $18.50
+            </div>
+        </div>
+
+        <!-- Demo Controls -->
+        <div style="margin-top: 1.5rem; text-align: center;">
+            <button class="demo-button" onclick="simulateStatusUpdate('demo-order-1', 'confirmed')">
+                Confirm Order #1001
+            </button>
+            <button class="demo-button success" onclick="simulateStatusUpdate('demo-order-2', 'ready')">
+                Mark Order #1002 Ready
+            </button>
+            <button class="demo-button danger" onclick="simulateNewOrder()">
+                Simulate New Order
+            </button>
+        </div>
+    </div>
+
+    <!-- Technology Stack -->
+    <div class="tech-stack">
+        <h2 class="card-title">🛠️ Technology Stack</h2>
+        <div class="tech-grid">
+            <div class="tech-item">
+                <div class="tech-icon">🐍</div>
+                <div class="tech-name">Django Channels</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">🔌</div>
+                <div class="tech-name">WebSocket</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">⚡</div>
+                <div class="tech-name">JavaScript ES6</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">📱</div>
+                <div class="tech-name">Responsive CSS</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">🗄️</div>
+                <div class="tech-name">Redis/Memory</div>
+            </div>
+            <div class="tech-item">
+                <div class="tech-icon">🔄</div>
+                <div class="tech-name">Real-time Updates</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="instructions">
+        <h3>🧪 How to Test Real-time Features</h3>
+        <ol>
+            <li><strong>Place an Order:</strong> Go to the menu, add items to cart, and complete checkout</li>
+            <li><strong>Track Your Order:</strong> Click on the tracking link in the thank you page</li>
+            <li><strong>Admin Dashboard:</strong> Open admin dashboard in another tab (requires staff access)</li>
+            <li><strong>Update Status:</strong> Change order status in admin dashboard</li>
+            <li><strong>Watch Updates:</strong> See instant updates on the customer tracking page</li>
+            <li><strong>Test Reconnection:</strong> Disable/enable network to test auto-reconnection</li>
+        </ol>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/order-tracking.js' %}"></script>
+<script>
+// Demo page JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize demo connection
+    initializeDemoConnection();
+    
+    // Setup demo event listeners
+    setupDemoEventListeners();
+});
+
+function initializeDemoConnection() {
+    // Simulate connection to demonstrate status updates
+    const statusElement = document.getElementById('connection-status');
+    
+    // Show connecting
+    setTimeout(() => {
+        statusElement.textContent = 'Connected to Real-time System';
+        statusElement.className = 'status-indicator status-connected';
+    }, 2000);
+    
+    // Try to connect to actual WebSocket if available
+    try {
+        if (window.orderTracker) {
+            window.orderTracker.connectToOrders();
+        }
+    } catch (e) {
+        console.log('WebSocket connection not available in demo mode');
+    }
+}
+
+function setupDemoEventListeners() {
+    // Listen for real-time events if WebSocket is available
+    document.addEventListener('ordertracking:connected', function() {
+        const statusElement = document.getElementById('connection-status');
+        statusElement.textContent = 'Connected to Live System';
+        statusElement.className = 'status-indicator status-connected';
+    });
+    
+    document.addEventListener('ordertracking:new_order', function(event) {
+        const data = event.detail;
+        showDemoNotification(`New order #${data.order_id} received!`, 'success');
+    });
+    
+    document.addEventListener('ordertracking:order_update', function(event) {
+        const data = event.detail;
+        showDemoNotification(`Order #${data.order_id} status: ${data.status}`, 'info');
+    });
+}
+
+function testConnection() {
+    const statusElement = document.getElementById('connection-status');
+    
+    // Simulate connection test
+    statusElement.textContent = 'Testing...';
+    statusElement.className = 'status-indicator status-connecting';
+    
+    setTimeout(() => {
+        statusElement.textContent = 'Connection Test Successful!';
+        statusElement.className = 'status-indicator status-connected';
+        
+        showDemoNotification('WebSocket connection test completed successfully!', 'success');
+    }, 1500);
+}
+
+function simulateStatusUpdate(orderId, newStatus) {
+    const orderElement = document.getElementById(orderId);
+    const statusElement = orderElement.querySelector('.order-status');
+    
+    // Update status with animation
+    orderElement.classList.add('active');
+    
+    // Status mapping
+    const statusMap = {
+        'pending': { text: '🕐 Pending', class: 'status-pending' },
+        'confirmed': { text: '✅ Confirmed', class: 'status-confirmed' },
+        'preparing': { text: '👨‍🍳 Preparing', class: 'status-preparing' },
+        'ready': { text: '🍽️ Ready', class: 'status-ready' },
+        'completed': { text: '✅ Completed', class: 'status-completed' }
+    };
+    
+    const statusInfo = statusMap[newStatus];
+    if (statusInfo) {
+        statusElement.textContent = statusInfo.text;
+        statusElement.className = `order-status ${statusInfo.class}`;
+        
+        showDemoNotification(`${orderId.replace('demo-order-', 'Order #100')} updated to ${statusInfo.text}`, 'success');
+    }
+    
+    // Remove active class after animation
+    setTimeout(() => {
+        orderElement.classList.remove('active');
+    }, 2000);
+}
+
+function simulateNewOrder() {
+    const demoOrders = document.querySelector('.demo-card:last-of-type');
+    const newOrderId = 'demo-order-' + Date.now();
+    
+    const newOrder = document.createElement('div');
+    newOrder.className = 'demo-order active';
+    newOrder.id = newOrderId;
+    newOrder.innerHTML = `
+        <div class="order-header">
+            <span class="order-id">Order #${Math.floor(Math.random() * 9000) + 1000}</span>
+            <span class="order-status status-pending">🕐 Pending</span>
+        </div>
+        <div class="order-details">
+            <strong>Customer:</strong> Demo Customer<br>
+            <strong>Items:</strong> 1x Demo Item<br>
+            <strong>Total:</strong> $${(Math.random() * 50 + 10).toFixed(2)}
+        </div>
+    `;
+    
+    // Insert before the demo controls
+    const controls = demoOrders.querySelector('div[style*="margin-top"]');
+    demoOrders.insertBefore(newOrder, controls);
+    
+    showDemoNotification('New demo order created!', 'success');
+    
+    // Remove active class after animation
+    setTimeout(() => {
+        newOrder.classList.remove('active');
+    }, 2000);
+}
+
+function showDemoNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `demo-notification notification-${type}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        border-left: 4px solid ${type === 'success' ? '#28a745' : '#007bff'};
+        z-index: 1000;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        max-width: 300px;
+    `;
+    
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}" 
+               style="color: ${type === 'success' ? '#28a745' : '#007bff'};"></i>
+            <span style="font-weight: 500;">${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Show notification
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Hide notification after 3 seconds
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+// Demo auto-updates (simulate live activity)
+setInterval(() => {
+    if (Math.random() > 0.7) { // 30% chance every 10 seconds
+        const orders = ['demo-order-1', 'demo-order-2'];
+        const statuses = ['confirmed', 'preparing', 'ready'];
+        const randomOrder = orders[Math.floor(Math.random() * orders.length)];
+        const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+        
+        simulateStatusUpdate(randomOrder, randomStatus);
+    }
+}, 10000);
+</script>
+{% endblock %}
