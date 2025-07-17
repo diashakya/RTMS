@@ -3,7 +3,7 @@ This module defines the views for the main application.
 It handles rendering of different pages and user authentication.
 """
 # ---------------Python Standard Library
-from datetime import datetime
+from datetime import datetime, date
 from io import BytesIO
 import base64
 
@@ -43,6 +43,7 @@ from .models import Order, OrderItem, Foods, Special, Customer, Favorite, Cart, 
 # -----------------------------------   Local Apps
 from .models import Special
 from .realtime_utils import send_new_order_notification, send_order_update, send_user_notification, send_order_status_notification
+from .realtime_order_utils import notify_order_status_change, notify_new_order, get_order_status_display, get_order_progress_percentage
 
 # Create your views here.
 
@@ -578,27 +579,19 @@ def checkout(request):
         order.total = total
         order.save()
         
-        # Send real-time notifications (temporarily disabled)
+        # Send real-time notifications
         try:
             # Notify staff about new order
-            order_data = {
-                'id': order.id,
-                'customer': order.user.username if order.user else 'Guest',
-                'total': float(order.total),
-                'items_count': valid_items_count,
-                'created_at': order.created_at.isoformat()
-            }
-            # send_new_order_notification(order_data)  # Temporarily commented out
+            notify_new_order(order.id)
+            print(f"Real-time notification sent for new order {order.id}")
             
-            # Send notification to customer if logged in
+            # Send confirmation notification to customer if logged in
             if order.user:
-                pass
-                # send_user_notification(  # Temporarily commented out
-                #     order.user.id,
-                #     'Order Confirmed',
-                #     f'Your order #{order.id} has been placed successfully!',
-                #     'success'
-                # )
+                notify_order_status_change(
+                    order.id, 
+                    'pending', 
+                    f'Your order #{order.id} has been placed successfully!'
+                )
         except Exception as notification_error:
             # Don't fail the order if notification fails
             print(f"Failed to send real-time notification: {notification_error}")
@@ -773,28 +766,47 @@ def update_order_status(request, order_id):
     
     try:
         order = Order.objects.get(id=order_id)
-        new_status = request.data.get('status')
         
-        if new_status in ['pending', 'completed', 'cancelled']:
+        # Get new status from request data
+        if request.method == 'POST':
+            data = json.loads(request.body.decode('utf-8'))
+            new_status = data.get('status')
+        else:
+            new_status = request.GET.get('status')
+        
+        # Validate status
+        valid_statuses = ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled']
+        if new_status in valid_statuses:
+            old_status = order.status
             order.status = new_status
             order.save()
             
-            # Send real-time notifications
+            # Send real-time notifications using new utilities
             try:
-                send_order_update(order.id, new_status, f'Order status updated to {new_status}')
-                send_order_status_notification(order, new_status)
+                notify_order_status_change(order.id, new_status)
+                print(f"Real-time notification sent for order {order.id}: {old_status} -> {new_status}")
             except Exception as e:
                 print(f"Failed to send real-time notification: {e}")
             
             # Send status update email
-            send_order_status_email(order, new_status)
+            try:
+                send_order_status_email(order, new_status)
+            except Exception as e:
+                print(f"Failed to send email notification: {e}")
             
-            return JsonResponse({'success': True, 'message': 'Order status updated'})
+            return JsonResponse({
+                'success': True, 
+                'message': 'Order status updated',
+                'status': new_status,
+                'status_display': get_order_status_display(new_status)
+            })
         else:
             return JsonResponse({'success': False, 'message': 'Invalid status'})
             
     except Order.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Order not found'})
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
 
 # ......................................................Admin Dashboard Views........................
 
@@ -1277,17 +1289,37 @@ def add_to_cart_form(request):
     return redirect(request.META.get('HTTP_REFERER', 'menu'))
 
 @csrf_exempt
-@api_view(['POST'])
-@login_required(login_url='login')
 def cancel_order(request, order_id):
-    """Cancel an order (only if pending)"""
+    """Cancel an order (only if pending or confirmed)"""
     try:
-        order = Order.objects.get(id=order_id, user=request.user, status='pending')
+        # Get order - allow both authenticated and guest orders
+        if request.user.is_authenticated:
+            order = Order.objects.get(
+                id=order_id, 
+                user=request.user, 
+                status__in=['pending', 'confirmed']
+            )
+        else:
+            # For guest orders, we might need session verification
+            order = Order.objects.get(
+                id=order_id, 
+                status__in=['pending', 'confirmed']
+            )
+        
         order.status = 'cancelled'
         order.save()
         
+        # Send real-time notification
+        try:
+            notify_order_status_change(order.id, 'cancelled', 'Order has been cancelled by customer')
+        except Exception as e:
+            print(f"Failed to send real-time notification: {e}")
+        
         # Send notification email
-        send_order_status_email(order, 'cancelled')
+        try:
+            send_order_status_email(order, 'cancelled')
+        except Exception as e:
+            print(f"Failed to send email notification: {e}")
         
         return JsonResponse({
             'success': True,
@@ -1300,16 +1332,20 @@ def cancel_order(request, order_id):
         }, status=404)
 
 @csrf_exempt
-@api_view(['POST'])
-@login_required(login_url='login')
 def reorder(request, order_id):
     """Add all items from a previous order to current cart"""
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'message': 'Please log in to reorder'
+        }, status=401)
+    
     try:
         order = Order.objects.get(id=order_id, user=request.user)
         cart = get_or_create_cart(request)
         
         items_added = 0
-        for order_item in order.items.all():
+        for order_item in order.orderitem_set.all():
             if order_item.food:
                 cart_item, created = CartItem.objects.get_or_create(
                     cart=cart,
@@ -1321,23 +1357,22 @@ def reorder(request, order_id):
                     cart_item.save()
                 items_added += 1
             elif order_item.special:
-                # Check if special is still active
-                if order_item.special.active:
-                    cart_item, created = CartItem.objects.get_or_create(
-                        cart=cart,
-                        special=order_item.special,
-                        defaults={'quantity': order_item.quantity}
-                    )
-                    if not created:
-                        cart_item.quantity += order_item.quantity
-                        cart_item.save()
-                    items_added += 1
+                cart_item, created = CartItem.objects.get_or_create(
+                    cart=cart,
+                    special=order_item.special,
+                    defaults={'quantity': order_item.quantity}
+                )
+                if not created:
+                    cart_item.quantity += order_item.quantity
+                    cart_item.save()
+                items_added += 1
         
         return JsonResponse({
             'success': True,
-            'message': f'Added {items_added} items to cart',
-            'cart_count': cart.total_items
+            'message': f'{items_added} items added to your cart',
+            'items_added': items_added
         })
+        
     except Order.DoesNotExist:
         return JsonResponse({
             'success': False,
@@ -1432,6 +1467,79 @@ def send_order_status_email(order, status):
             )
     except Exception as e:
         print(f"Error sending status email: {e}")
+
+# ------------------------Order Tracking Views
+def order_tracking(request, order_id):
+    """Display real-time order tracking page"""
+    try:
+        order = Order.objects.get(id=order_id)
+        
+        # Calculate progress percentage
+        progress_percentage = get_order_progress_percentage(order.status)
+        
+        # Get user-friendly status display
+        status_display = get_order_status_display(order.status)
+        
+        # Default status messages
+        status_messages = {
+            'pending': 'Your order has been received and is pending confirmation.',
+            'confirmed': 'Your order has been confirmed and will be prepared soon.',
+            'preparing': 'Your order is being prepared by our kitchen staff.',
+            'ready': 'Your order is ready for pickup/delivery!',
+            'completed': 'Your order has been completed. Thank you!',
+            'cancelled': 'Your order has been cancelled.',
+        }
+        
+        status_message = status_messages.get(order.status, f'Order status: {order.status}')
+        
+        context = {
+            'order': order,
+            'progress_percentage': progress_percentage,
+            'status_display': status_display,
+            'status_message': status_message,
+        }
+        
+        return render(request, 'main/order_tracking.html', context)
+        
+    except Order.DoesNotExist:
+        messages.error(request, 'Order not found.')
+        return redirect('menu')
+
+def track_order_api(request, order_id):
+    """API endpoint for order tracking data"""
+    try:
+        order = Order.objects.get(id=order_id)
+        
+        # Get order items
+        order_items = []
+        for item in order.orderitem_set.all():
+            order_items.append({
+                'name': item.food.name if item.food else item.special.name,
+                'quantity': item.quantity,
+                'price': float(item.total_price()),
+                'type': 'food' if item.food else 'special'
+            })
+        
+        data = {
+            'id': order.id,
+            'status': order.status,
+            'status_display': get_order_status_display(order.status),
+            'progress_percentage': get_order_progress_percentage(order.status),
+            'customer_name': order.customer_name or (order.customer.name if order.customer else 'Guest'),
+            'customer_phone': order.customer_phone,
+            'order_type': order.get_order_type_display(),
+            'delivery_address': order.delivery_address,
+            'table_number': order.table_number,
+            'total': float(order.total),
+            'created_at': order.created_at.isoformat(),
+            'notes': order.notes,
+            'items': order_items,
+        }
+        
+        return JsonResponse({'success': True, 'order': data})
+        
+    except Order.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Order not found'})
 
 
 

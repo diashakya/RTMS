@@ -1,0 +1,473 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Loading Indicators Demo{% endblock %}
+
+{% block content %}
+<style>
+    .demo-section {
+        margin: 2rem 0;
+        padding: 2rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: #f9f9f9;
+    }
+    
+    .demo-button {
+        margin: 0.5rem;
+        padding: 10px 20px;
+        background: #f76d37;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .demo-button:hover {
+        background: #e55a28;
+        transform: translateY(-2px);
+    }
+    
+    .test-form {
+        max-width: 400px;
+        margin: 1rem 0;
+    }
+    
+    .test-form input, .test-form textarea {
+        width: 100%;
+        margin: 0.5rem 0;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    
+    .spinner-demo {
+        display: inline-block;
+        margin: 1rem;
+        padding: 2rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        text-align: center;
+        background: white;
+    }
+    
+    .code-block {
+        background: #f4f4f4;
+        padding: 1rem;
+        border-radius: 5px;
+        font-family: monospace;
+        margin: 1rem 0;
+        overflow-x: auto;
+    }
+</style>
+
+<div class="container mt-5 pt-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="text-center mb-5" style="color: #f76d37;">🔄 Loading Indicators Demo</h1>
+            <p class="text-center mb-5">Comprehensive showcase of all loading indicators and spinners implemented in the system.</p>
+        </div>
+    </div>
+
+    <!-- Button Loading Demo -->
+    <div class="demo-section">
+        <h3>🔘 Button Loading Indicators</h3>
+        <p>Click these buttons to see different loading states:</p>
+        
+        <button class="demo-button" onclick="demoButtonLoading(this, 'add-to-cart')">
+            Add to Cart
+        </button>
+        
+        <button class="demo-button" onclick="demoButtonLoading(this, 'favorite')">
+            ❤️ Add to Favorites
+        </button>
+        
+        <button class="demo-button" onclick="demoButtonLoading(this, 'checkout')">
+            Checkout
+        </button>
+        
+        <button class="demo-button" onclick="demoButtonLoading(this, 'generic')">
+            Generic Action
+        </button>
+        
+        <div class="code-block">
+            <strong>Code:</strong><br>
+            loadingManager.showButtonLoading(button);<br>
+            // ... async operation ...<br>
+            loadingManager.hideButtonLoading(button);
+        </div>
+    </div>
+
+    <!-- Form Loading Demo -->
+    <div class="demo-section">
+        <h3>📝 Form Loading Indicators</h3>
+        <p>Submit this form to see form loading states:</p>
+        
+        <form class="test-form" onsubmit="demoFormLoading(event)">
+            {% csrf_token %}
+            <input type="text" placeholder="Name" required>
+            <input type="email" placeholder="Email" required>
+            <textarea placeholder="Message" rows="3" required></textarea>
+            <button type="submit" class="demo-button">Submit Form</button>
+        </form>
+        
+        <div class="code-block">
+            <strong>Code:</strong><br>
+            loadingManager.showFormLoading(form);<br>
+            // ... form submission ...<br>
+            loadingManager.hideFormLoading(form);
+        </div>
+    </div>
+
+    <!-- Global Loading Demo -->
+    <div class="demo-section">
+        <h3>🌐 Global Loading Overlay</h3>
+        <p>Click to show full-screen loading overlay:</p>
+        
+        <button class="demo-button" onclick="demoGlobalLoading()">
+            Show Global Loading
+        </button>
+        
+        <div class="code-block">
+            <strong>Code:</strong><br>
+            loadingManager.showGlobalLoading('Processing your request...');<br>
+            // ... heavy operation ...<br>
+            loadingManager.hideGlobalLoading();
+        </div>
+    </div>
+
+    <!-- Spinner Variations -->
+    <div class="demo-section">
+        <h3>🌀 Spinner Variations</h3>
+        <p>Different spinner animations available:</p>
+        
+        <div class="row">
+            <div class="col-md-3">
+                <div class="spinner-demo">
+                    <div class="spinner"></div>
+                    <p><strong>Main Spinner</strong></p>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="spinner-demo">
+                    <div class="spinner-small"></div>
+                    <p><strong>Small Spinner</strong></p>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="spinner-demo">
+                    <div class="spinner-dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                    <p><strong>Dots Spinner</strong></p>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="spinner-demo">
+                    <div class="spinner-pulse"></div>
+                    <p><strong>Pulse Spinner</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AJAX Loading Demo -->
+    <div class="demo-section">
+        <h3>🔄 AJAX Loading Integration</h3>
+        <p>Real AJAX calls with loading indicators:</p>
+        
+        <button class="demo-button" onclick="demoAjaxCall('/api/foods/1/', 'GET')">
+            Fetch Food Item
+        </button>
+        
+        <button class="demo-button" onclick="demoAjaxCall('/api/favorites/', 'GET')">
+            Load Favorites
+        </button>
+        
+        <div id="ajax-result" class="mt-3" style="min-height: 50px; padding: 1rem; background: white; border-radius: 5px;">
+            <em>AJAX results will appear here...</em>
+        </div>
+        
+        <div class="code-block">
+            <strong>Code:</strong><br>
+            makeAjaxCall('/api/endpoint/', {<br>
+            &nbsp;&nbsp;method: 'GET',<br>
+            &nbsp;&nbsp;button: button,<br>
+            &nbsp;&nbsp;loadingMessage: 'Loading data...',<br>
+            &nbsp;&nbsp;onSuccess: (data) => { /* handle success */ }<br>
+            });
+        </div>
+    </div>
+
+    <!-- Flash Animations Demo -->
+    <div class="demo-section">
+        <h3>✨ Flash Animations</h3>
+        <p>Success and error flash animations:</p>
+        
+        <button class="demo-button" onclick="demoFlashAnimation(this, 'success')">
+            Flash Success
+        </button>
+        
+        <button class="demo-button" onclick="demoFlashAnimation(this, 'error')">
+            Flash Error
+        </button>
+        
+        <div class="code-block">
+            <strong>Code:</strong><br>
+            loadingManager.flashSuccess(element);<br>
+            loadingManager.flashError(element);
+        </div>
+    </div>
+
+    <!-- Skeleton Loading Demo -->
+    <div class="demo-section">
+        <h3>💀 Skeleton Loading</h3>
+        <p>Skeleton placeholders for content loading:</p>
+        
+        <button class="demo-button" onclick="demoSkeletonLoading()">
+            Show Skeleton Loading
+        </button>
+        
+        <div id="skeleton-container" style="min-height: 200px; padding: 1rem; background: white; border-radius: 5px; margin-top: 1rem;">
+            <p>Original content will be replaced with skeleton loading...</p>
+        </div>
+        
+        <div class="code-block">
+            <strong>Code:</strong><br>
+            loadingManager.showSectionLoading(container, 'menu-items');<br>
+            // ... load content ...<br>
+            container.innerHTML = realContent;
+        </div>
+    </div>
+
+    <!-- Integration Examples -->
+    <div class="demo-section">
+        <h3>🔗 Real Integration Examples</h3>
+        <p>These buttons demonstrate actual system integrations:</p>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h5>Cart Operations</h5>
+                <button class="demo-button" onclick="simulateAddToCart()">
+                    🛒 Add Item to Cart
+                </button>
+                <button class="demo-button" onclick="simulateRemoveFromCart()">
+                    🗑️ Remove from Cart
+                </button>
+            </div>
+            
+            <div class="col-md-6">
+                <h5>Favorites Operations</h5>
+                <button class="demo-button" onclick="simulateToggleFavorite()">
+                    ❤️ Toggle Favorite
+                </button>
+                <button class="demo-button" onclick="simulateLoadFavorites()">
+                    📋 Load Favorites
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Demo Functions
+
+function demoButtonLoading(button, type) {
+    if (!window.loadingManager) {
+        alert('LoadingManager not available');
+        return;
+    }
+    
+    window.loadingManager.showButtonLoading(button);
+    
+    // Simulate async operation
+    setTimeout(() => {
+        window.loadingManager.hideButtonLoading(button);
+        window.loadingManager.flashSuccess(button);
+        
+        if (window.showNotification) {
+            window.showNotification(`${type} action completed successfully!`, 'success');
+        }
+    }, 2000);
+}
+
+function demoFormLoading(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const button = form.querySelector('button[type="submit"]');
+    
+    if (!window.loadingManager) {
+        alert('LoadingManager not available');
+        return;
+    }
+    
+    window.loadingManager.showFormLoading(form);
+    window.loadingManager.showButtonLoading(button);
+    
+    // Simulate form submission
+    setTimeout(() => {
+        window.loadingManager.hideFormLoading(form);
+        window.loadingManager.hideButtonLoading(button);
+        window.loadingManager.flashSuccess(button);
+        
+        if (window.showNotification) {
+            window.showNotification('Form submitted successfully!', 'success');
+        }
+        
+        form.reset();
+    }, 3000);
+}
+
+function demoGlobalLoading() {
+    if (!window.loadingManager) {
+        alert('LoadingManager not available');
+        return;
+    }
+    
+    window.loadingManager.showGlobalLoading('Processing your request...');
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+        window.loadingManager.hideGlobalLoading();
+        
+        if (window.showNotification) {
+            window.showNotification('Global operation completed!', 'success');
+        }
+    }, 3000);
+}
+
+function demoAjaxCall(url, method) {
+    const resultDiv = document.getElementById('ajax-result');
+    
+    if (!window.makeAjaxCall) {
+        resultDiv.innerHTML = '<span style="color: red;">makeAjaxCall function not available</span>';
+        return;
+    }
+    
+    const button = event.target;
+    
+    window.makeAjaxCall(url, {
+        method: method,
+        button: button,
+        loadingMessage: 'Fetching data...',
+        onSuccess: (data) => {
+            resultDiv.innerHTML = `
+                <strong>✅ Success!</strong><br>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+        },
+        onError: (error) => {
+            resultDiv.innerHTML = `
+                <strong style="color: red;">❌ Error:</strong><br>
+                ${error.message}
+            `;
+        }
+    });
+}
+
+function demoFlashAnimation(element, type) {
+    if (!window.loadingManager) {
+        alert('LoadingManager not available');
+        return;
+    }
+    
+    if (type === 'success') {
+        window.loadingManager.flashSuccess(element);
+    } else {
+        window.loadingManager.flashError(element);
+    }
+}
+
+function demoSkeletonLoading() {
+    const container = document.getElementById('skeleton-container');
+    
+    if (!window.loadingManager) {
+        alert('LoadingManager not available');
+        return;
+    }
+    
+    window.loadingManager.showSectionLoading(container, 'menu-items');
+    
+    // Restore content after 3 seconds
+    setTimeout(() => {
+        container.innerHTML = `
+            <h5>✅ Content Loaded!</h5>
+            <p>This is the real content that was loaded after the skeleton placeholder.</p>
+            <p>Skeleton loading provides better user experience during content loading.</p>
+        `;
+    }, 3000);
+}
+
+// Real integration simulations
+function simulateAddToCart() {
+    if (window.addToCartAjax) {
+        window.addToCartAjax('food', 1, 1, event.target);
+    } else {
+        demoButtonLoading(event.target, 'add-to-cart');
+    }
+}
+
+function simulateRemoveFromCart() {
+    const button = event.target;
+    if (window.loadingManager) {
+        window.loadingManager.showButtonLoading(button);
+        setTimeout(() => {
+            window.loadingManager.hideButtonLoading(button);
+            window.loadingManager.flashSuccess(button);
+            if (window.showNotification) {
+                window.showNotification('Item removed from cart', 'success');
+            }
+        }, 1500);
+    }
+}
+
+function simulateToggleFavorite() {
+    if (window.addToFavorites) {
+        window.addToFavorites(1, event.target);
+    } else {
+        demoButtonLoading(event.target, 'favorite');
+    }
+}
+
+function simulateLoadFavorites() {
+    const button = event.target;
+    if (window.loadingManager) {
+        window.loadingManager.showButtonLoading(button);
+        // Simulate loading favorites
+        setTimeout(() => {
+            window.loadingManager.hideButtonLoading(button);
+            window.loadingManager.flashSuccess(button);
+            if (window.showNotification) {
+                window.showNotification('Favorites loaded successfully', 'success');
+            }
+        }, 2000);
+    }
+}
+
+// Initialize demo page
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Loading Indicators Demo initialized');
+    
+    // Check if LoadingManager is available
+    if (window.loadingManager) {
+        console.log('✅ LoadingManager available');
+    } else {
+        console.log('❌ LoadingManager not available');
+    }
+    
+    // Check if makeAjaxCall is available
+    if (window.makeAjaxCall) {
+        console.log('✅ makeAjaxCall available');
+    } else {
+        console.log('❌ makeAjaxCall not available');
+    }
+});
+</script>
+{% endblock %}

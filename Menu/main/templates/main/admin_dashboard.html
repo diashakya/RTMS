@@ -1,103 +1,749 @@
-{% extends "base.html" %}
+{% extends 'main/base.html' %}
 {% load static %}
 
-{% block title %}Admin Dashboard{% endblock %}
+{% block title %}Admin Dashboard - Real-time Order Management{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Admin Dashboard Styles */
+.admin-dashboard {
+    padding: 2rem 0;
+    min-height: 100vh;
+    background: #f8f9fa;
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+}
+
+.dashboard-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-subtitle {
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+.connection-status {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-top: 1rem;
+}
+
+.status-success { background: rgba(40, 167, 69, 0.2); color: #155724; }
+.status-info { background: rgba(0, 123, 255, 0.2); color: #0c5460; }
+.status-warning { background: rgba(255, 193, 7, 0.2); color: #856404; }
+.status-error { background: rgba(220, 53, 69, 0.2); color: #721c24; }
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border-left: 4px solid #007bff;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card.pending { border-color: #ffc107; }
+.stat-card.completed { border-color: #28a745; }
+.stat-card.revenue { border-color: #17a2b8; }
+.stat-card.total { border-color: #6f42c1; }
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-change {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.stat-change.positive { color: #28a745; }
+.stat-change.negative { color: #dc3545; }
+
+.orders-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.section-header {
+    background: #f8f9fa;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.filter-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #dee2e6;
+    background: white;
+    color: #333;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-btn.active,
+.filter-btn:hover {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.orders-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.orders-table th {
+    background: #f8f9fa;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.orders-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+.orders-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.order-id {
+    font-weight: bold;
+    color: #007bff;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.status-pending { background: #fff3cd; color: #856404; }
+.status-confirmed { background: #d1ecf1; color: #0c5460; }
+.status-preparing { background: #d4edda; color: #155724; }
+.status-ready { background: #f8d7da; color: #721c24; }
+.status-completed { background: #d4edda; color: #155724; }
+.status-cancelled { background: #f8d7da; color: #721c24; }
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.notification-badge {
+    position: relative;
+    cursor: pointer;
+}
+
+.notification-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: #666;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: #ccc;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        padding: 1rem 0;
+    }
+    
+    .dashboard-title {
+        font-size: 2rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .filter-buttons {
+        justify-content: center;
+    }
+    
+    .orders-table {
+        font-size: 0.875rem;
+    }
+    
+    .orders-table th,
+    .orders-table td {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid" style="margin-top: 20px;">
-    <div class="row">
-        <!-- Sidebar -->
-        <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar" style="height: 100vh; position: fixed; top: 0; left: 0; padding-top: 80px;">
-            <div class="position-sticky pt-3">
-                <h5 class="text-center mb-4" style="color: #f76d37; font-weight: bold;">Admin Panel</h5>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="{% url 'admin_dashboard' %}" style="color: #f76d37;">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'manage_orders' %}" style="color: #333;">
-                            <i class="fas fa-shopping-cart"></i> Manage Orders
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'generate_qr_codes' %}" style="color: #333;">
-                            <i class="fas fa-qrcode"></i> QR Codes
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/admin/" style="color: #333;">
-                            <i class="fas fa-utensils"></i> Manage Menu
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'index' %}" style="color: #333;">
-                            <i class="fas fa-home"></i> Back to Website
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
+<div class="admin-dashboard admin-dashboard-page">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="container">
+            <h1 class="dashboard-title">Admin Dashboard</h1>
+            <p class="dashboard-subtitle">Real-time Order Management System</p>
+            <div class="connection-status status-info">Connecting to real-time updates...</div>
+        </div>
+    </div>
 
-        <!-- Main content -->
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4" style="margin-left: 16.666667%;">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2" style="color: #f76d37;">Restaurant Dashboard</h1>
-                <div class="btn-toolbar mb-2 mb-md-0">
-                    <div class="btn-group me-2">
-                        <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
-                    </div>
+    <div class="container">
+        <!-- Statistics Grid -->
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-number" id="total-orders">{{ total_orders }}</div>
+                <div class="stat-label">Total Orders</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i> Live tracking active
                 </div>
             </div>
 
-            <!-- Statistics Cards -->
-            <div class="row mb-4">
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card border-start-primary shadow h-100 py-2" style="border-left: 4px solid #f76d37;">
-                        <div class="card-body">
-                            <div class="row g-0 align-items-center">
-                                <div class="col me-2">
-                                    <div class="text-xs fw-bold text-primary text-uppercase mb-1" style="color: #f76d37 !important;">
-                                        Total Orders</div>
-                                    <div class="h5 mb-0 fw-bold text-gray-800">{{ total_orders }}</div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="stat-card pending">
+                <div class="stat-number" id="pending-orders">{{ pending_orders }}</div>
+                <div class="stat-label">Pending Orders</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-clock"></i> Real-time updates
                 </div>
+            </div>
 
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card border-start-warning shadow h-100 py-2" style="border-left: 4px solid #f39c12;">
-                        <div class="card-body">
-                            <div class="row g-0 align-items-center">
-                                <div class="col me-2">
-                                    <div class="text-xs fw-bold text-warning text-uppercase mb-1">
-                                        Pending Orders</div>
-                                    <div class="h5 mb-0 fw-bold text-gray-800">{{ pending_orders }}</div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-clock fa-2x text-gray-300"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="stat-card completed">
+                <div class="stat-number" id="completed-orders">{{ completed_orders }}</div>
+                <div class="stat-label">Completed Today</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-check"></i> Updated live
                 </div>
+            </div>
 
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card border-start-success shadow h-100 py-2" style="border-left: 4px solid #28a745;">
-                        <div class="card-body">
-                            <div class="row g-0 align-items-center">
-                                <div class="col me-2">
-                                    <div class="text-xs fw-bold text-success text-uppercase mb-1">
-                                        Completed Orders</div>
-                                    <div class="h5 mb-0 fw-bold text-gray-800">{{ completed_orders }}</div>
+            <div class="stat-card revenue">
+                <div class="stat-number" id="total-revenue">${{ total_revenue|floatformat:2 }}</div>
+                <div class="stat-label">Total Revenue</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-dollar-sign"></i> Live calculations
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Management Section -->
+        <div class="orders-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-utensils"></i> Live Orders
+                    <span class="notification-badge" onclick="showNotifications()">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-count" id="notification-count" style="display: none;">0</span>
+                    </span>
+                </h2>
+                
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-status="all">All</button>
+                    <button class="filter-btn" data-status="pending">Pending</button>
+                    <button class="filter-btn" data-status="confirmed">Confirmed</button>
+                    <button class="filter-btn" data-status="preparing">Preparing</button>
+                    <button class="filter-btn" data-status="ready">Ready</button>
+                    <button class="filter-btn" data-status="completed">Completed</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="orders-table orders-list">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr data-order-id="{{ order.id }}">
+                            <td class="order-id">#{{ order.id }}</td>
+                            <td>{{ order.customer_name|default:order.customer.name|default:"Guest" }}</td>
+                            <td>{{ order.orderitem_set.count }} items</td>
+                            <td>${{ order.total }}</td>
+                            <td class="order-status-cell">
+                                <span class="status-badge status-{{ order.status }}">
+                                    {% if order.status == 'pending' %}🕐 Pending
+                                    {% elif order.status == 'confirmed' %}✅ Confirmed
+                                    {% elif order.status == 'preparing' %}👨‍🍳 Preparing
+                                    {% elif order.status == 'ready' %}🍽️ Ready
+                                    {% elif order.status == 'completed' %}✅ Completed
+                                    {% elif order.status == 'cancelled' %}❌ Cancelled
+                                    {% else %}{{ order.status|title }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td class="order-timestamp-cell">{{ order.created_at|date:"M d, H:i" }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    {% if order.status == 'pending' %}
+                                    <button class="btn btn-success" onclick="updateOrderStatus({{ order.id }}, 'confirmed')">
+                                        <i class="fas fa-check"></i> Confirm
+                                    </button>
+                                    {% elif order.status == 'confirmed' %}
+                                    <button class="btn btn-warning" onclick="updateOrderStatus({{ order.id }}, 'preparing')">
+                                        <i class="fas fa-utensils"></i> Start Prep
+                                    </button>
+                                    {% elif order.status == 'preparing' %}
+                                    <button class="btn btn-primary" onclick="updateOrderStatus({{ order.id }}, 'ready')">
+                                        <i class="fas fa-bell"></i> Ready
+                                    </button>
+                                    {% elif order.status == 'ready' %}
+                                    <button class="btn btn-success" onclick="updateOrderStatus({{ order.id }}, 'completed')">
+                                        <i class="fas fa-check-circle"></i> Complete
+                                    </button>
+                                    {% endif %}
+                                    
+                                    <a href="{% url 'order_tracking' order.id %}" class="btn btn-primary">
+                                        <i class="fas fa-eye"></i> Track
+                                    </a>
+                                    
+                                    {% if order.status in 'pending,confirmed' %}
+                                    <button class="btn btn-danger" onclick="updateOrderStatus({{ order.id }}, 'cancelled')">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </button>
+                                    {% endif %}
                                 </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>No orders found</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Counter (Hidden) -->
+    <span class="orders-counter" style="display: none;">{{ total_orders }}</span>
+    
+    <!-- Hidden CSRF Token for JavaScript -->
+    {% csrf_token %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/order-tracking.js' %}"></script>
+<script>
+// Admin Dashboard JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Connect to admin WebSocket channel
+    window.orderTracker.connectToAdmin();
+    
+    // Initialize filter buttons
+    initializeFilters();
+    
+    // Initialize notifications
+    initializeNotifications();
+    
+    // Setup event listeners
+    setupEventListeners();
+});
+
+function initializeFilters() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            const status = this.dataset.status;
+            filterOrders(status);
+        });
+    });
+}
+
+function filterOrders(status) {
+    const orderRows = document.querySelectorAll('.orders-table tbody tr');
+    
+    orderRows.forEach(row => {
+        if (status === 'all') {
+            row.style.display = '';
+        } else {
+            const orderStatus = row.querySelector('.status-badge').textContent.toLowerCase();
+            row.style.display = orderStatus.includes(status) ? '' : 'none';
+        }
+    });
+}
+
+function setupEventListeners() {
+    document.addEventListener('ordertracking:new_order', function(event) {
+        const data = event.detail;
+        handleNewOrder(data);
+        updateStats();
+        showNotification(`New order #${data.order_id} from ${data.customer_name}`, 'info');
+    });
+    
+    document.addEventListener('ordertracking:order_update', function(event) {
+        const data = event.detail;
+        handleOrderUpdate(data);
+        showNotification(`Order #${data.order_id} status: ${data.status}`, 'success');
+    });
+    
+    document.addEventListener('ordertracking:connected', function() {
+        updateConnectionStatus('Connected to real-time system', 'success');
+    });
+    
+    document.addEventListener('ordertracking:disconnected', function() {
+        updateConnectionStatus('Disconnected - attempting reconnect', 'warning');
+    });
+}
+
+function handleNewOrder(data) {
+    const tbody = document.querySelector('.orders-table tbody');
+    const newRow = createOrderRow(data);
+    
+    if (tbody.firstElementChild && !tbody.firstElementChild.querySelector('.empty-state')) {
+        tbody.insertBefore(newRow, tbody.firstElementChild);
+    } else {
+        tbody.innerHTML = '';
+        tbody.appendChild(newRow);
+    }
+    
+    updatePendingCount(1);
+    playNotificationSound();
+}
+
+function handleOrderUpdate(data) {
+    const orderRow = document.querySelector(`tr[data-order-id="${data.order_id}"]`);
+    if (orderRow) {
+        const statusCell = orderRow.querySelector('.order-status-cell');
+        const actionButtons = orderRow.querySelector('.action-buttons');
+        
+        if (statusCell) {
+            statusCell.innerHTML = `<span class="status-badge status-${data.status}">
+                ${getStatusDisplay(data.status)}
+            </span>`;
+        }
+        
+        if (actionButtons) {
+            actionButtons.innerHTML = generateActionButtons(data.order_id, data.status);
+        }
+    }
+}
+
+function createOrderRow(data) {
+    const row = document.createElement('tr');
+    row.setAttribute('data-order-id', data.order_id);
+    
+    row.innerHTML = `
+        <td class="order-id">#${data.order_id}</td>
+        <td>${data.customer_name}</td>
+        <td>New Order</td>
+        <td>$${data.total}</td>
+        <td class="order-status-cell">
+            <span class="status-badge status-pending">🕐 Pending</span>
+        </td>
+        <td class="order-timestamp-cell">${new Date().toLocaleString()}</td>
+        <td>
+            <div class="action-buttons">
+                ${generateActionButtons(data.order_id, 'pending')}
+            </div>
+        </td>
+    `;
+    
+    return row;
+}
+
+function generateActionButtons(orderId, status) {
+    let buttons = '';
+    
+    if (status === 'pending') {
+        buttons += `<button class="btn btn-success" onclick="updateOrderStatus(${orderId}, 'confirmed')">
+            <i class="fas fa-check"></i> Confirm
+        </button>`;
+    } else if (status === 'confirmed') {
+        buttons += `<button class="btn btn-warning" onclick="updateOrderStatus(${orderId}, 'preparing')">
+            <i class="fas fa-utensils"></i> Start Prep
+        </button>`;
+    } else if (status === 'preparing') {
+        buttons += `<button class="btn btn-primary" onclick="updateOrderStatus(${orderId}, 'ready')">
+            <i class="fas fa-bell"></i> Ready
+        </button>`;
+    } else if (status === 'ready') {
+        buttons += `<button class="btn btn-success" onclick="updateOrderStatus(${orderId}, 'completed')">
+            <i class="fas fa-check-circle"></i> Complete
+        </button>`;
+    }
+    
+    buttons += `<a href="/track-order/${orderId}/" class="btn btn-primary">
+        <i class="fas fa-eye"></i> Track
+    </a>`;
+    
+    if (status === 'pending' || status === 'confirmed') {
+        buttons += `<button class="btn btn-danger" onclick="updateOrderStatus(${orderId}, 'cancelled')">
+            <i class="fas fa-times"></i> Cancel
+        </button>`;
+    }
+    
+    return buttons;
+}
+
+function getStatusDisplay(status) {
+    const statusMap = {
+        'pending': '🕐 Pending',
+        'confirmed': '✅ Confirmed',
+        'preparing': '👨‍🍳 Preparing',
+        'ready': '🍽️ Ready',
+        'completed': '✅ Completed',
+        'cancelled': '❌ Cancelled',
+    };
+    return statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+function updateOrderStatus(orderId, newStatus) {
+    fetch(`/update-order-status/${orderId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({ status: newStatus })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.orderTracker.showOrderNotification(`Order #${orderId} updated to ${newStatus}`, 'success');
+        } else {
+            window.orderTracker.showOrderNotification(`Failed: ${data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        window.orderTracker.showOrderNotification('Update failed', 'error');
+    });
+}
+
+function updateStats() {
+    const totalElement = document.getElementById('total-orders');
+    if (totalElement) {
+        const current = parseInt(totalElement.textContent) || 0;
+        totalElement.textContent = current + 1;
+    }
+}
+
+function updatePendingCount(change) {
+    const pendingElement = document.getElementById('pending-orders');
+    if (pendingElement) {
+        const current = parseInt(pendingElement.textContent) || 0;
+        pendingElement.textContent = Math.max(0, current + change);
+    }
+}
+
+function updateConnectionStatus(message, type) {
+    const statusElement = document.querySelector('.connection-status');
+    if (statusElement) {
+        statusElement.textContent = message;
+        statusElement.className = `connection-status status-${type}`;
+    }
+}
+
+function initializeNotifications() {
+    let notificationCount = 0;
+    
+    window.showNotification = function(message, type = 'info') {
+        notificationCount++;
+        updateNotificationBadge(notificationCount);
+        
+        // Show browser notification if permission granted
+        if (Notification.permission === 'granted') {
+            new Notification('Restaurant Order Update', {
+                body: message,
+                icon: '/static/images/logo.png'
+            });
+        }
+    };
+    
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+}
+
+function updateNotificationBadge(count) {
+    const badge = document.getElementById('notification-count');
+    if (badge) {
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'flex' : 'none';
+    }
+}
+
+function showNotifications() {
+    // Reset notification count when clicked
+    updateNotificationBadge(0);
+    alert('Notification center feature coming soon!');
+}
+
+function playNotificationSound() {
+    if ('Audio' in window) {
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        } catch (e) {
+            console.log('Could not play notification sound:', e);
+        }
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
                                 </div>
                             </div>
                         </div>
