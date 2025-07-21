@@ -1,16 +1,29 @@
 from django import forms
+from django.core.validators import RegexValidator
 from .models import Cart, CartItem, Customer
+import re
 
 class CartItemUpdateForm(forms.Form):
     """Form for updating cart item quantity"""
     cart_item_id = forms.IntegerField(widget=forms.HiddenInput())
-    quantity = forms.IntegerField(min_value=1, max_value=50, initial=1)
+    quantity = forms.IntegerField(
+        min_value=1, 
+        max_value=50, 
+        initial=1,
+        error_messages={
+            'required': 'Please enter a quantity.',
+            'min_value': 'Quantity must be at least 1.',
+            'max_value': 'Maximum quantity allowed is 50.',
+            'invalid': 'Please enter a valid number.'
+        }
+    )
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['quantity'].widget.attrs.update({
             'class': 'form-control text-center',
-            'style': 'width: 80px; display: inline-block;'
+            'style': 'width: 80px; display: inline-block;',
+            'data-validation': 'quantity'
         })
 
 class CartItemRemoveForm(forms.Form):
@@ -19,9 +32,30 @@ class CartItemRemoveForm(forms.Form):
 
 class AddToCartForm(forms.Form):
     """Form for adding items to cart"""
-    item_type = forms.ChoiceField(choices=[('food', 'Food'), ('special', 'Special')])
-    item_id = forms.IntegerField()
-    quantity = forms.IntegerField(min_value=1, max_value=50, initial=1)
+    item_type = forms.ChoiceField(
+        choices=[('food', 'Food'), ('special', 'Special')],
+        error_messages={
+            'required': 'Please select an item type.',
+            'invalid_choice': 'Please select a valid item type.'
+        }
+    )
+    item_id = forms.IntegerField(
+        error_messages={
+            'required': 'Item ID is required.',
+            'invalid': 'Please select a valid item.'
+        }
+    )
+    quantity = forms.IntegerField(
+        min_value=1, 
+        max_value=50, 
+        initial=1,
+        error_messages={
+            'required': 'Please enter a quantity.',
+            'min_value': 'Quantity must be at least 1.',
+            'max_value': 'Maximum quantity allowed is 50.',
+            'invalid': 'Please enter a valid number.'
+        }
+    )
 
 class CheckoutForm(forms.ModelForm):
     """Form for checkout process with support for delivery and dine-in orders"""
@@ -34,7 +68,17 @@ class CheckoutForm(forms.ModelForm):
     order_type = forms.ChoiceField(
         choices=ORDER_TYPE_CHOICES,
         widget=forms.RadioSelect(attrs={'class': 'order-type-radio'}),
-        initial='delivery'
+        initial='delivery',
+        error_messages={
+            'required': 'Please select an order type.',
+            'invalid_choice': 'Please select a valid order type.'
+        }
+    )
+    
+    # Phone number validator
+    phone_validator = RegexValidator(
+        regex=r'^\+?1?\d{9,15}$',
+        message="Phone number must be 9-15 digits. Format: '+999999999' or '999999999'"
     )
     
     table_number = forms.CharField(
@@ -42,8 +86,12 @@ class CheckoutForm(forms.ModelForm):
         required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Table Number (e.g., T-01, A5)'
-        })
+            'placeholder': 'Table Number (e.g., T-01, A5)',
+            'data-validation': 'table-number'
+        }),
+        error_messages={
+            'max_length': 'Table number cannot exceed 10 characters.'
+        }
     )
     
     payment_method = forms.ChoiceField(
@@ -52,16 +100,25 @@ class CheckoutForm(forms.ModelForm):
             ('card', 'Card Payment'),
             ('wallet', 'Digital Wallet')
         ],
-        widget=forms.RadioSelect(attrs={'class': 'payment-radio'})
+        widget=forms.RadioSelect(attrs={'class': 'payment-radio'}),
+        error_messages={
+            'required': 'Please select a payment method.',
+            'invalid_choice': 'Please select a valid payment method.'
+        }
     )
     
     order_notes = forms.CharField(
         required=False,
+        max_length=500,
         widget=forms.Textarea(attrs={
             'rows': 3,
             'placeholder': 'Special instructions (optional)',
-            'class': 'form-control'
-        })
+            'class': 'form-control',
+            'data-validation': 'notes'
+        }),
+        error_messages={
+            'max_length': 'Order notes cannot exceed 500 characters.'
+        }
     )
     
     class Meta:
@@ -71,35 +128,95 @@ class CheckoutForm(forms.ModelForm):
             'customer_firstname': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'First Name',
-                'required': True
+                'required': True,
+                'data-validation': 'first-name'
             }),
             'customer_lastname': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Last Name',
-                'required': True
+                'required': True,
+                'data-validation': 'last-name'
             }),
             'customer_mobileno': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Phone Number',
-                'required': True
+                'required': True,
+                'data-validation': 'phone'
             }),
             'customer_address': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
                 'placeholder': 'Delivery Address',
-                'required': False  # Will be required conditionally
+                'required': False,
+                'data-validation': 'address'
             }),
             'customer_email': forms.EmailInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Email Address',
-                'required': True
+                'required': True,
+                'data-validation': 'email'
             }),
+        }
+        error_messages = {
+            'customer_firstname': {
+                'required': 'First name is required.',
+                'max_length': 'First name cannot exceed 100 characters.'
+            },
+            'customer_lastname': {
+                'required': 'Last name is required.',
+                'max_length': 'Last name cannot exceed 100 characters.'
+            },
+            'customer_mobileno': {
+                'required': 'Phone number is required.',
+                'invalid': 'Please enter a valid phone number.'
+            },
+            'customer_address': {
+                'max_length': 'Address cannot exceed 500 characters.'
+            },
+            'customer_email': {
+                'required': 'Email address is required.',
+                'invalid': 'Please enter a valid email address.'
+            }
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Make address not required by default - we'll handle this with JavaScript
         self.fields['customer_address'].required = False
+        
+        # Add phone validator to mobile field
+        self.fields['customer_mobileno'].validators = [self.phone_validator]
+        
+        # Enhanced validation attributes for better UX
+        for field_name, field in self.fields.items():
+            if field_name in self.Meta.fields:
+                field.widget.attrs['data-field'] = field_name
+    
+    def clean_customer_firstname(self):
+        firstname = self.cleaned_data.get('customer_firstname')
+        if firstname:
+            if len(firstname.strip()) < 2:
+                raise forms.ValidationError('First name must be at least 2 characters long.')
+            if not re.match(r'^[a-zA-Z\s]+$', firstname):
+                raise forms.ValidationError('First name can only contain letters and spaces.')
+        return firstname
+    
+    def clean_customer_lastname(self):
+        lastname = self.cleaned_data.get('customer_lastname')
+        if lastname:
+            if len(lastname.strip()) < 2:
+                raise forms.ValidationError('Last name must be at least 2 characters long.')
+            if not re.match(r'^[a-zA-Z\s]+$', lastname):
+                raise forms.ValidationError('Last name can only contain letters and spaces.')
+        return lastname
+    
+    def clean_customer_email(self):
+        email = self.cleaned_data.get('customer_email')
+        if email:
+            # Additional email validation
+            if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+                raise forms.ValidationError('Please enter a valid email address.')
+        return email
     
     def clean(self):
         cleaned_data = super().clean()
@@ -108,10 +225,14 @@ class CheckoutForm(forms.ModelForm):
         table_number = cleaned_data.get('table_number')
         
         if order_type == 'delivery':
-            if not customer_address:
+            if not customer_address or not customer_address.strip():
                 raise forms.ValidationError('Delivery address is required for delivery orders.')
+            elif len(customer_address.strip()) < 10:
+                raise forms.ValidationError('Please provide a more detailed delivery address (at least 10 characters).')
         elif order_type == 'dine_in':
-            if not table_number:
+            if not table_number or not table_number.strip():
                 raise forms.ValidationError('Table number is required for dine-in orders.')
+            elif not re.match(r'^[A-Za-z0-9\-]{1,10}$', table_number.strip()):
+                raise forms.ValidationError('Table number format is invalid. Use letters, numbers, and hyphens only.')
         
         return cleaned_data

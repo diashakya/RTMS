@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Form Validation Demo{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 100px; margin-bottom: 50px;">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 8px 30px rgba(0,0,0,0.1);">
+                <h2 style="text-align: center; color: #333; margin-bottom: 30px;">
+                    <i class="fas fa-check-circle" style="color: #f76d37; margin-right: 10px;"></i>
+                    Enhanced Form Validation Demo
+                </h2>
+                
+                <p style="text-align: center; color: #666; margin-bottom: 40px;">
+                    This page demonstrates all the enhanced form validation features implemented in the restaurant management system.
+                </p>
+                
+                <!-- Features Overview -->
+                <div class="row mb-5">
+                    <div class="col-md-6">
+                        <div class="feature-card" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                            <h5 style="color: #f76d37; margin-bottom: 15px;">
+                                <i class="fas fa-lightning-bolt"></i> Real-time Validation
+                            </h5>
+                            <ul style="color: #666; margin: 0; padding-left: 20px;">
+                                <li>Instant feedback as you type</li>
+                                <li>Visual success/error indicators</li>
+                                <li>Contextual error messages</li>
+                                <li>Character counters for text areas</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                            <h5 style="color: #f76d37; margin-bottom: 15px;">
+                                <i class="fas fa-shield-alt"></i> Enhanced Security
+                            </h5>
+                            <ul style="color: #666; margin: 0; padding-left: 20px;">
+                                <li>Strong password requirements</li>
+                                <li>Email format validation</li>
+                                <li>Phone number pattern checking</li>
+                                <li>Username format compliance</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sample Form -->
+                <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
+                    <h4 style="color: #333; margin-bottom: 25px;">
+                        <i class="fas fa-edit"></i> Try the Validation System
+                    </h4>
+                    
+                    <form class="demo-form" method="post" action="#" onsubmit="return false;">
+                        {% csrf_token %}
+                        
+                        <!-- Personal Information -->
+                        <div class="row mb-4">
+                            <div class="col-md-6 form-group-enhanced">
+                                <label class="form-label" style="font-weight: bold;">First Name *</label>
+                                <input type="text" class="form-control" data-validation="first-name" placeholder="Enter your first name">
+                                <div class="invalid-feedback"></div>
+                                <div class="valid-feedback">Looks good!</div>
+                            </div>
+                            <div class="col-md-6 form-group-enhanced">
+                                <label class="form-label" style="font-weight: bold;">Last Name *</label>
+                                <input type="text" class="form-control" data-validation="last-name" placeholder="Enter your last name">
+                                <div class="invalid-feedback"></div>
+                                <div class="valid-feedback">Looks good!</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Contact Information -->
+                        <div class="row mb-4">
+                            <div class="col-md-6 form-group-enhanced">
+                                <label class="form-label" style="font-weight: bold;">Email Address *</label>
+                                <input type="email" class="form-control" data-validation="email" placeholder="your@email.com">
+                                <div class="invalid-feedback"></div>
+                                <div class="valid-feedback">Valid email format!</div>
+                            </div>
+                            <div class="col-md-6 form-group-enhanced">
+                                <label class="form-label" style="font-weight: bold;">Phone Number *</label>
+                                <input type="tel" class="form-control" data-validation="phone" placeholder="+1234567890">
+                                <div class="invalid-feedback"></div>
+                                <div class="valid-feedback">Valid phone number!</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Address -->
+                        <div class="form-group-enhanced mb-4">
+                            <label class="form-label" style="font-weight: bold;">Address</label>
+                            <textarea class="form-control" data-validation="address" rows="3" placeholder="Enter your full address"></textarea>
+                            <div class="invalid-feedback"></div>
+                            <div class="valid-feedback">Address looks complete!</div>
+                        </div>
+                        
+                        <!-- Quantity Example -->
+                        <div class="row mb-4">
+                            <div class="col-md-6 form-group-enhanced">
+                                <label class="form-label" style="font-weight: bold;">Quantity (1-50) *</label>
+                                <input type="number" class="form-control" data-validation="quantity" min="1" max="50" placeholder="Enter quantity">
+                                <div class="invalid-feedback"></div>
+                                <div class="valid-feedback">Valid quantity!</div>
+                            </div>
+                            <div class="col-md-6 form-group-enhanced">
+                                <label class="form-label" style="font-weight: bold;">Table Number</label>
+                                <input type="text" class="form-control" data-validation="table-number" placeholder="e.g., T-01, A5">
+                                <div class="invalid-feedback"></div>
+                                <div class="valid-feedback">Valid table number!</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Notes with Character Counter -->
+                        <div class="form-group-enhanced mb-4">
+                            <label class="form-label" style="font-weight: bold;">Special Notes</label>
+                            <textarea class="form-control" data-validation="notes" rows="3" placeholder="Enter any special instructions..." id="demo-notes"></textarea>
+                            <div class="invalid-feedback"></div>
+                            <div class="valid-feedback">Notes saved!</div>
+                            <small class="form-text text-muted">
+                                <span id="demo-notes-count">0</span>/500 characters
+                            </small>
+                        </div>
+                        
+                        <!-- Radio Button Group Example -->
+                        <div class="form-group-enhanced mb-4">
+                            <label class="form-label" style="font-weight: bold;">Order Type *</label>
+                            <div class="order-type-selection" style="border: 1px solid #e1e5e9; border-radius: 8px; padding: 15px;">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="demo_order_type" id="demo_delivery" value="delivery">
+                                    <label class="form-check-label" for="demo_delivery">
+                                        <i class="fas fa-truck text-primary"></i> Delivery
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="demo_order_type" id="demo_dine_in" value="dine_in">
+                                    <label class="form-check-label" for="demo_dine_in">
+                                        <i class="fas fa-utensils text-warning"></i> Dine In
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg" style="background: #f76d37; border: none; padding: 12px 40px; border-radius: 8px;">
+                                <i class="fas fa-check"></i> Validate Form
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Implementation Details -->
+                <div style="background: #e3f2fd; padding: 25px; border-radius: 10px; border-left: 4px solid #2196f3;">
+                    <h5 style="color: #1976d2; margin-bottom: 15px;">
+                        <i class="fas fa-info-circle"></i> Implementation Features
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 style="color: #1976d2;">Client-Side Validation</h6>
+                            <ul style="color: #666; margin-bottom: 20px;">
+                                <li>Real-time field validation</li>
+                                <li>Visual feedback with colors and icons</li>
+                                <li>Custom validation rules per field type</li>
+                                <li>Progressive disclosure of errors</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 style="color: #1976d2;">Server-Side Integration</h6>
+                            <ul style="color: #666; margin-bottom: 20px;">
+                                <li>Django form validation enhanced</li>
+                                <li>Custom error messages</li>
+                                <li>Proper error display in templates</li>
+                                <li>Form submission with loading states</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Links to Other Forms -->
+                <div class="text-center mt-4">
+                    <h5 style="color: #333; margin-bottom: 20px;">Test Enhanced Validation in Action</h5>
+                    <div class="d-flex gap-3 justify-content-center flex-wrap">
+                        <a href="{% url 'cart' %}" class="btn" style="background: #f76d37; color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px;">
+                            <i class="fas fa-shopping-cart"></i> Checkout Form
+                        </a>
+                        <a href="{% url 'register' %}" class="btn" style="background: #28a745; color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px;">
+                            <i class="fas fa-user-plus"></i> Registration Form
+                        </a>
+                        <a href="{% url 'login' %}" class="btn" style="background: #007bff; color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px;">
+                            <i class="fas fa-sign-in-alt"></i> Login Form
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Character counter for demo notes
+    const demoNotesField = document.querySelector('#demo-notes');
+    const demoNotesCount = document.querySelector('#demo-notes-count');
+    
+    if (demoNotesField && demoNotesCount) {
+        demoNotesField.addEventListener('input', function() {
+            const currentLength = this.value.length;
+            demoNotesCount.textContent = currentLength;
+            
+            // Visual feedback for character limit
+            if (currentLength > 450) {
+                demoNotesCount.style.color = '#dc3545';
+            } else if (currentLength > 350) {
+                demoNotesCount.style.color = '#ffc107';
+            } else {
+                demoNotesCount.style.color = '#6c757d';
+            }
+        });
+        
+        // Initialize character count
+        demoNotesCount.textContent = demoNotesField.value.length;
+    }
+    
+    // Demo form submission
+    const demoForm = document.querySelector('.demo-form');
+    if (demoForm) {
+        demoForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show success message
+            const button = this.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '<i class="fas fa-check"></i> Validation Complete!';
+            button.style.background = '#28a745';
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.style.background = '#f76d37';
+            }, 3000);
+            
+            // Show notification
+            if (window.showLoadingNotification) {
+                window.showLoadingNotification('✅ Form validation completed successfully!', 3000);
+            }
+        });
+    }
+});
+</script>
+
+{% endblock %}
