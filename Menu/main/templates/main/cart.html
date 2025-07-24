@@ -189,8 +189,13 @@
                     <!-- Item Image and Details -->
                     <div class="col-md-6">
                         <div class="d-flex align-items-center">
+                            {% if item.item_image %}
                             <img src="{{ item.item_image.url }}" alt="{{ item.item_name }}" 
                                  style="width:80px;height:80px;object-fit:cover;border-radius:10px;margin-right:20px;">
+                            {% else %}
+                            <img src="{% static 'images/sample_food.jpg' %}" alt="{{ item.item_name }}" 
+                                 style="width:80px;height:80px;object-fit:cover;border-radius:10px;margin-right:20px;">
+                            {% endif %}
                             <div>
                                 <h5 style="margin: 0 0 8px 0; color: #333; font-weight: bold;">{{ item.item_name }}</h5>
                                 <p style="margin: 0; color: #666; font-size: 0.95em;">Rs {{ item.item_price }} each</p>
@@ -275,28 +280,30 @@
                         <i class="fas fa-map-marker-alt" style="margin-right: 10px;"></i>Order Type *
                     </h5>
                     <div class="order-type-selection">
-                        {% for choice in checkout_form.order_type %}
-                            <div class="order-type-option" data-order-type="{{ choice.choice_value }}">
-                                <label class="d-flex align-items-center" style="cursor: pointer; margin-bottom: 0;">
-                                    {{ choice.tag }}
-                                    <div class="ms-3">
-                                        {% if choice.choice_value == 'delivery' %}
-                                            <i class="fas fa-truck text-primary" style="font-size: 1.5em; margin-right: 10px;"></i>
-                                            <div>
-                                                <strong>Delivery</strong>
-                                                <p class="mb-0 text-muted">Get your order delivered to your address</p>
-                                            </div>
-                                        {% elif choice.choice_value == 'dine_in' %}
-                                            <i class="fas fa-utensils text-warning" style="font-size: 1.5em; margin-right: 10px;"></i>
-                                            <div>
-                                                <strong>Dine In</strong>
-                                                <p class="mb-0 text-muted">Order for your table at the restaurant</p>
-                                            </div>
-                                        {% endif %}
+                        <div class="order-type-option" data-order-type="delivery">
+                            <label class="d-flex align-items-center" style="cursor: pointer; margin-bottom: 0;">
+                                <input type="radio" name="order_type" value="delivery" class="order-type-radio" checked>
+                                <div class="ms-3 d-flex align-items-center">
+                                    <i class="fas fa-truck text-primary" style="font-size: 1.5em; margin-right: 10px;"></i>
+                                    <div>
+                                        <strong>Delivery</strong>
+                                        <p class="mb-0 text-muted">Get your order delivered to your address</p>
                                     </div>
-                                </label>
-                            </div>
-                        {% endfor %}
+                                </div>
+                            </label>
+                        </div>
+                        <div class="order-type-option" data-order-type="dine_in">
+                            <label class="d-flex align-items-center" style="cursor: pointer; margin-bottom: 0;">
+                                <input type="radio" name="order_type" value="dine_in" class="order-type-radio">
+                                <div class="ms-3 d-flex align-items-center">
+                                    <i class="fas fa-utensils text-warning" style="font-size: 1.5em; margin-right: 10px;"></i>
+                                    <div>
+                                        <strong>Dine In</strong>
+                                        <p class="mb-0 text-muted">Order for your table at the restaurant</p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
                     </div>
                     {% if checkout_form.order_type.errors %}
                         <div class="invalid-feedback" style="display: block;">
@@ -374,34 +381,42 @@
                         <i class="fas fa-credit-card" style="margin-right: 10px;"></i>Payment Method *
                     </h5>
                     <div class="payment-methods">
-                        {% for choice in checkout_form.payment_method %}
-                            <div class="payment-option">
-                                <label class="d-flex align-items-center" style="cursor: pointer; margin-bottom: 0;">
-                                    {{ choice.tag }}
-                                    <div class="ms-3">
-                                        {% if choice.choice_value == 'cash' %}
-                                            <i class="fas fa-money-bill-wave text-success" style="font-size: 1.5em; margin-right: 10px;"></i>
-                                            <div>
-                                                <strong>Cash Payment</strong>
-                                                <p class="mb-0 text-muted">Pay with cash</p>
-                                            </div>
-                                        {% elif choice.choice_value == 'card' %}
-                                            <i class="fas fa-credit-card text-primary" style="font-size: 1.5em; margin-right: 10px;"></i>
-                                            <div>
-                                                <strong>Card Payment</strong>
-                                                <p class="mb-0 text-muted">Pay with debit/credit card</p>
-                                            </div>
-                                        {% elif choice.choice_value == 'wallet' %}
-                                            <i class="fas fa-wallet text-info" style="font-size: 1.5em; margin-right: 10px;"></i>
-                                            <div>
-                                                <strong>Digital Wallet</strong>
-                                                <p class="mb-0 text-muted">eSewa, Khalti, etc.</p>
-                                            </div>
-                                        {% endif %}
+                        <div class="payment-option">
+                            <label class="d-flex align-items-center" style="cursor: pointer; margin-bottom: 0;">
+                                <input type="radio" name="payment_method" value="cash" class="payment-radio">
+                                <div class="ms-3 d-flex align-items-center">
+                                    <i class="fas fa-money-bill-wave text-success" style="font-size: 1.5em; margin-right: 10px;"></i>
+                                    <div>
+                                        <strong>Cash Payment</strong>
+                                        <p class="mb-0 text-muted">Pay with cash</p>
                                     </div>
-                                </label>
-                            </div>
-                        {% endfor %}
+                                </div>
+                            </label>
+                        </div>
+                        <div class="payment-option">
+                            <label class="d-flex align-items-center" style="cursor: pointer; margin-bottom: 0;">
+                                <input type="radio" name="payment_method" value="card" class="payment-radio">
+                                <div class="ms-3 d-flex align-items-center">
+                                    <i class="fas fa-credit-card text-primary" style="font-size: 1.5em; margin-right: 10px;"></i>
+                                    <div>
+                                        <strong>Card Payment</strong>
+                                        <p class="mb-0 text-muted">Pay with debit/credit card</p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="payment-option">
+                            <label class="d-flex align-items-center" style="cursor: pointer; margin-bottom: 0;">
+                                <input type="radio" name="payment_method" value="wallet" class="payment-radio">
+                                <div class="ms-3 d-flex align-items-center">
+                                    <i class="fas fa-wallet text-info" style="font-size: 1.5em; margin-right: 10px;"></i>
+                                    <div>
+                                        <strong>Digital Wallet</strong>
+                                        <p class="mb-0 text-muted">eSewa, Khalti, etc.</p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
                     </div>
                     {% if checkout_form.payment_method.errors %}
                         <div class="invalid-feedback" style="display: block;">
