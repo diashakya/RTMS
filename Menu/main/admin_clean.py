@@ -14,7 +14,7 @@ class OrderItemInline(admin.TabularInline):
 # Enhanced Order Admin
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'customer_info', 'order_type_display', 'user', 'status', 'total', 'created_at')
+    list_display = ('id', 'customer_info', 'order_type_display', 'user', 'status', 'total', 'created_at', 'order_actions')
     list_filter = ('status', 'order_type', 'created_at', 'customer')
     search_fields = ('id', 'customer__customer_firstname', 'customer__customer_lastname', 'customer__customer_mobileno', 'table_number', 'customer_name')
     readonly_fields = ('created_at', 'total')
@@ -55,7 +55,17 @@ class OrderAdmin(admin.ModelAdmin):
     order_type_display.short_description = "Order Type"
     order_type_display.allow_tags = True
     
-    actions = ['mark_completed', 'mark_cancelled', 'send_confirmation_emails', 'delete_selected_orders']
+    def order_actions(self, obj):
+        return format_html(
+            '<a class="button" href="{}">View Receipt</a>&nbsp;'
+            '<a class="button" href="{}">Send Status Email</a>',
+            reverse('order_receipt', args=[obj.id]),
+            reverse('send_status_email', args=[obj.id])
+        )
+    order_actions.short_description = "Actions"
+    order_actions.allow_tags = True
+    
+    actions = ['mark_completed', 'mark_cancelled', 'send_confirmation_emails']
     
     def mark_completed(self, request, queryset):
         count = queryset.update(status='completed')
@@ -90,12 +100,6 @@ class OrderAdmin(admin.ModelAdmin):
                 pass
         self.message_user(request, f'Confirmation emails sent for {queryset.count()} orders.')
     send_confirmation_emails.short_description = "Send confirmation emails"
-    
-    def delete_selected_orders(self, request, queryset):
-        count = queryset.count()
-        queryset.delete()
-        self.message_user(request, f'{count} orders deleted successfully.')
-    delete_selected_orders.short_description = "⚠️ Delete selected orders (permanent)"
 
 # Enhanced Customer Admin
 @admin.register(Customer)
@@ -135,23 +139,6 @@ class SpecialAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description')
     list_editable = ('active', 'price', 'discounted_price')
     date_hierarchy = 'date'
-    actions = ['delete_selected_specials', 'deactivate_specials', 'activate_specials']
-    
-    def delete_selected_specials(self, request, queryset):
-        count = queryset.count()
-        queryset.delete()
-        self.message_user(request, f'{count} special items deleted successfully.')
-    delete_selected_specials.short_description = "Delete selected specials"
-    
-    def deactivate_specials(self, request, queryset):
-        count = queryset.update(active=False)
-        self.message_user(request, f'{count} specials deactivated.')
-    deactivate_specials.short_description = "Deactivate selected specials"
-    
-    def activate_specials(self, request, queryset):
-        count = queryset.update(active=True)
-        self.message_user(request, f'{count} specials activated.')
-    activate_specials.short_description = "Activate selected specials"
 
 @admin.register(Foods)
 class FoodsAdmin(admin.ModelAdmin):
@@ -159,24 +146,11 @@ class FoodsAdmin(admin.ModelAdmin):
     list_filter = ('category', 'is_spicy')
     search_fields = ('title',)
     list_editable = ('price', 'is_spicy', 'rating')
-    actions = ['delete_selected_foods', 'mark_as_unavailable']
-    
-    def delete_selected_foods(self, request, queryset):
-        count = queryset.count()
-        queryset.delete()
-        self.message_user(request, f'{count} food items deleted successfully.')
-    delete_selected_foods.short_description = "Delete selected food items"
-    
-    def mark_as_unavailable(self, request, queryset):
-        # Note: This would require an 'is_available' field in the Foods model
-        self.message_user(request, f'Feature not implemented yet - would mark {queryset.count()} items as unavailable.')
-    mark_as_unavailable.short_description = "Mark selected items as unavailable"
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'food_count', 'special_count')
     search_fields = ('name',)
-    actions = ['delete_selected_categories']
     
     def food_count(self, obj):
         return obj.foods_set.count()
@@ -185,12 +159,6 @@ class CategoryAdmin(admin.ModelAdmin):
     def special_count(self, obj):
         return obj.special_set.count()
     special_count.short_description = "Specials"
-    
-    def delete_selected_categories(self, request, queryset):
-        count = queryset.count()
-        queryset.delete()
-        self.message_user(request, f'{count} categories deleted successfully.')
-    delete_selected_categories.short_description = "Delete selected categories"
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):

@@ -74,4 +74,7 @@ urlpatterns = [
     path('api/favorites/add/', toggle_favorite, name='add_favorite'),
     path('api/favorites/remove/', toggle_favorite, name='remove_favorite_toggle'),
     path('api/foods/<int:pk>/', food_detail, name='food_detail'),
+
+    # Admin email functionality
+    path('send-status-email/<int:order_id>/', send_status_email, name='send_status_email'),
 ]

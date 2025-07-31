@@ -1269,6 +1269,24 @@ def send_order_status_email(order, status):
     except Exception as e:
         print(f"Error sending status email: {e}")
 
+@login_required(login_url='login')
+def send_status_email(request, order_id):
+    """Send status email for specific order (admin only)."""
+    if not request.user.is_staff:
+        messages.error(request, 'Access denied. Staff privileges required.')
+        return redirect('admin:main_order_changelist')
+    
+    try:
+        order = Order.objects.get(id=order_id)
+        send_order_status_email(order, order.status)
+        messages.success(request, f'Status email sent for Order #{order_id}.')
+    except Order.DoesNotExist:
+        messages.error(request, f'Order #{order_id} not found.')
+    except Exception as e:
+        messages.error(request, f'Error sending email: {str(e)}')
+    
+    return redirect('admin:main_order_changelist')
+
 
 
 
