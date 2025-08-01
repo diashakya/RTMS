@@ -30,6 +30,7 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'testserver']
 
 # Application definition
 INSTALLED_APPS = [
+    "whitenoise.runserver_nostatic",  # Use whitenoise for static files in production
     'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Serve static files in production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -56,7 +58,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
     'allauth.account.middleware.AccountMiddleware',
-    'main.middleware.RoleBasedAccessMiddleware',  # Add role-based access control
 ]
 
 ROOT_URLCONF = 'Menu.urls'
@@ -161,9 +162,4 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='Restaurant <noreply@r
 # For development, you can use console backend to see emails in terminal
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-# Authentication URLs
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
 
