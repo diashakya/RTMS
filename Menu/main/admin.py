@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-from .models import Special, Foods, Category, Favorite, Order, OrderItem, Customer, Cart, CartItem, Contact, Reservation
+from .models import Special, Foods, Category, Favorite, Order, OrderItem, Customer, Cart, CartItem, Contact, Reservation, CateringRequest, GiftCardRequest
 
 # Enhanced Order Item Inline
 class OrderItemInline(admin.TabularInline):
@@ -250,6 +250,42 @@ class ReservationAdmin(admin.ModelAdmin):
         count = queryset.update(is_confirmed=False)
         self.message_user(request, f'{count} reservations marked as unconfirmed.')
     mark_unconfirmed.short_description = "Mark selected as unconfirmed"
+
+@admin.register(CateringRequest)
+class CateringRequestAdmin(admin.ModelAdmin):
+    list_display = ('name', 'event_date', 'event_type', 'guests', 'is_handled', 'submitted_at')
+    list_filter = ('event_date', 'is_handled', 'event_type')
+    search_fields = ('name', 'email', 'phone', 'event_type')
+    ordering = ('-submitted_at',)
+    actions = ['mark_handled', 'mark_unhandled']
+
+    def mark_handled(self, request, queryset):
+        count = queryset.update(is_handled=True)
+        self.message_user(request, f'{count} requests marked as handled.')
+    mark_handled.short_description = "Mark selected as handled"
+
+    def mark_unhandled(self, request, queryset):
+        count = queryset.update(is_handled=False)
+        self.message_user(request, f'{count} requests marked as unhandled.')
+    mark_unhandled.short_description = "Mark selected as unhandled"
+
+@admin.register(GiftCardRequest)
+class GiftCardRequestAdmin(admin.ModelAdmin):
+    list_display = ('name', 'amount', 'recipient_name', 'recipient_email', 'is_processed', 'submitted_at')
+    list_filter = ('is_processed',)
+    search_fields = ('name', 'email', 'phone', 'recipient_name', 'recipient_email')
+    ordering = ('-submitted_at',)
+    actions = ['mark_processed', 'mark_unprocessed']
+
+    def mark_processed(self, request, queryset):
+        count = queryset.update(is_processed=True)
+        self.message_user(request, f'{count} requests marked as processed.')
+    mark_processed.short_description = "Mark selected as processed"
+
+    def mark_unprocessed(self, request, queryset):
+        count = queryset.update(is_processed=False)
+        self.message_user(request, f'{count} requests marked as unprocessed.')
+    mark_unprocessed.short_description = "Mark selected as unprocessed"
 
 # Admin site customization
 admin.site.site_header = "Restaurant Management System"

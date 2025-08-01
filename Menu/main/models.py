@@ -242,3 +242,41 @@ class Reservation(models.Model):
 
     def __str__(self):
         return f"Reservation for {self.name} on {self.date} at {self.time}"
+
+class CateringRequest(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    event_date = models.DateField()
+    event_type = models.CharField(max_length=100)
+    guests = models.PositiveIntegerField(default=1)
+    message = models.TextField(blank=True, null=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    is_handled = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-submitted_at']
+        verbose_name = "Catering Request"
+        verbose_name_plural = "Catering Requests"
+
+    def __str__(self):
+        return f"Catering for {self.name} on {self.event_date} ({self.event_type})"
+
+class GiftCardRequest(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    recipient_name = models.CharField(max_length=100)
+    recipient_email = models.EmailField()
+    message = models.TextField(blank=True, null=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    is_processed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-submitted_at']
+        verbose_name = "Gift Card Request"
+        verbose_name_plural = "Gift Card Requests"
+
+    def __str__(self):
+        return f"Gift Card for {self.recipient_name} ({self.amount})"

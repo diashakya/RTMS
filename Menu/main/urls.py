@@ -78,4 +78,6 @@ urlpatterns = [
     # Admin email functionality
     path('send-status-email/<int:order_id>/', send_status_email, name='send_status_email'),
     path('reservation/', make_reservation, name='make_reservation'),
+    path('catering/', catering_request, name='catering_request'),
+    path('gift-card/', gift_card_request, name='gift_card_request'),
 ]

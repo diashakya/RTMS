@@ -1,5 +1,5 @@
 from django import forms
-from .models import Cart, CartItem, Customer, Contact, Reservation
+from .models import Cart, CartItem, Customer, Contact, Reservation, CateringRequest, GiftCardRequest
 
 class CartItemUpdateForm(forms.Form):
     """Form for updating cart item quantity"""
@@ -162,4 +162,23 @@ class ReservationForm(forms.ModelForm):
             'time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
             'guests': forms.NumberInput(attrs={'min': 1, 'max': 20, 'class': 'form-control'}),
             'message': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Any special requests?'}),
+        }
+
+class CateringRequestForm(forms.ModelForm):
+    class Meta:
+        model = CateringRequest
+        fields = ['name', 'email', 'phone', 'event_date', 'event_type', 'guests', 'message']
+        widgets = {
+            'event_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'guests': forms.NumberInput(attrs={'min': 1, 'max': 500, 'class': 'form-control'}),
+            'message': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Describe your event or requests'}),
+        }
+
+class GiftCardRequestForm(forms.ModelForm):
+    class Meta:
+        model = GiftCardRequest
+        fields = ['name', 'email', 'phone', 'amount', 'recipient_name', 'recipient_email', 'message']
+        widgets = {
+            'amount': forms.NumberInput(attrs={'min': 100, 'max': 10000, 'step': 100, 'class': 'form-control'}),
+            'message': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Personal message for recipient'}),
         }

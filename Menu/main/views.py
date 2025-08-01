@@ -1342,6 +1342,34 @@ def make_reservation(request):
         form = ReservationForm()
     return render(request, 'main/reservation.html', {'form': form, 'page_title': 'Make Reservation'})
 
+def catering_request(request):
+    from .forms import CateringRequestForm
+    if request.method == 'POST':
+        form = CateringRequestForm(request.POST)
+        if form.is_valid():
+            catering = form.save()
+            messages.success(request, 'Your catering inquiry has been submitted! We will contact you soon.')
+            return redirect('catering_request')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = CateringRequestForm()
+    return render(request, 'main/catering.html', {'form': form, 'page_title': 'Catering Services'})
+
+def gift_card_request(request):
+    from .forms import GiftCardRequestForm
+    if request.method == 'POST':
+        form = GiftCardRequestForm(request.POST)
+        if form.is_valid():
+            gift_card = form.save()
+            messages.success(request, 'Your gift card request has been submitted! We will process it soon.')
+            return redirect('gift_card_request')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = GiftCardRequestForm()
+    return render(request, 'main/gift_card.html', {'form': form, 'page_title': 'Gift Cards'})
+
 
 
 
