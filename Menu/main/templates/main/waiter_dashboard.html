@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Waiter Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Table Management Section -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Table Management</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-grid">
+                        {% for table in tables %}
+                        <div class="table-card {% if table.status == 'occupied' %}occupied{% elif table.status == 'reserved' %}reserved{% else %}available{% endif %}"
+                             onclick="handleTableClick('{{ table.id }}')">
+                            <h5>Table {{ table.number }}</h5>
+                            <p>Capacity: {{ table.capacity }}</p>
+                            <p class="status">{{ table.get_status_display }}</p>
+                            {% if table.status == 'occupied' %}
+                                <p class="order-info">Order #{{ table.current_order.id }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Orders Section -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Active Orders</h4>
+                </div>
+                <div class="card-body">
+                    <div class="active-orders">
+                        {% for assignment in waiter.table_assignments.all %}
+                        <div class="order-card">
+                            <h5>Order #{{ assignment.order.id }}</h5>
+                            <p>Table {{ assignment.table.number }}</p>
+                            <p>Status: {{ assignment.order.get_status_display }}</p>
+                            <button class="btn btn-sm btn-primary" onclick="viewOrderDetails('{{ assignment.order.id }}')">
+                                View Details
+                            </button>
+                        </div>
+                        {% empty %}
+                        <p>No active orders</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderDetailsContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .table-card {
+        padding: 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .table-card.available {
+        background-color: #e7f5e7;
+    }
+    
+    .table-card.occupied {
+        background-color: #ffe8e8;
+    }
+    
+    .table-card.reserved {
+        background-color: #fff3cd;
+    }
+    
+    .order-card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let notificationSocket = null;
+function connectNotifications() {
+    const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsScheme}//${window.location.host}/ws/notifications/`;
+    
+    notificationSocket = new WebSocket(wsUrl);
+    
+    notificationSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        // Handle notifications
+        if (data.type === 'new_order') {
+            // Refresh orders list
+            location.reload();
+        }
+    };
+
+    notificationSocket.onclose = function(e) {
+        console.log('Notification socket closed. Attempting to reconnect...');
+        setTimeout(connectNotifications, 1000);
+    };
+
+    notificationSocket.onerror = function(e) {
+        console.error('WebSocket error:', e);
+    };
+}
+
+// Connect to WebSocket when page loads
+document.addEventListener('DOMContentLoaded', connectNotifications);
+
+function handleTableClick(tableId) {
+    // Handle table selection
+    window.location.href = `/waiter/table/${tableId}/`;
+}
+
+function viewOrderDetails(orderId) {
+    // Load order details into modal
+    fetch(`/waiter/order/${orderId}/details/`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('orderDetailsContent').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
+        });
+}
+</script>
+{% endblock %}

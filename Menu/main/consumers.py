@@ -161,52 +161,59 @@ class MenuConsumer(AsyncWebsocketConsumer):
 
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.user = self.scope["user"]
-        
-        if self.user.is_anonymous:
-            await self.close()
-        else:
-            self.room_group_name = f'user_{self.user.id}'
-            
-            # Join room group
-            await self.channel_layer.group_add(
-                self.room_group_name,
-                self.channel_name
-            )
-            
-            await self.accept()
+        # Join room group
+        await self.channel_layer.group_add(
+            "notifications",
+            self.channel_name
+        )
+        await self.accept()
 
     async def disconnect(self, close_code):
-        if not self.user.is_anonymous:
-            # Leave room group
-            await self.channel_layer.group_discard(
-                self.room_group_name,
-                self.channel_name
-            )
+        # Leave room group
+        await self.channel_layer.group_discard(
+            "notifications",
+            self.channel_name
+        )
 
+    # Receive message from WebSocket
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message_type = text_data_json['type']
-        
-        if message_type == 'ping':
-            await self.send(text_data=json.dumps({
-                'type': 'pong'
-            }))
+        message = text_data_json['message']
 
-    async def notification(self, event):
-        # Send notification to user
+        # Send message to room group
+        await self.channel_layer.group_send(
+            "notifications",
+            {
+                'type': 'notification_message',
+                'message': message
+            }
+        )
+
+    # Receive message from room group
+    async def notification_message(self, event):
+        message = event['message']
+
+        # Send message to WebSocket
         await self.send(text_data=json.dumps({
-            'type': 'notification',
-            'title': event['title'],
-            'message': event['message'],
-            'notification_type': event.get('notification_type', 'info')
+            'message': message
         }))
 
-    async def order_notification(self, event):
-        # Send order-specific notification
+class WaiterNotificationConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        await self.channel_layer.group_add(
+            "waiter_notifications",
+            self.channel_name
+        )
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(
+            "waiter_notifications",
+            self.channel_name
+        )
+
+    async def notify(self, event):
         await self.send(text_data=json.dumps({
-            'type': 'order_notification',
-            'order_id': event['order_id'],
-            'status': event['status'],
+            'type': event['type'],
             'message': event['message']
         }))

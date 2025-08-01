@@ -280,3 +280,75 @@ class GiftCardRequest(models.Model):
 
     def __str__(self):
         return f"Gift Card for {self.recipient_name} ({self.amount})"
+
+class Table(models.Model):
+    """Model representing restaurant tables"""
+    TABLE_STATUS_CHOICES = [
+        ('available', 'Available'),
+        ('occupied', 'Occupied'),
+        ('reserved', 'Reserved'),
+        ('cleaning', 'Being Cleaned'),
+    ]
+    
+    number = models.CharField(max_length=10, unique=True)
+    capacity = models.PositiveIntegerField(default=4)
+    status = models.CharField(max_length=20, choices=TABLE_STATUS_CHOICES, default='available')
+    location = models.CharField(max_length=50, blank=True, null=True, help_text="Table location (e.g. 'Window', 'Patio')")
+    
+    class Meta:
+        ordering = ['number']
+        verbose_name = "Table"
+        verbose_name_plural = "Tables"
+    
+    def __str__(self):
+        return f"Table {self.number} ({self.get_status_display()})"
+
+class WaiterProfile(models.Model):
+    """Model representing waiter-specific information"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='waiter_profile')
+    employee_id = models.CharField(max_length=20, unique=True)
+    phone = models.CharField(max_length=20)
+    assigned_tables = models.ManyToManyField(Table, blank=True, related_name='assigned_waiters')
+    
+    class Meta:
+        verbose_name = "Waiter Profile"
+        verbose_name_plural = "Waiter Profiles"
+    
+    def __str__(self):
+        return f"Waiter: {self.user.get_full_name() or self.user.username}"
+
+class TableAssignment(models.Model):
+    """Model representing table assignments for orders"""
+    table = models.ForeignKey(Table, on_delete=models.CASCADE, related_name='assignments')
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='table_assignment')
+    waiter = models.ForeignKey(WaiterProfile, on_delete=models.SET_NULL, null=True, related_name='table_assignments')
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-assigned_at']
+        verbose_name = "Table Assignment"
+        verbose_name_plural = "Table Assignments"
+    
+    def __str__(self):
+        return f"Table {self.table.number} assigned to {self.waiter} for Order #{self.order.id}"
+        
+    def save(self, *args, **kwargs):
+        """Update table status when assigned"""
+        self.table.status = 'occupied'
+        self.table.save()
+        super().save(*args, **kwargs)
+
+class UserProfile(models.Model):
+    USER_TYPES = [
+        ('customer', 'Customer'),
+        ('waiter', 'Waiter'),
+        ('admin', 'Admin'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    user_type = models.CharField(max_length=20, choices=USER_TYPES, default='customer')
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    employee_id = models.CharField(max_length=20, blank=True, null=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.get_user_type_display()}"

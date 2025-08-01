@@ -2,7 +2,9 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-from .models import Special, Foods, Category, Favorite, Order, OrderItem, Customer, Cart, CartItem, Contact, Reservation, CateringRequest, GiftCardRequest
+from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin
+from .models import Special, Foods, Category, Favorite, Order, OrderItem, Customer, Cart, CartItem, Contact, Reservation, CateringRequest, UserProfile
 
 # Enhanced Order Item Inline
 class OrderItemInline(admin.TabularInline):
@@ -269,23 +271,36 @@ class CateringRequestAdmin(admin.ModelAdmin):
         self.message_user(request, f'{count} requests marked as unhandled.')
     mark_unhandled.short_description = "Mark selected as unhandled"
 
-@admin.register(GiftCardRequest)
-class GiftCardRequestAdmin(admin.ModelAdmin):
-    list_display = ('name', 'amount', 'recipient_name', 'recipient_email', 'is_processed', 'submitted_at')
-    list_filter = ('is_processed',)
-    search_fields = ('name', 'email', 'phone', 'recipient_name', 'recipient_email')
-    ordering = ('-submitted_at',)
-    actions = ['mark_processed', 'mark_unprocessed']
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'user_type', 'employee_id', 'phone')
+    list_filter = ('user_type',)
+    search_fields = ('user__username', 'employee_id', 'phone')
+    
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if not obj:  # If this is an add form
+            form.base_fields['user_type'].initial = 'waiter'
+        return form
 
-    def mark_processed(self, request, queryset):
-        count = queryset.update(is_processed=True)
-        self.message_user(request, f'{count} requests marked as processed.')
-    mark_processed.short_description = "Mark selected as processed"
+# Create a custom User admin that includes profile
+from django.contrib.admin import TabularInline
 
-    def mark_unprocessed(self, request, queryset):
-        count = queryset.update(is_processed=False)
-        self.message_user(request, f'{count} requests marked as unprocessed.')
-    mark_unprocessed.short_description = "Mark selected as unprocessed"
+class UserProfileInline(TabularInline):
+    model = UserProfile
+    extra = 1
+    max_num = 1
+    fields = ['user_type', 'phone', 'employee_id']
+
+class CustomUserAdmin(UserAdmin):
+    inlines = [UserProfileInline]
+    list_display = ['username', 'email', 'is_staff']
+    search_fields = ['username', 'email']
+    ordering = ['-date_joined']
+
+# Unregister the default User admin and register our custom one
+admin.site.unregister(User)
+admin.site.register(User, CustomUserAdmin)
 
 # Admin site customization
 admin.site.site_header = "Restaurant Management System"

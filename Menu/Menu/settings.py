@@ -30,13 +30,14 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'testserver']
 
 # Application definition
 INSTALLED_APPS = [
-    'unfold',
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'main.apps.MainConfig',
     'channels',  # WebSocket support
     'rest_framework',
     'allauth',
@@ -44,11 +45,6 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'social_django',
 ]
-
-EXTERNAL_APPS = [
-    'main',
-]
-INSTALLED_APPS.extend(EXTERNAL_APPS)
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -60,6 +56,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'main.middleware.RoleBasedAccessMiddleware',  # Add role-based access control
 ]
 
 ROOT_URLCONF = 'Menu.urls'

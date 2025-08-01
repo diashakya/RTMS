@@ -80,4 +80,8 @@ urlpatterns = [
     path('reservation/', make_reservation, name='make_reservation'),
     path('catering/', catering_request, name='catering_request'),
     path('gift-card/', gift_card_request, name='gift_card_request'),
+
+    # Waiter URLs
+    path('waiter/', WaiterDashboardView.as_view(), name='waiter_dashboard'),
+    path('waiter/order/<int:order_id>/details/', order_details_ajax, name='waiter_order_details'),
 ]

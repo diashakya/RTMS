@@ -8,7 +8,7 @@ from io import BytesIO
 import base64
 
 # --------------------Django Core - Generic
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.db import IntegrityError
 from django.db import models
 from django.utils import timezone
@@ -38,7 +38,7 @@ from django.contrib.auth.decorators import login_required
 import json
 
 # ------------------------Models
-from .models import Order, OrderItem, Foods, Special, Customer, Favorite, Cart, CartItem, Category
+from .models import Order, OrderItem, Foods, Special, Customer, Favorite, Cart, CartItem, Category, Table
 
 # -----------------------------------   Local Apps
 from .models import Special
@@ -89,6 +89,10 @@ def contact(request):
 
 def menu(request):
     """Renders the menu page with food items and today's specials, filtered by category and search query."""
+    # Restrict waiter users
+    if hasattr(request.user, 'profile') and request.user.profile.user_type == 'waiter':
+        return redirect('waiter_dashboard')
+    
     todays_specials = Special.objects.filter(date=date.today(), active=True)
     categories = Category.objects.all()
     selected_category_name = request.GET.get('category')
@@ -620,7 +624,7 @@ def checkout_api(request):
         })
         
     except Exception as e:
-        return JsonResponse({'success': False, 'message': f'Error processing order: {str(e)}'}, status=500)
+        return JsonResponse({'success': False, 'message': f'Error processing order: {str(e)}', 'error': str(e)}, status=500)
 
 @login_required
 def order_history(request):
@@ -1369,6 +1373,41 @@ def gift_card_request(request):
     else:
         form = GiftCardRequestForm()
     return render(request, 'main/gift_card.html', {'form': form, 'page_title': 'Gift Cards'})
+
+# ----------------------------------- Waiter Views -----------------------------------
+
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import TemplateView
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
+from .models import Table, Order
+
+class WaiterRequiredMixin:
+    """Verify that the current user is authenticated and is a waiter"""
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        try:
+            if request.user.profile.user_type != 'waiter':
+                raise PermissionDenied("You must be a waiter to access this page.")
+        except (AttributeError, RelatedObjectDoesNotExist):
+            raise PermissionDenied("Waiter profile not found.")
+        return super().dispatch(request, *args, **kwargs)
+
+class WaiterDashboardView(WaiterRequiredMixin, TemplateView):
+    template_name = 'main/waiter_dashboard.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tables'] = Table.objects.all()
+        context['waiter'] = self.request.user.profile
+        return context
+
+@login_required
+def order_details_ajax(request, order_id):
+    """AJAX view for loading order details"""
+    order = get_object_or_404(Order, id=order_id)
+    return render(request, 'main/partials/order_details.html', {'order': order})
 
 
 
