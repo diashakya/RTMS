@@ -3,7 +3,7 @@ This module defines the views for the main application.
 It handles rendering of different pages and user authentication.
 """
 # ---------------Python Standard Library
-from datetime import datetime
+from datetime import datetime, date
 from io import BytesIO
 import base64
 
@@ -43,6 +43,7 @@ from .models import Order, OrderItem, Foods, Special, Customer, Favorite, Cart, 
 # -----------------------------------   Local Apps
 from .models import Special
 from .realtime_utils import send_new_order_notification, send_order_update, send_user_notification, send_order_status_notification
+from .realtime_order_utils import notify_order_status_change, notify_new_order, get_order_status_display, get_order_progress_percentage
 
 # Create your views here.
 
@@ -315,29 +316,65 @@ def get_or_create_cart(request):
 
 def cart_view(request):
     """Renders the cart page with items and handles cart operations."""
-    cart = get_or_create_cart(request)
-    cart_items = cart.items.all()
-    
-    # Handle form submissions
-    if request.method == 'POST':
-        if 'update_quantity' in request.POST:
-            return handle_update_quantity(request, cart)
-        elif 'remove_item' in request.POST:
-            return handle_remove_item(request, cart)
-        elif 'checkout' in request.POST:
-            return handle_checkout(request, cart)
-    
-    # Create checkout form
-    checkout_form = CheckoutForm()
-    
-    context = {
-        'cart': cart,
-        'cart_items': cart_items,
-        'total_price': cart.total_price,
-        'total_items': cart.total_items,
-        'checkout_form': checkout_form,
-    }
-    return render(request, 'main/cart.html', context)
+    try:
+        cart = get_or_create_cart(request)
+        if not cart:
+            # If cart creation fails, create empty context
+            context = {
+                'cart': None,
+                'cart_items': [],
+                'total_price': 0,
+                'total_items': 0,
+                'checkout_form': CheckoutForm(),
+            }
+            return render(request, 'main/cart.html', context)
+        
+        cart_items = cart.items.all()
+        
+        # Handle form submissions
+        if request.method == 'POST':
+            if 'update_quantity' in request.POST:
+                return handle_update_quantity(request, cart)
+            elif 'remove_item' in request.POST:
+                return handle_remove_item(request, cart)
+            elif 'checkout' in request.POST:
+                return handle_checkout(request, cart)
+        
+        # Create checkout form
+        checkout_form = CheckoutForm()
+        
+        # Safely get cart properties
+        try:
+            total_price = cart.total_price
+        except (AttributeError, TypeError):
+            total_price = 0
+            
+        try:
+            total_items = cart.total_items
+        except (AttributeError, TypeError):
+            total_items = 0
+        
+        context = {
+            'cart': cart,
+            'cart_items': cart_items,
+            'total_price': total_price,
+            'total_items': total_items,
+            'checkout_form': checkout_form,
+        }
+        return render(request, 'main/cart.html', context)
+        
+    except Exception as e:
+        print(f"Error in cart_view: {e}")
+        # Return a safe fallback context
+        context = {
+            'cart': None,
+            'cart_items': [],
+            'total_price': 0,
+            'total_items': 0,
+            'checkout_form': CheckoutForm(),
+            'error': str(e)
+        }
+        return render(request, 'main/cart.html', context)
 
 @csrf_exempt
 def add_to_cart(request):
@@ -470,8 +507,9 @@ def checkout(request):
         cart_items = data.get('cart', [])
         notes = data.get('notes', '')
         
-        if not cart_items:
-            return JsonResponse({'success': False, 'message': 'Cart is empty'})
+        # Validate cart_items is a list and not None
+        if not cart_items or not isinstance(cart_items, list):
+            return JsonResponse({'success': False, 'message': 'Cart is empty or invalid'})
         
         # Create order
         order = Order.objects.create(
@@ -481,76 +519,119 @@ def checkout(request):
         )
         
         total = 0
-        # Create order items
+        valid_items_count = 0
+        
+        # Create order items with improved error handling
         for item in cart_items:
             try:
+                # Validate item is a dictionary
+                if not isinstance(item, dict):
+                    continue
+                
+                # Get item ID and validate it's not None/empty
+                item_id = item.get('id')
+                if not item_id or str(item_id).strip() == '':
+                    continue
+                
+                # Get quantity and price with defaults
+                quantity = item.get('quantity', 1)
+                price = item.get('price', 0)
+                
+                # Validate quantity is positive integer
+                try:
+                    quantity = int(quantity) if quantity is not None else 1
+                    if quantity <= 0:
+                        quantity = 1
+                except (ValueError, TypeError):
+                    quantity = 1
+                
+                # Validate price is numeric
+                try:
+                    price = float(price) if price is not None else 0
+                    if price < 0:
+                        price = 0
+                except (ValueError, TypeError):
+                    price = 0
+                
                 # Check if it's a special or regular food item
-                if 'special' in str(item.get('id', '')).lower():
+                item_id_str = str(item_id).lower()
+                if 'special' in item_id_str:
                     # It's a special item
-                    special_id = item['id'].replace('special-', '')
-                    special = Special.objects.get(id=special_id)
-                    price = special.discounted_price if special.discounted_price else special.price
-                    
-                    OrderItem.objects.create(
-                        order=order,
-                        special=special,
-                        quantity=item['quantity'],
-                        price=price
-                    )
+                    special_id = item_id_str.replace('special-', '')
+                    try:
+                        special = Special.objects.get(id=special_id)
+                        order_price = special.discounted_price if special.discounted_price else special.price
+                        
+                        OrderItem.objects.create(
+                            order=order,
+                            special=special,
+                            quantity=quantity,
+                            price=order_price or price
+                        )
+                        valid_items_count += 1
+                    except (Special.DoesNotExist, ValueError):
+                        continue
                 else:
                     # It's a regular food item
-                    food = Foods.objects.get(id=item['id'])
-                    
-                    OrderItem.objects.create(
-                        order=order,
-                        food=food,
-                        quantity=item['quantity'],
-                        price=food.price
-                    )
+                    try:
+                        food = Foods.objects.get(id=item_id)
+                        
+                        OrderItem.objects.create(
+                            order=order,
+                            food=food,
+                            quantity=quantity,
+                            price=food.price or price
+                        )
+                        valid_items_count += 1
+                    except (Foods.DoesNotExist, ValueError):
+                        continue
                 
-                total += float(item['price']) * int(item['quantity'])
+                # Calculate total with validated values
+                total += float(price) * int(quantity)
                 
-            except (Foods.DoesNotExist, Special.DoesNotExist):
+            except Exception as item_error:
+                # Log individual item errors but continue processing
+                print(f"Error processing cart item: {item_error}")
                 continue
+        
+        # Check if at least one item was processed successfully
+        if valid_items_count == 0:
+            order.delete()  # Clean up empty order
+            return JsonResponse({'success': False, 'message': 'No valid items found in cart'})
         
         # Update order total
         order.total = total
         order.save()
         
-        # Send real-time notifications (temporarily disabled)
+        # Send real-time notifications
         try:
             # Notify staff about new order
-            order_data = {
-                'id': order.id,
-                'customer': order.user.username if order.user else 'Guest',
-                'total': float(order.total),
-                'items_count': len(cart_items),
-                'created_at': order.created_at.isoformat()
-            }
-            # send_new_order_notification(order_data)  # Temporarily commented out
+            notify_new_order(order.id)
+            print(f"Real-time notification sent for new order {order.id}")
             
-            # Send notification to customer if logged in
+            # Send confirmation notification to customer if logged in
             if order.user:
-                pass
-                # send_user_notification(  # Temporarily commented out
-                #     order.user.id,
-                #     'Order Confirmed',
-                #     f'Your order #{order.id} has been placed successfully!',
-                #     'success'
-                # )
-        except Exception as e:
+                notify_order_status_change(
+                    order.id, 
+                    'pending', 
+                    f'Your order #{order.id} has been placed successfully!'
+                )
+        except Exception as notification_error:
             # Don't fail the order if notification fails
-            print(f"Failed to send real-time notification: {e}")
+            print(f"Failed to send real-time notification: {notification_error}")
         
         return JsonResponse({
             'success': True, 
             'order_id': order.id,
             'total': float(total),
+            'items_count': valid_items_count,
             'message': 'Order placed successfully!'
         })
         
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
     except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)})
+        return JsonResponse({'success': False, 'message': f'Order processing error: {str(e)}'})
 
 @csrf_exempt
 def checkout_api(request):
@@ -572,6 +653,9 @@ def checkout_api(request):
         
         # Get user's cart
         cart = get_or_create_cart(request)
+        if not cart:
+            return JsonResponse({'success': False, 'message': 'Unable to access cart'}, status=500)
+        
         cart_items = cart.items.all()
         
         if not cart_items:
@@ -579,39 +663,71 @@ def checkout_api(request):
         
         # Create or get customer
         customer, created = Customer.objects.get_or_create(
-            phone=customer_phone,
+            customer_mobileno=customer_phone,
             defaults={
-                'name': customer_name,
-                'address': customer_address
+                'customer_firstname': customer_name.split()[0] if customer_name else 'Guest',
+                'customer_lastname': ' '.join(customer_name.split()[1:]) if customer_name and len(customer_name.split()) > 1 else '',
+                'customer_address': customer_address,
+                'customer_email': 'guest@restaurant.com',  # Default email for API orders
+                'customer_dob': timezone.now().date()  # Default DOB
             }
         )
         
         # Create order
+        try:
+            cart_total = cart.total_price or 0
+        except (AttributeError, TypeError):
+            cart_total = 0
+            
         order = Order.objects.create(
             customer=customer,
             user=request.user if request.user.is_authenticated else None,
             notes=f"Payment Method: {payment_method.title()}\nDelivery Address: {customer_address}\n{order_notes}".strip(),
             status='pending',
-            total=cart.total_price
+            total=cart_total
         )
         
-        # Create order items from cart
+        # Create order items from cart with improved null safety
+        valid_items_count = 0
         for cart_item in cart_items:
-            if cart_item.food:
-                OrderItem.objects.create(
-                    order=order,
-                    food=cart_item.food,
-                    quantity=cart_item.quantity,
-                    price=cart_item.food.price
-                )
-            elif cart_item.special:
-                price = cart_item.special.discounted_price if cart_item.special.discounted_price else cart_item.special.price
-                OrderItem.objects.create(
-                    order=order,
-                    special=cart_item.special,
-                    quantity=cart_item.quantity,
-                    price=price
-                )
+            try:
+                # Validate cart_item exists and has required attributes
+                if not cart_item:
+                    continue
+                    
+                # Ensure quantity is valid (CartItem.quantity cannot be None due to DB constraint)
+                quantity = getattr(cart_item, 'quantity', 1)
+                if quantity is None or quantity <= 0:
+                    quantity = 1
+                
+                if cart_item.food:
+                    # Validate food item exists and has valid price
+                    if hasattr(cart_item.food, 'price') and cart_item.food.price is not None:
+                        OrderItem.objects.create(
+                            order=order,
+                            food=cart_item.food,
+                            quantity=quantity,
+                            price=cart_item.food.price
+                        )
+                        valid_items_count += 1
+                elif cart_item.special:
+                    # Validate special item exists and has valid price
+                    if hasattr(cart_item.special, 'price') and cart_item.special.price is not None:
+                        price = cart_item.special.discounted_price if cart_item.special.discounted_price else cart_item.special.price
+                        OrderItem.objects.create(
+                            order=order,
+                            special=cart_item.special,
+                            quantity=quantity,
+                            price=price
+                        )
+                        valid_items_count += 1
+            except (AttributeError, TypeError, ValueError) as item_error:
+                print(f"Error processing cart item in API: {item_error}")
+                continue
+        
+        # Verify at least one item was processed successfully
+        if valid_items_count == 0:
+            return JsonResponse({'success': False, 'message': 'No valid items found in cart'}, status=400)
         
         # Clear the cart
         cart_items.delete()
@@ -626,7 +742,7 @@ def checkout_api(request):
     except Exception as e:
         return JsonResponse({'success': False, 'message': f'Error processing order: {str(e)}', 'error': str(e)}, status=500)
 
-@login_required
+@login_required(login_url='login')
 def order_history(request):
     """Display user's order history with pagination and filters."""
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
@@ -674,32 +790,51 @@ def update_order_status(request, order_id):
     
     try:
         order = Order.objects.get(id=order_id)
-        new_status = request.data.get('status')
         
-        if new_status in ['pending', 'completed', 'cancelled']:
+        # Get new status from request data
+        if request.method == 'POST':
+            data = json.loads(request.body.decode('utf-8'))
+            new_status = data.get('status')
+        else:
+            new_status = request.GET.get('status')
+        
+        # Validate status
+        valid_statuses = ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled']
+        if new_status in valid_statuses:
+            old_status = order.status
             order.status = new_status
             order.save()
             
-            # Send real-time notifications
+            # Send real-time notifications using new utilities
             try:
-                send_order_update(order.id, new_status, f'Order status updated to {new_status}')
-                send_order_status_notification(order, new_status)
+                notify_order_status_change(order.id, new_status)
+                print(f"Real-time notification sent for order {order.id}: {old_status} -> {new_status}")
             except Exception as e:
                 print(f"Failed to send real-time notification: {e}")
             
             # Send status update email
-            send_order_status_email(order, new_status)
+            try:
+                send_order_status_email(order, new_status)
+            except Exception as e:
+                print(f"Failed to send email notification: {e}")
             
-            return JsonResponse({'success': True, 'message': 'Order status updated'})
+            return JsonResponse({
+                'success': True, 
+                'message': 'Order status updated',
+                'status': new_status,
+                'status_display': get_order_status_display(new_status)
+            })
         else:
             return JsonResponse({'success': False, 'message': 'Invalid status'})
             
     except Order.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Order not found'})
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
 
 # ......................................................Admin Dashboard Views........................
 
-@login_required
+@login_required(login_url='login')
 def admin_dashboard(request):
     """Admin dashboard for managing restaurant."""
     if not request.user.is_staff:
@@ -724,7 +859,7 @@ def admin_dashboard(request):
     }
     return render(request, 'main/admin_dashboard.html', context)
 
-@login_required 
+@login_required(login_url='login')
 def manage_orders(request):
     """Manage all orders for staff."""
     if not request.user.is_staff:
@@ -743,7 +878,7 @@ def manage_orders(request):
 
 # ......................................................QR Code Views............................
 
-@login_required
+@login_required(login_url='login')
 def generate_qr_codes(request):
     """Generate QR codes for restaurant tables."""
     if not request.user.is_staff:
@@ -1000,8 +1135,18 @@ def handle_checkout(request, cart):
     """Handle checkout form submission with support for delivery and dine-in orders"""
     form = CheckoutForm(request.POST)
     if form.is_valid():
-        # Get cart items
-        cart_items = cart.items.all()
+        # Get cart items with null safety
+        if not cart:
+            messages.error(request, 'Cart not found.')
+            return redirect('cart')
+            
+        try:
+            cart_items = cart.items.all()
+            # Filter out any None items and validate cart_items is iterable
+            cart_items = [item for item in cart_items if item is not None] if cart_items else []
+        except (AttributeError, TypeError):
+            cart_items = []
+            
         if not cart_items:
             messages.error(request, 'Your cart is empty.')
             return redirect('cart')
@@ -1035,6 +1180,12 @@ def handle_checkout(request, cart):
         if order_notes:
             notes_parts.append(order_notes)
         
+        # Calculate cart total with null checks
+        try:
+            cart_total = cart.total_price if cart else 0
+        except (AttributeError, TypeError):
+            cart_total = 0
+        
         order = Order.objects.create(
             customer=customer,
             user=request.user if request.user.is_authenticated else None,
@@ -1045,26 +1196,51 @@ def handle_checkout(request, cart):
             customer_phone=customer_data['customer_mobileno'],
             notes="\n".join(notes_parts),
             status='pending',
-            total=cart.total_price
+            total=cart_total
         )
         
-        # Create order items from cart
+        # Create order items from cart with improved error handling
+        valid_items_count = 0
         for cart_item in cart_items:
-            if cart_item.food:
-                OrderItem.objects.create(
-                    order=order,
-                    food=cart_item.food,
-                    quantity=cart_item.quantity,
-                    price=cart_item.food.price
-                )
-            elif cart_item.special:
-                price = cart_item.special.discounted_price if cart_item.special.discounted_price else cart_item.special.price
-                OrderItem.objects.create(
-                    order=order,
-                    special=cart_item.special,
-                    quantity=cart_item.quantity,
-                    price=price
-                )
+            try:
+                # Validate cart_item exists and has required attributes
+                if not cart_item:
+                    continue
+                    
+                # Ensure quantity is valid
+                quantity = getattr(cart_item, 'quantity', None)
+                if quantity is None or quantity <= 0:
+                    quantity = 1
+                
+                if cart_item.food:
+                    # Validate food item exists and has price
+                    if hasattr(cart_item.food, 'price') and cart_item.food.price is not None:
+                        OrderItem.objects.create(
+                            order=order,
+                            food=cart_item.food,
+                            quantity=quantity,
+                            price=cart_item.food.price
+                        )
+                        valid_items_count += 1
+                elif cart_item.special:
+                    # Validate special item exists and has price
+                    if hasattr(cart_item.special, 'price') and cart_item.special.price is not None:
+                        price = cart_item.special.discounted_price if cart_item.special.discounted_price else cart_item.special.price
+                        OrderItem.objects.create(
+                            order=order,
+                            special=cart_item.special,
+                            quantity=quantity,
+                            price=price
+                        )
+                        valid_items_count += 1
+            except (AttributeError, TypeError, ValueError) as item_error:
+                print(f"Error processing cart item: {item_error}")
+                continue
+        
+        # Verify at least one item was processed
+        if valid_items_count == 0:
+            messages.error(request, 'No valid items found in cart.')
+            return redirect('cart')
         
         # Clear the cart
         cart_items.delete()
@@ -1137,17 +1313,37 @@ def add_to_cart_form(request):
     return redirect(request.META.get('HTTP_REFERER', 'menu'))
 
 @csrf_exempt
-@api_view(['POST'])
-@login_required
 def cancel_order(request, order_id):
-    """Cancel an order (only if pending)"""
+    """Cancel an order (only if pending or confirmed)"""
     try:
-        order = Order.objects.get(id=order_id, user=request.user, status='pending')
+        # Get order - allow both authenticated and guest orders
+        if request.user.is_authenticated:
+            order = Order.objects.get(
+                id=order_id, 
+                user=request.user, 
+                status__in=['pending', 'confirmed']
+            )
+        else:
+            # For guest orders, we might need session verification
+            order = Order.objects.get(
+                id=order_id, 
+                status__in=['pending', 'confirmed']
+            )
+        
         order.status = 'cancelled'
         order.save()
         
+        # Send real-time notification
+        try:
+            notify_order_status_change(order.id, 'cancelled', 'Order has been cancelled by customer')
+        except Exception as e:
+            print(f"Failed to send real-time notification: {e}")
+        
         # Send notification email
-        send_order_status_email(order, 'cancelled')
+        try:
+            send_order_status_email(order, 'cancelled')
+        except Exception as e:
+            print(f"Failed to send email notification: {e}")
         
         return JsonResponse({
             'success': True,
@@ -1160,16 +1356,20 @@ def cancel_order(request, order_id):
         }, status=404)
 
 @csrf_exempt
-@api_view(['POST'])
-@login_required
 def reorder(request, order_id):
     """Add all items from a previous order to current cart"""
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'message': 'Please log in to reorder'
+        }, status=401)
+    
     try:
         order = Order.objects.get(id=order_id, user=request.user)
         cart = get_or_create_cart(request)
         
         items_added = 0
-        for order_item in order.items.all():
+        for order_item in order.orderitem_set.all():
             if order_item.food:
                 cart_item, created = CartItem.objects.get_or_create(
                     cart=cart,
@@ -1181,30 +1381,29 @@ def reorder(request, order_id):
                     cart_item.save()
                 items_added += 1
             elif order_item.special:
-                # Check if special is still active
-                if order_item.special.active:
-                    cart_item, created = CartItem.objects.get_or_create(
-                        cart=cart,
-                        special=order_item.special,
-                        defaults={'quantity': order_item.quantity}
-                    )
-                    if not created:
-                        cart_item.quantity += order_item.quantity
-                        cart_item.save()
-                    items_added += 1
+                cart_item, created = CartItem.objects.get_or_create(
+                    cart=cart,
+                    special=order_item.special,
+                    defaults={'quantity': order_item.quantity}
+                )
+                if not created:
+                    cart_item.quantity += order_item.quantity
+                    cart_item.save()
+                items_added += 1
         
         return JsonResponse({
             'success': True,
-            'message': f'Added {items_added} items to cart',
-            'cart_count': cart.total_items
+            'message': f'{items_added} items added to your cart',
+            'items_added': items_added
         })
+        
     except Order.DoesNotExist:
         return JsonResponse({
             'success': False,
             'message': 'Order not found'
         }, status=404)
 
-@login_required
+@login_required(login_url='login')
 def order_receipt(request, order_id):
     """Generate and display order receipt"""
     try:
@@ -1293,13 +1492,19 @@ def send_order_status_email(order, status):
     except Exception as e:
         print(f"Error sending status email: {e}")
 
+
+from django.core.mail import send_mail
+from django.conf import settings
+from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db.models import ObjectDoesNotExist as RelatedObjectDoesNotExist
+
 @login_required(login_url='login')
 def send_status_email(request, order_id):
     """Send status email for specific order (admin only)."""
     if not request.user.is_staff:
         messages.error(request, 'Access denied. Staff privileges required.')
         return redirect('admin:main_order_changelist')
-    
     try:
         order = Order.objects.get(id=order_id)
         send_order_status_email(order, order.status)
@@ -1308,7 +1513,6 @@ def send_status_email(request, order_id):
         messages.error(request, f'Order #{order_id} not found.')
     except Exception as e:
         messages.error(request, f'Error sending email: {str(e)}')
-    
     return redirect('admin:main_order_changelist')
 
 def send_contact_notification_email(contact_message):
@@ -1326,10 +1530,8 @@ def send_contact_notification_email(contact_message):
     
     Submitted at: {contact_message.submitted_at}
     """
-    
     from_email = settings.DEFAULT_FROM_EMAIL
     recipient_list = [settings.ADMIN_EMAIL] if hasattr(settings, 'ADMIN_EMAIL') else ['admin@restaurant.com']
-    
     send_mail(subject, message, from_email, recipient_list, fail_silently=True)
 
 def make_reservation(request):
@@ -1375,7 +1577,6 @@ def gift_card_request(request):
     return render(request, 'main/gift_card.html', {'form': form, 'page_title': 'Gift Cards'})
 
 # ----------------------------------- Waiter Views -----------------------------------
-
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
@@ -1396,7 +1597,6 @@ class WaiterRequiredMixin:
 
 class WaiterDashboardView(WaiterRequiredMixin, TemplateView):
     template_name = 'main/waiter_dashboard.html'
-    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['tables'] = Table.objects.all()
@@ -1408,6 +1608,68 @@ def order_details_ajax(request, order_id):
     """AJAX view for loading order details"""
     order = get_object_or_404(Order, id=order_id)
     return render(request, 'main/partials/order_details.html', {'order': order})
+
+# ------------------------Order Tracking Views
+def order_tracking(request, order_id):
+    """Display real-time order tracking page"""
+    try:
+        order = Order.objects.get(id=order_id)
+        # Calculate progress percentage
+        progress_percentage = get_order_progress_percentage(order.status)
+        # Get user-friendly status display
+        status_display = get_order_status_display(order.status)
+        # Default status messages
+        status_messages = {
+            'pending': 'Your order has been received and is pending confirmation.',
+            'confirmed': 'Your order has been confirmed and will be prepared soon.',
+            'preparing': 'Your order is being prepared by our kitchen staff.',
+            'ready': 'Your order is ready for pickup/delivery!',
+            'completed': 'Your order has been completed. Thank you!',
+            'cancelled': 'Your order has been cancelled.',
+        }
+        status_message = status_messages.get(order.status, f'Order status: {order.status}')
+        context = {
+            'order': order,
+            'progress_percentage': progress_percentage,
+            'status_display': status_display,
+            'status_message': status_message,
+        }
+        return render(request, 'main/order_tracking.html', context)
+    except Order.DoesNotExist:
+        messages.error(request, 'Order not found.')
+        return redirect('menu')
+
+def track_order_api(request, order_id):
+    """API endpoint for order tracking data"""
+    try:
+        order = Order.objects.get(id=order_id)
+        # Get order items
+        order_items = []
+        for item in order.orderitem_set.all():
+            order_items.append({
+                'name': item.food.name if item.food else item.special.name,
+                'quantity': item.quantity,
+                'price': float(item.total_price()),
+                'type': 'food' if item.food else 'special'
+            })
+        data = {
+            'id': order.id,
+            'status': order.status,
+            'status_display': get_order_status_display(order.status),
+            'progress_percentage': get_order_progress_percentage(order.status),
+            'customer_name': order.customer_name or (order.customer.name if order.customer else 'Guest'),
+            'customer_phone': order.customer_phone,
+            'order_type': order.get_order_type_display(),
+            'delivery_address': order.delivery_address,
+            'table_number': order.table_number,
+            'total': float(order.total),
+            'created_at': order.created_at.isoformat(),
+            'notes': order.notes,
+            'items': order_items,
+        }
+        return JsonResponse({'success': True, 'order': data})
+    except Order.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Order not found'})
 
 
 

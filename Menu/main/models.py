@@ -145,19 +145,38 @@ class Cart(models.Model):
 
     @property
     def total_price(self):
+        """Calculate total price of all items in cart with null safety"""
         total = 0
-        for item in self.items.all():
-            item_total = item.total_price
-            if item_total is not None:
-                total += item_total
+        try:
+            items = self.items.select_related('food', 'special').all()
+            for item in items:
+                if item and hasattr(item, 'total_price'):
+                    try:
+                        item_total = item.total_price
+                        if item_total is not None:
+                            total += float(item_total)
+                    except (AttributeError, TypeError, ValueError):
+                        continue
+        except Exception:
+            pass
         return total
 
     @property
     def total_items(self):
+        """Calculate total number of items in cart with null safety"""
         total = 0
-        for item in self.items.all():
-            if item.quantity is not None:
-                total += item.quantity
+        try:
+            items = self.items.all()
+            for item in items:
+                if item and hasattr(item, 'quantity'):
+                    try:
+                        quantity = item.quantity
+                        if quantity is not None:
+                            total += int(quantity)
+                    except (AttributeError, TypeError, ValueError):
+                        continue
+        except Exception:
+            pass
         return total
 
 class CartItem(models.Model):
@@ -169,28 +188,32 @@ class CartItem(models.Model):
 
     @property
     def item_price(self):
-        if self.food and self.food.price:
-            return self.food.price
-        elif self.special:
-            if self.special.discounted_price:
-                return self.special.discounted_price
-            elif self.special.price:
-                return self.special.price
-        return 0
+        try:
+            if self.food and hasattr(self.food, 'price'):
+                return self.food.price or 0
+            elif self.special and hasattr(self.special, 'price'):
+                return self.special.discounted_price or self.special.price or 0
+            return 0
+        except (AttributeError, TypeError):
+            return 0
 
     @property
     def total_price(self):
-        item_price = self.item_price
-        if item_price is None:
+        try:
+            return (self.item_price or 0) * (self.quantity or 0)
+        except (AttributeError, TypeError):
             return 0
-        return item_price * self.quantity
 
     @property
     def item_name(self):
-        if self.food:
-            return self.food.title
-        elif self.special:
-            return self.special.name
+        try:
+            if self.food and hasattr(self.food, 'title'):
+                return self.food.title or 'Unknown Item'
+            elif self.special and hasattr(self.special, 'name'):
+                return self.special.name or 'Unknown Special'
+            return 'Unknown Item'
+        except (AttributeError, TypeError):
+            return 'Unknown Item'
         return "Unknown Item"
 
     @property

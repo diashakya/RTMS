@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Loading Spinners Demo{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="text-center mb-5" style="color: #f76d37;">🔄 Loading Spinners Demo</h1>
+    <p class="text-center mb-5">This page demonstrates all the loading spinner features implemented in the restaurant system.</p>
+    
+    <!-- Basic Spinners Demo -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3><i class="fas fa-cogs"></i> Basic Spinner Animations</h3>
+            <div class="row">
+                <div class="col-md-3 text-center">
+                    <h5>Main Spinner</h5>
+                    <div class="spinner"></div>
+                    <p class="mt-2">Used for major operations</p>
+                </div>
+                <div class="col-md-3 text-center">
+                    <h5>Small Spinner</h5>
+                    <div class="spinner-small"></div>
+                    <p class="mt-2">Used in buttons</p>
+                </div>
+                <div class="col-md-3 text-center">
+                    <h5>Dots Spinner</h5>
+                    <div class="spinner-dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                    <p class="mt-2">Alternative animation</p>
+                </div>
+                <div class="col-md-3 text-center">
+                    <h5>Pulse Spinner</h5>
+                    <div class="spinner-pulse"></div>
+                    <p class="mt-2">Subtle pulse effect</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Button Loading States Demo -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3><i class="fas fa-mouse-pointer"></i> Button Loading States</h3>
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>Cart Button</h5>
+                    <button class="btn btn-primary cart-btn demo-btn" data-type="cart">
+                        <i class="fas fa-shopping-cart"></i> Add to Cart
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <h5>Favorite Button</h5>
+                    <button class="btn btn-outline-danger favorite-btn demo-btn" data-type="favorite">
+                        <i class="fas fa-heart"></i> Add to Favorites
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <h5>Update Button</h5>
+                    <button class="btn btn-success demo-btn" data-type="update">
+                        <i class="fas fa-sync-alt"></i> Update Quantity
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Form Loading Demo -->
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <h3><i class="fas fa-form"></i> Form Loading States</h3>
+            <form id="demo-form" class="border p-4 rounded">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-control" value="John Doe">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" value="john@example.com">
+                </div>
+                <button type="button" class="btn btn-warning demo-btn" data-type="form">
+                    <i class="fas fa-paper-plane"></i> Submit Form
+                </button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h3><i class="fas fa-globe"></i> Global Loading Overlay</h3>
+            <p>This demonstrates the full-screen loading overlay used for major operations.</p>
+            <button class="btn btn-info demo-btn" data-type="global">
+                <i class="fas fa-cloud"></i> Show Global Loading
+            </button>
+        </div>
+    </div>
+    
+    <!-- Skeleton Loading Demo -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3><i class="fas fa-th-list"></i> Skeleton Loading</h3>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="border p-3 rounded">
+                        <h5>Menu Item Skeleton</h5>
+                        <div id="skeleton-demo-1">
+                            <div class="skeleton skeleton-image"></div>
+                            <div class="skeleton skeleton-title"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text" style="width: 70%;"></div>
+                        </div>
+                        <button class="btn btn-sm btn-secondary mt-2" onclick="toggleSkeletonDemo('skeleton-demo-1', 'menu-items')">
+                            Toggle Skeleton
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border p-3 rounded">
+                        <h5>Cart Item Skeleton</h5>
+                        <div id="skeleton-demo-2">
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                            <div class="skeleton skeleton-text" style="width: 60%;"></div>
+                        </div>
+                        <button class="btn btn-sm btn-secondary mt-2" onclick="toggleSkeletonDemo('skeleton-demo-2', 'cart')">
+                            Toggle Skeleton
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border p-3 rounded">
+                        <h5>Default Skeleton</h5>
+                        <div id="skeleton-demo-3">
+                            <div class="skeleton skeleton-title"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text" style="width: 85%;"></div>
+                        </div>
+                        <button class="btn btn-sm btn-secondary mt-2" onclick="toggleSkeletonDemo('skeleton-demo-3', 'default')">
+                            Toggle Skeleton
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Success/Error Animation Demo -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3><i class="fas fa-magic"></i> Success/Error Animations</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="border p-4 rounded text-center" id="success-demo">
+                        <h5>Success Animation</h5>
+                        <p>Click to see success flash effect</p>
+                        <button class="btn btn-success" onclick="showSuccessDemo()">
+                            <i class="fas fa-check"></i> Trigger Success
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="border p-4 rounded text-center" id="error-demo">
+                        <h5>Error Animation</h5>
+                        <p>Click to see error shake effect</p>
+                        <button class="btn btn-danger" onclick="showErrorDemo()">
+                            <i class="fas fa-times"></i> Trigger Error
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Real AJAX Demo -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3><i class="fas fa-wifi"></i> Real AJAX with Loading</h3>
+            <p>These buttons demonstrate actual AJAX calls with loading states (requires login for favorites):</p>
+            <div class="d-flex gap-3">
+                <button class="btn btn-primary" onclick="testRealAjax('cart')">
+                    <i class="fas fa-shopping-cart"></i> Test Add to Cart
+                </button>
+                <button class="btn btn-outline-danger" onclick="testRealAjax('favorite')">
+                    <i class="fas fa-heart"></i> Test Favorites
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Control Panel -->
+    <div class="row">
+        <div class="col-12">
+            <div class="bg-light p-4 rounded">
+                <h4><i class="fas fa-sliders-h"></i> Demo Controls</h4>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-outline-primary" onclick="resetAllDemos()">
+                        <i class="fas fa-refresh"></i> Reset All
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="showLoadingNotification('Demo notification!', 3000)">
+                        <i class="fas fa-bell"></i> Test Notification
+                    </button>
+                    <button class="btn btn-outline-info" onclick="loadingManager.clearAllLoading()">
+                        <i class="fas fa-stop"></i> Clear All Loading
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Demo button handlers
+    document.querySelectorAll('.demo-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const type = this.dataset.type;
+            
+            switch(type) {
+                case 'cart':
+                    loadingManager.showButtonLoading(this);
+                    setTimeout(() => loadingManager.hideButtonLoading(this), 2000);
+                    break;
+                    
+                case 'favorite':
+                    loadingManager.showButtonLoading(this);
+                    setTimeout(() => {
+                        loadingManager.hideButtonLoading(this);
+                        loadingManager.flashSuccess(this);
+                    }, 2000);
+                    break;
+                    
+                case 'update':
+                    loadingManager.showButtonLoading(this);
+                    setTimeout(() => {
+                        loadingManager.hideButtonLoading(this);
+                        loadingManager.flashSuccess(this);
+                    }, 1500);
+                    break;
+                    
+                case 'form':
+                    const form = document.getElementById('demo-form');
+                    loadingManager.showFormLoading(form);
+                    setTimeout(() => {
+                        loadingManager.hideFormLoading(form);
+                        loadingManager.flashSuccess(form);
+                    }, 3000);
+                    break;
+                    
+                case 'global':
+                    loadingManager.showGlobalLoading('Demo: Processing your request...');
+                    setTimeout(() => loadingManager.hideGlobalLoading(), 3000);
+                    break;
+            }
+        });
+    });
+});
+
+function toggleSkeletonDemo(containerId, type) {
+    const container = document.getElementById(containerId);
+    if (container.querySelector('.loading-skeleton')) {
+        // Remove skeleton, show normal content
+        container.innerHTML = `
+            <div class="text-center p-3">
+                <i class="fas fa-check-circle text-success" style="font-size: 2em;"></i>
+                <p class="mt-2">Content Loaded!</p>
+            </div>
+        `;
+    } else {
+        // Show skeleton
+        loadingManager.showSectionLoading(container, type);
+    }
+}
+
+function showSuccessDemo() {
+    const element = document.getElementById('success-demo');
+    loadingManager.flashSuccess(element);
+}
+
+function showErrorDemo() {
+    const element = document.getElementById('error-demo');
+    loadingManager.flashError(element);
+}
+
+function testRealAjax(type) {
+    if (type === 'cart') {
+        // Test with first food item if available
+        addToCartAjax('food', 1, 1, event.target);
+    } else if (type === 'favorite') {
+        // Test with first food item if available
+        addToFavorites(1, event.target);
+    }
+}
+
+function resetAllDemos() {
+    loadingManager.clearAllLoading();
+    
+    // Reset skeleton demos
+    ['skeleton-demo-1', 'skeleton-demo-2', 'skeleton-demo-3'].forEach(id => {
+        const container = document.getElementById(id);
+        loadingManager.showSectionLoading(container, 'default');
+    });
+    
+    showLoadingNotification('All demos reset!', 2000);
+}
+</script>
+
+<style>
+.demo-btn {
+    margin: 10px 0;
+    min-width: 150px;
+}
+
+.skeleton-demo {
+    min-height: 150px;
+}
+
+#success-demo, #error-demo {
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+</style>
+
+{% endblock %}
