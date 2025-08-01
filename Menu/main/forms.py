@@ -1,6 +1,7 @@
+
 from django import forms
 from django.core.validators import RegexValidator
-from .models import Cart, CartItem, Customer
+from .models import Cart, CartItem, Customer, Contact, Reservation, CateringRequest, GiftCardRequest
 import re
 
 class CartItemUpdateForm(forms.Form):
@@ -236,3 +237,70 @@ class CheckoutForm(forms.ModelForm):
                 raise forms.ValidationError('Table number format is invalid. Use letters, numbers, and hyphens only.')
         
         return cleaned_data
+
+class ContactForm(forms.ModelForm):
+    """Form for contact submissions"""
+    
+    class Meta:
+        model = Contact
+        fields = ['name', 'email', 'phone', 'message']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': 'Your Name',
+                'required': True
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'input',
+                'placeholder': 'Your Email',
+                'required': True
+            }),
+            'phone': forms.TextInput(attrs={
+                'class': 'input',
+                'placeholder': 'Your Phone Number',
+                'required': True
+            }),
+            'message': forms.Textarea(attrs={
+                'class': 'textarea',
+                'placeholder': 'Your Message / Feedback',
+                'rows': 10,
+                'cols': 30,
+                'required': True
+            })
+        }
+    
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone')
+        if phone and not phone.replace('+', '').replace('-', '').replace(' ', '').isdigit():
+            raise forms.ValidationError('Please enter a valid phone number.')
+        return phone
+
+class ReservationForm(forms.ModelForm):
+    class Meta:
+        model = Reservation
+        fields = ['name', 'email', 'phone', 'date', 'time', 'guests', 'message']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            'guests': forms.NumberInput(attrs={'min': 1, 'max': 20, 'class': 'form-control'}),
+            'message': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Any special requests?'}),
+        }
+
+class CateringRequestForm(forms.ModelForm):
+    class Meta:
+        model = CateringRequest
+        fields = ['name', 'email', 'phone', 'event_date', 'event_type', 'guests', 'message']
+        widgets = {
+            'event_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'guests': forms.NumberInput(attrs={'min': 1, 'max': 500, 'class': 'form-control'}),
+            'message': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Describe your event or requests'}),
+        }
+
+class GiftCardRequestForm(forms.ModelForm):
+    class Meta:
+        model = GiftCardRequest
+        fields = ['name', 'email', 'phone', 'amount', 'recipient_name', 'recipient_email', 'message']
+        widgets = {
+            'amount': forms.NumberInput(attrs={'min': 100, 'max': 10000, 'step': 100, 'class': 'form-control'}),
+            'message': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Personal message for recipient'}),
+        }

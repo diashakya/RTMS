@@ -1,0 +1,343 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Shopping Cart{% endblock %}
+
+{% block extra_css %}
+<style>
+.cart-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.cart-item {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.quantity-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quantity-input {
+    width: 60px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px;
+}
+
+.btn-update {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-remove {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.checkout-section {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cart-container">
+    <h2><i class="fas fa-shopping-cart"></i> Your Cart</h2>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    {% if cart_items %}
+        <!-- Cart Items -->
+        {% for item in cart_items %}
+        <div class="cart-item">
+            <div class="row align-items-center">
+                <div class="col-md-2">
+                    {% if item.food %}
+                        {% if item.food.image %}
+                            <img src="{{ item.food.image.url }}" alt="{{ item.food.title }}" class="img-fluid rounded" style="height: 80px; object-fit: cover;">
+                        {% else %}
+                            <img src="{% static 'images/sample_food.jpg' %}" alt="{{ item.food.title }}" class="img-fluid rounded" style="height: 80px; object-fit: cover;">
+                        {% endif %}
+                    {% elif item.special %}
+                        {% if item.special.image %}
+                            <img src="{{ item.special.image.url }}" alt="{{ item.special.name }}" class="img-fluid rounded" style="height: 80px; object-fit: cover;">
+                        {% else %}
+                            <img src="{% static 'images/sample_food.jpg' %}" alt="{{ item.special.name }}" class="img-fluid rounded" style="height: 80px; object-fit: cover;">
+                        {% endif %}
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-4">
+                    <h5>
+                        {% if item.food %}
+                            {{ item.food.title }}
+                        {% elif item.special %}
+                            {{ item.special.name }} <span class="badge bg-warning">Special</span>
+                        {% endif %}
+                    </h5>
+                    <p class="text-muted mb-1">
+                        Price: Rs 
+                        {% if item.food %}
+                            {{ item.food.price }}
+                        {% elif item.special %}
+                            {{ item.special.discounted_price|default:item.special.price }}
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div class="col-md-3">
+                    <!-- Update Quantity Form -->
+                    <form method="post" class="quantity-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="update_quantity" value="1">
+                        <input type="hidden" name="cart_item_id" value="{{ item.id }}">
+                        <label for="quantity_{{ item.id }}" class="form-label">Qty:</label>
+                        <input type="number" id="quantity_{{ item.id }}" name="quantity" value="{{ item.quantity }}" 
+                               min="1" max="99" class="quantity-input">
+                        <button type="submit" class="btn-update" title="Update Quantity">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="col-md-2">
+                    <strong>Rs {{ item.total_price }}</strong>
+                </div>
+                
+                <div class="col-md-1">
+                    <!-- Remove Item Form -->
+                    <form method="post" style="display: inline;" onsubmit="return confirm('Remove this item from cart?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="remove_item" value="1">
+                        <input type="hidden" name="cart_item_id" value="{{ item.id }}">
+                        <button type="submit" class="btn-remove" title="Remove Item">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        <!-- Cart Summary & Checkout -->
+        <div class="checkout-section">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Order Summary</h4>
+                    <table class="table">
+                        <tr>
+                            <td>Items ({{ cart.total_items }}):</td>
+                            <td>Rs {{ cart.total_price }}</td>
+                        </tr>
+                        <tr class="table-active">
+                            <td><strong>Total:</strong></td>
+                            <td><strong>Rs {{ cart.total_price }}</strong></td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="col-md-6">
+                    {% if checkout_form %}
+                    <!-- Checkout Form -->
+                    <form method="post" class="checkout-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="checkout" value="1">
+                        
+                        <!-- Order Type Selection -->
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Order Type *</strong></label>
+                            <div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="order_type" value="delivery" id="delivery" checked>
+                                    <label class="form-check-label" for="delivery">
+                                        <i class="fas fa-truck"></i> Delivery
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="order_type" value="dine_in" id="dine_in">
+                                    <label class="form-check-label" for="dine_in">
+                                        <i class="fas fa-utensils"></i> Dine In
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Customer Information -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="customer_firstname" class="form-label">First Name *</label>
+                                    <input type="text" class="form-control" id="customer_firstname" name="customer_firstname" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="customer_lastname" class="form-label">Last Name *</label>
+                                    <input type="text" class="form-control" id="customer_lastname" name="customer_lastname" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="customer_mobileno" class="form-label">Mobile Number *</label>
+                            <input type="tel" class="form-control" id="customer_mobileno" name="customer_mobileno" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="customer_email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="customer_email" name="customer_email">
+                        </div>
+                        
+                        <div class="mb-3" id="address_field">
+                            <label for="customer_address" class="form-label">Delivery Address *</label>
+                            <textarea class="form-control" id="customer_address" name="customer_address" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="mb-3" id="table_field" style="display: none;">
+                            <label for="table_number" class="form-label">Table Number *</label>
+                            <input type="text" class="form-control" id="table_number" name="table_number">
+                        </div>
+                        
+                        <!-- Payment Method -->
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Payment Method *</strong></label>
+                            <div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" value="cash" id="cash" checked>
+                                    <label class="form-check-label" for="cash">
+                                        <i class="fas fa-money-bill"></i> Cash Payment
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" value="card" id="card">
+                                    <label class="form-check-label" for="card">
+                                        <i class="fas fa-credit-card"></i> Card Payment
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" value="wallet" id="wallet">
+                                    <label class="form-check-label" for="wallet">
+                                        <i class="fas fa-wallet"></i> Digital Wallet
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="order_notes" class="form-label">Special Instructions</label>
+                            <textarea class="form-control" id="order_notes" name="order_notes" rows="2" placeholder="Any special requests..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-check-circle"></i> Place Order (Rs {{ cart.total_price }})
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+    {% else %}
+        <!-- Empty Cart -->
+        <div class="text-center py-5">
+            <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+            <h3>Your cart is empty</h3>
+            <p class="text-muted">Add some delicious items to your cart to get started!</p>
+            <a href="{% url 'menu' %}" class="btn btn-primary">
+                <i class="fas fa-utensils"></i> Browse Menu
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle address/table fields based on order type
+document.addEventListener('DOMContentLoaded', function() {
+    const deliveryRadio = document.getElementById('delivery');
+    const dineInRadio = document.getElementById('dine_in');
+    const addressField = document.getElementById('address_field');
+    const tableField = document.getElementById('table_field');
+    const customerAddress = document.getElementById('customer_address');
+    const tableNumber = document.getElementById('table_number');
+    
+    function toggleFields() {
+        if (deliveryRadio && deliveryRadio.checked) {
+            addressField.style.display = 'block';
+            tableField.style.display = 'none';
+            customerAddress.required = true;
+            tableNumber.required = false;
+        } else if (dineInRadio && dineInRadio.checked) {
+            addressField.style.display = 'none';
+            tableField.style.display = 'block';
+            customerAddress.required = false;
+            tableNumber.required = true;
+        }
+    }
+    
+    if (deliveryRadio) deliveryRadio.addEventListener('change', toggleFields);
+    if (dineInRadio) dineInRadio.addEventListener('change', toggleFields);
+    
+    // Initialize
+    toggleFields();
+});
+
+// Form validation
+document.querySelector('.checkout-form')?.addEventListener('submit', function(e) {
+    const orderType = document.querySelector('input[name="order_type"]:checked')?.value;
+    const firstName = document.getElementById('customer_firstname')?.value.trim();
+    const lastName = document.getElementById('customer_lastname')?.value.trim();
+    const mobile = document.getElementById('customer_mobileno')?.value.trim();
+    
+    if (!firstName || !lastName || !mobile) {
+        e.preventDefault();
+        alert('Please fill in all required fields.');
+        return;
+    }
+    
+    if (orderType === 'delivery') {
+        const address = document.getElementById('customer_address')?.value.trim();
+        if (!address) {
+            e.preventDefault();
+            alert('Please enter your delivery address.');
+            return;
+        }
+    } else if (orderType === 'dine_in') {
+        const table = document.getElementById('table_number')?.value.trim();
+        if (!table) {
+            e.preventDefault();
+            alert('Please enter your table number.');
+            return;
+        }
+    }
+});
+</script>
+{% endblock %}

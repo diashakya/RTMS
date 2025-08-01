@@ -1,8 +1,13 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}
 ContactUs
 {% endblock title %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/contact_form.css' %}">
+{% endblock %}
 
 {% block content %}
 
@@ -49,16 +54,20 @@ ContactUs
          </div>
       </div>
 
-
-
-
-
-
       <div class="contact_section_2 layout_padding">
          <div class="container-fluid">
             <div class="row">
                <div class="col-md-6 padding_0">
                   <div class="form-container form-container-1">
+                     <!-- Display Messages -->
+                     {% if messages %}
+                        {% for message in messages %}
+                           <div class="alert alert-{{ message.tags }} alert-dismissible fade show" style="margin: 20px;">
+                              {{ message }}
+                              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                           </div>
+                        {% endfor %}
+                     {% endif %}
                      <form method="post" action="{% url 'contact' %}">
                         {% csrf_token %}
                         <h1 style="color: white; font-size: 50px; border-bottom: 3px solid #f76d37;"
@@ -66,20 +75,17 @@ ContactUs
 
                         <div class="form-container">
                            <div class="form">
-                              <input required="" placeholder="Name" type="text" class="input" name="name">
-                              <input required="" placeholder="Email" type="email" class="input" name="email">
-                              <input required="" placeholder="Phone Number" type="tel" class="input" name="phone">
-                              <textarea required="" placeholder="Say Hello" rows="10" cols="30" id="message"
-                                 name="message" class="textarea"></textarea>
+                              {{ form.name }}
+                              {{ form.email }}
+                              {{ form.phone }}
+                              {{ form.message }}
                               <div class="button-container">
-                                 <input type="submit" value="send" class="send-button">
-
+                                 <input type="submit" value="Send Message" class="send-button">
                               </div>
                            </div>
                         </div>
                      </form>
                   </div>
-
                </div>
                <div class="col-md-6 padding_0">
                   <div class="map-responsive">

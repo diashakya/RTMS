@@ -1,0 +1,52 @@
+<!-- Order Details Partial -->
+<div class="order-details">
+    <h4>Order #{{ order.id }}</h4>
+    
+    <div class="items-list">
+        {% for item in order.items.all %}
+        <div class="item">
+            <span class="quantity">{{ item.quantity }}x</span>
+            <span class="name">{{ item.food.title|default:item.special.name }}</span>
+            <span class="price">Rs {{ item.total_price }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="order-summary mt-3">
+        <div class="d-flex justify-content-between">
+            <strong>Total:</strong>
+            <span>Rs {{ order.total }}</span>
+        </div>
+    </div>
+    
+    <div class="order-actions mt-3">
+        <button class="btn btn-success" onclick="markOrderReady({{ order.id }})">
+            Mark Ready
+        </button>
+        <button class="btn btn-danger" onclick="markOrderDelivered({{ order.id }})">
+            Mark Delivered
+        </button>
+    </div>
+</div>
+
+<style>
+.items-list {
+    margin: 1rem 0;
+}
+.item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+.quantity {
+    font-weight: bold;
+    margin-right: 1rem;
+}
+.name {
+    flex-grow: 1;
+}
+.price {
+    margin-left: 1rem;
+}
+</style>

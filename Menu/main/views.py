@@ -8,7 +8,7 @@ from io import BytesIO
 import base64
 
 # --------------------Django Core - Generic
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.db import IntegrityError
 from django.db import models
 from django.utils import timezone
@@ -38,7 +38,7 @@ from django.contrib.auth.decorators import login_required
 import json
 
 # ------------------------Models
-from .models import Order, OrderItem, Foods, Special, Customer, Favorite, Cart, CartItem
+from .models import Order, OrderItem, Foods, Special, Customer, Favorite, Cart, CartItem, Category, Table
 
 # -----------------------------------   Local Apps
 from .models import Special
@@ -61,15 +61,39 @@ def about(request):
     return render(request, 'main/about.html')
 
 def contact(request):
-    """Renders the contact page."""
-    return render(request, 'main/contact.html')
-
-from .models import Special, Foods
-
-from .models import Special, Foods, Category
+    """Contact page with functional contact form"""
+    if request.method == 'POST':
+        from .forms import ContactForm
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            contact_message = form.save()
+            
+            # Send notification email to admin (optional)
+            try:
+                send_contact_notification_email(contact_message)
+            except Exception as e:
+                print(f"Error sending notification email: {e}")
+            
+            messages.success(request, 'Thank you for your message! We will get back to you soon.')
+            return redirect('contact')
+        else:
+            messages.error(request, 'Please correct the errors in the form.')
+    else:
+        from .forms import ContactForm
+        form = ContactForm()
+    
+    context = {
+        'form': form,
+        'page_title': 'Contact Us'
+    }
+    return render(request, 'main/contact.html', context)
 
 def menu(request):
     """Renders the menu page with food items and today's specials, filtered by category and search query."""
+    # Restrict waiter users
+    if hasattr(request.user, 'profile') and request.user.profile.user_type == 'waiter':
+        return redirect('waiter_dashboard')
+    
     todays_specials = Special.objects.filter(date=date.today(), active=True)
     categories = Category.objects.all()
     selected_category_name = request.GET.get('category')
@@ -716,7 +740,7 @@ def checkout_api(request):
         })
         
     except Exception as e:
-        return JsonResponse({'success': False, 'message': f'Error processing order: {str(e)}'}, status=500)
+        return JsonResponse({'success': False, 'message': f'Error processing order: {str(e)}', 'error': str(e)}, status=500)
 
 @login_required(login_url='login')
 def order_history(request):
@@ -1468,18 +1492,132 @@ def send_order_status_email(order, status):
     except Exception as e:
         print(f"Error sending status email: {e}")
 
+
+from django.core.mail import send_mail
+from django.conf import settings
+from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db.models import ObjectDoesNotExist as RelatedObjectDoesNotExist
+
+@login_required(login_url='login')
+def send_status_email(request, order_id):
+    """Send status email for specific order (admin only)."""
+    if not request.user.is_staff:
+        messages.error(request, 'Access denied. Staff privileges required.')
+        return redirect('admin:main_order_changelist')
+    try:
+        order = Order.objects.get(id=order_id)
+        send_order_status_email(order, order.status)
+        messages.success(request, f'Status email sent for Order #{order_id}.')
+    except Order.DoesNotExist:
+        messages.error(request, f'Order #{order_id} not found.')
+    except Exception as e:
+        messages.error(request, f'Error sending email: {str(e)}')
+    return redirect('admin:main_order_changelist')
+
+def send_contact_notification_email(contact_message):
+    """Send email notification to admin when new contact message is received"""
+    subject = f"New Contact Message from {contact_message.name}"
+    message = f"""
+    New contact message received:
+    
+    Name: {contact_message.name}
+    Email: {contact_message.email}
+    Phone: {contact_message.phone}
+    
+    Message:
+    {contact_message.message}
+    
+    Submitted at: {contact_message.submitted_at}
+    """
+    from_email = settings.DEFAULT_FROM_EMAIL
+    recipient_list = [settings.ADMIN_EMAIL] if hasattr(settings, 'ADMIN_EMAIL') else ['admin@restaurant.com']
+    send_mail(subject, message, from_email, recipient_list, fail_silently=True)
+
+def make_reservation(request):
+    from .forms import ReservationForm
+    if request.method == 'POST':
+        form = ReservationForm(request.POST)
+        if form.is_valid():
+            reservation = form.save()
+            messages.success(request, 'Your reservation request has been submitted! We will confirm soon.')
+            return redirect('make_reservation')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ReservationForm()
+    return render(request, 'main/reservation.html', {'form': form, 'page_title': 'Make Reservation'})
+
+def catering_request(request):
+    from .forms import CateringRequestForm
+    if request.method == 'POST':
+        form = CateringRequestForm(request.POST)
+        if form.is_valid():
+            catering = form.save()
+            messages.success(request, 'Your catering inquiry has been submitted! We will contact you soon.')
+            return redirect('catering_request')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = CateringRequestForm()
+    return render(request, 'main/catering.html', {'form': form, 'page_title': 'Catering Services'})
+
+def gift_card_request(request):
+    from .forms import GiftCardRequestForm
+    if request.method == 'POST':
+        form = GiftCardRequestForm(request.POST)
+        if form.is_valid():
+            gift_card = form.save()
+            messages.success(request, 'Your gift card request has been submitted! We will process it soon.')
+            return redirect('gift_card_request')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = GiftCardRequestForm()
+    return render(request, 'main/gift_card.html', {'form': form, 'page_title': 'Gift Cards'})
+
+# ----------------------------------- Waiter Views -----------------------------------
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import TemplateView
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
+from .models import Table, Order
+
+class WaiterRequiredMixin:
+    """Verify that the current user is authenticated and is a waiter"""
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        try:
+            if request.user.profile.user_type != 'waiter':
+                raise PermissionDenied("You must be a waiter to access this page.")
+        except (AttributeError, RelatedObjectDoesNotExist):
+            raise PermissionDenied("Waiter profile not found.")
+        return super().dispatch(request, *args, **kwargs)
+
+class WaiterDashboardView(WaiterRequiredMixin, TemplateView):
+    template_name = 'main/waiter_dashboard.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tables'] = Table.objects.all()
+        context['waiter'] = self.request.user.profile
+        return context
+
+@login_required
+def order_details_ajax(request, order_id):
+    """AJAX view for loading order details"""
+    order = get_object_or_404(Order, id=order_id)
+    return render(request, 'main/partials/order_details.html', {'order': order})
+
 # ------------------------Order Tracking Views
 def order_tracking(request, order_id):
     """Display real-time order tracking page"""
     try:
         order = Order.objects.get(id=order_id)
-        
         # Calculate progress percentage
         progress_percentage = get_order_progress_percentage(order.status)
-        
         # Get user-friendly status display
         status_display = get_order_status_display(order.status)
-        
         # Default status messages
         status_messages = {
             'pending': 'Your order has been received and is pending confirmation.',
@@ -1489,18 +1627,14 @@ def order_tracking(request, order_id):
             'completed': 'Your order has been completed. Thank you!',
             'cancelled': 'Your order has been cancelled.',
         }
-        
         status_message = status_messages.get(order.status, f'Order status: {order.status}')
-        
         context = {
             'order': order,
             'progress_percentage': progress_percentage,
             'status_display': status_display,
             'status_message': status_message,
         }
-        
         return render(request, 'main/order_tracking.html', context)
-        
     except Order.DoesNotExist:
         messages.error(request, 'Order not found.')
         return redirect('menu')
@@ -1509,7 +1643,6 @@ def track_order_api(request, order_id):
     """API endpoint for order tracking data"""
     try:
         order = Order.objects.get(id=order_id)
-        
         # Get order items
         order_items = []
         for item in order.orderitem_set.all():
@@ -1519,7 +1652,6 @@ def track_order_api(request, order_id):
                 'price': float(item.total_price()),
                 'type': 'food' if item.food else 'special'
             })
-        
         data = {
             'id': order.id,
             'status': order.status,
@@ -1535,9 +1667,7 @@ def track_order_api(request, order_id):
             'notes': order.notes,
             'items': order_items,
         }
-        
         return JsonResponse({'success': True, 'order': data})
-        
     except Order.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Order not found'})
 

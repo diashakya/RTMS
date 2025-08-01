@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Table Management{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Table Management</h2>
+            <div class="table-actions">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#assignTableModal">
+                    <i class="fas fa-plus"></i> Assign Table
+                </button>
+                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#reserveTableModal">
+                    <i class="fas fa-clock"></i> Make Reservation
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-grid">
+                        {% for table in tables %}
+                        <div class="table-card {% if table.status == 'occupied' %}occupied{% elif table.status == 'reserved' %}reserved{% else %}available{% endif %}">
+                            <h4>Table {{ table.number }}</h4>
+                            <p>Capacity: {{ table.capacity }}</p>
+                            <p class="status">Status: {{ table.get_status_display }}</p>
+                            {% if table.status == 'occupied' %}
+                                <div class="table-info">
+                                    <p>Order #{{ table.current_order.id }}</p>
+                                    <p>Time: {{ table.current_order.created_at|timesince }} ago</p>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm btn-primary" onclick="viewOrder('{{ table.current_order.id }}')">View Order</button>
+                                    <button class="btn btn-sm btn-success" onclick="markTableAvailable('{{ table.id }}')">Mark Available</button>
+                                </div>
+                            {% elif table.status == 'reserved' %}
+                                <div class="table-info">
+                                    <p>Reserved for: {{ table.reservation.name }}</p>
+                                    <p>Time: {{ table.reservation.time }}</p>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm btn-success" onclick="confirmReservation('{{ table.id }}')">Seat Guests</button>
+                                    <button class="btn btn-sm btn-danger" onclick="cancelReservation('{{ table.id }}')">Cancel</button>
+                                </div>
+                            {% else %}
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm btn-primary" onclick="assignTable('{{ table.id }}')">Assign</button>
+                                    <button class="btn btn-sm btn-warning" onclick="reserveTable('{{ table.id }}')">Reserve</button>
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Table Modal -->
+<div class="modal fade" id="assignTableModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign Table</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="assignTableForm" method="post" action="{% url 'assign_table' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="table_id" id="assignTableId">
+                    <div class="mb-3">
+                        <label class="form-label">Number of Guests</label>
+                        <input type="number" name="guests" class="form-control" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Special Notes</label>
+                        <textarea name="notes" class="form-control"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Assign Table</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reserve Table Modal -->
+<div class="modal fade" id="reserveTableModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reserve Table</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reserveTableForm" method="post" action="{% url 'reserve_table' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="table_id" id="reserveTableId">
+                    <div class="mb-3">
+                        <label class="form-label">Guest Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" name="phone" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Number of Guests</label>
+                        <input type="number" name="guests" class="form-control" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date & Time</label>
+                        <input type="datetime-local" name="datetime" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Special Requests</label>
+                        <textarea name="notes" class="form-control"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Make Reservation</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.table-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.table-card {
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.table-card.available {
+    background-color: #e7f5e7;
+    border: 2px solid #28a745;
+}
+
+.table-card.occupied {
+    background-color: #ffe8e8;
+    border: 2px solid #dc3545;
+}
+
+.table-card.reserved {
+    background-color: #fff3cd;
+    border: 2px solid #ffc107;
+}
+
+.table-info {
+    margin: 1rem 0;
+    padding: 0.5rem;
+    background: rgba(255,255,255,0.5);
+    border-radius: 4px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.table-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function assignTable(tableId) {
+    document.getElementById('assignTableId').value = tableId;
+    new bootstrap.Modal(document.getElementById('assignTableModal')).show();
+}
+
+function reserveTable(tableId) {
+    document.getElementById('reserveTableId').value = tableId;
+    new bootstrap.Modal(document.getElementById('reserveTableModal')).show();
+}
+
+function viewOrder(orderId) {
+    window.location.href = `/waiter/order/${orderId}/`;
+}
+
+function markTableAvailable(tableId) {
+    if (confirm('Are you sure you want to mark this table as available?')) {
+        fetch(`/waiter/table/${tableId}/clear/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        }).then(() => location.reload());
+    }
+}
+
+function confirmReservation(tableId) {
+    if (confirm('Confirm seating for this reservation?')) {
+        fetch(`/waiter/table/${tableId}/confirm-reservation/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        }).then(() => location.reload());
+    }
+}
+
+function cancelReservation(tableId) {
+    if (confirm('Are you sure you want to cancel this reservation?')) {
+        fetch(`/waiter/table/${tableId}/cancel-reservation/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        }).then(() => location.reload());
+    }
+}
+
+function getCookie(name) {
+    let value = `; ${document.cookie}`;
+    let parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+</script>
+{% endblock %}

@@ -81,4 +81,14 @@ urlpatterns = [
     path('api/favorites/add/', toggle_favorite, name='add_favorite'),
     path('api/favorites/remove/', toggle_favorite, name='remove_favorite_toggle'),
     path('api/foods/<int:pk>/', food_detail, name='food_detail'),
+
+    # Admin email functionality
+    path('send-status-email/<int:order_id>/', send_status_email, name='send_status_email'),
+    path('reservation/', make_reservation, name='make_reservation'),
+    path('catering/', catering_request, name='catering_request'),
+    path('gift-card/', gift_card_request, name='gift_card_request'),
+
+    # Waiter URLs
+    path('waiter/', WaiterDashboardView.as_view(), name='waiter_dashboard'),
+    path('waiter/order/<int:order_id>/details/', order_details_ajax, name='waiter_order_details'),
 ]

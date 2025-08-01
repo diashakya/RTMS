@@ -93,11 +93,29 @@ class OrderItem(models.Model):
     food = models.ForeignKey(Foods, on_delete=models.SET_NULL, null=True, blank=True)
     special = models.ForeignKey(Special, on_delete=models.SET_NULL, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=1)
-    price = models.DecimalField(max_digits=8, decimal_places=2)  # price at time of order
+    price = models.DecimalField(max_digits=8, decimal_places=2, default=0)  # price at time of order
+
+    def save(self, *args, **kwargs):
+        """Ensure price is set when saving"""
+        if self.price is None or self.price == 0:
+            if self.food and self.food.price:
+                self.price = self.food.price
+            elif self.special:
+                if self.special.discounted_price:
+                    self.price = self.special.discounted_price
+                elif self.special.price:
+                    self.price = self.special.price
+                else:
+                    self.price = 0
+            else:
+                self.price = 0
+        super().save(*args, **kwargs)
 
     @property
     def total_price(self):
         """Calculate total price for this item (price * quantity)"""
+        if self.price is None:
+            return 0
         return self.price * self.quantity
 
     def __str__(self):
@@ -130,7 +148,6 @@ class Cart(models.Model):
         """Calculate total price of all items in cart with null safety"""
         total = 0
         try:
-            # Use select_related to avoid N+1 queries and handle potential None values
             items = self.items.select_related('food', 'special').all()
             for item in items:
                 if item and hasattr(item, 'total_price'):
@@ -212,3 +229,149 @@ class CartItem(models.Model):
 
     class Meta:
         unique_together = ['cart', 'food', 'special']  # Prevent duplicate items
+
+class Contact(models.Model):
+    """Model to store contact form submissions"""
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    message = models.TextField()
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-submitted_at']
+        verbose_name = "Contact Message"
+        verbose_name_plural = "Contact Messages"
+    
+    def __str__(self):
+        return f"Contact from {self.name} - {self.email}"
+
+class Reservation(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    date = models.DateField()
+    time = models.TimeField()
+    guests = models.PositiveIntegerField(default=1)
+    message = models.TextField(blank=True, null=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    is_confirmed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-submitted_at']
+        verbose_name = "Reservation"
+        verbose_name_plural = "Reservations"
+
+    def __str__(self):
+        return f"Reservation for {self.name} on {self.date} at {self.time}"
+
+class CateringRequest(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    event_date = models.DateField()
+    event_type = models.CharField(max_length=100)
+    guests = models.PositiveIntegerField(default=1)
+    message = models.TextField(blank=True, null=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    is_handled = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-submitted_at']
+        verbose_name = "Catering Request"
+        verbose_name_plural = "Catering Requests"
+
+    def __str__(self):
+        return f"Catering for {self.name} on {self.event_date} ({self.event_type})"
+
+class GiftCardRequest(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    recipient_name = models.CharField(max_length=100)
+    recipient_email = models.EmailField()
+    message = models.TextField(blank=True, null=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    is_processed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-submitted_at']
+        verbose_name = "Gift Card Request"
+        verbose_name_plural = "Gift Card Requests"
+
+    def __str__(self):
+        return f"Gift Card for {self.recipient_name} ({self.amount})"
+
+class Table(models.Model):
+    """Model representing restaurant tables"""
+    TABLE_STATUS_CHOICES = [
+        ('available', 'Available'),
+        ('occupied', 'Occupied'),
+        ('reserved', 'Reserved'),
+        ('cleaning', 'Being Cleaned'),
+    ]
+    
+    number = models.CharField(max_length=10, unique=True)
+    capacity = models.PositiveIntegerField(default=4)
+    status = models.CharField(max_length=20, choices=TABLE_STATUS_CHOICES, default='available')
+    location = models.CharField(max_length=50, blank=True, null=True, help_text="Table location (e.g. 'Window', 'Patio')")
+    
+    class Meta:
+        ordering = ['number']
+        verbose_name = "Table"
+        verbose_name_plural = "Tables"
+    
+    def __str__(self):
+        return f"Table {self.number} ({self.get_status_display()})"
+
+class WaiterProfile(models.Model):
+    """Model representing waiter-specific information"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='waiter_profile')
+    employee_id = models.CharField(max_length=20, unique=True)
+    phone = models.CharField(max_length=20)
+    assigned_tables = models.ManyToManyField(Table, blank=True, related_name='assigned_waiters')
+    
+    class Meta:
+        verbose_name = "Waiter Profile"
+        verbose_name_plural = "Waiter Profiles"
+    
+    def __str__(self):
+        return f"Waiter: {self.user.get_full_name() or self.user.username}"
+
+class TableAssignment(models.Model):
+    """Model representing table assignments for orders"""
+    table = models.ForeignKey(Table, on_delete=models.CASCADE, related_name='assignments')
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='table_assignment')
+    waiter = models.ForeignKey(WaiterProfile, on_delete=models.SET_NULL, null=True, related_name='table_assignments')
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-assigned_at']
+        verbose_name = "Table Assignment"
+        verbose_name_plural = "Table Assignments"
+    
+    def __str__(self):
+        return f"Table {self.table.number} assigned to {self.waiter} for Order #{self.order.id}"
+        
+    def save(self, *args, **kwargs):
+        """Update table status when assigned"""
+        self.table.status = 'occupied'
+        self.table.save()
+        super().save(*args, **kwargs)
+
+class UserProfile(models.Model):
+    USER_TYPES = [
+        ('customer', 'Customer'),
+        ('waiter', 'Waiter'),
+        ('admin', 'Admin'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    user_type = models.CharField(max_length=20, choices=USER_TYPES, default='customer')
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    employee_id = models.CharField(max_length=20, blank=True, null=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.get_user_type_display()}"
