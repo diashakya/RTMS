@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-from .models import Special, Foods, Category, Favorite, Order, OrderItem, Customer, Cart, CartItem
+from .models import Special, Foods, Category, Favorite, Order, OrderItem, Customer, Cart, CartItem, Contact, Reservation
 
 # Enhanced Order Item Inline
 class OrderItemInline(admin.TabularInline):
@@ -10,6 +10,11 @@ class OrderItemInline(admin.TabularInline):
     extra = 0
     readonly_fields = ('total_price',)
     fields = ('food', 'special', 'quantity', 'price', 'total_price')
+    
+    def get_readonly_fields(self, request, obj=None):
+        # Make total_price readonly
+        readonly = list(self.readonly_fields)
+        return readonly
 
 # Enhanced Order Admin
 @admin.register(Order)
@@ -192,13 +197,64 @@ class CategoryAdmin(admin.ModelAdmin):
         self.message_user(request, f'{count} categories deleted successfully.')
     delete_selected_categories.short_description = "Delete selected categories"
 
+@admin.register(Contact)
+class ContactAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'phone', 'submitted_at', 'is_read', 'message_preview')
+    list_filter = ('is_read', 'submitted_at')
+    search_fields = ('name', 'email', 'phone')
+    readonly_fields = ('submitted_at',)
+    list_editable = ('is_read',)
+    ordering = ('-submitted_at',)
+    actions = ['mark_as_read', 'mark_as_unread', 'delete_selected_messages']
+    
+    def message_preview(self, obj):
+        return obj.message[:50] + "..." if len(obj.message) > 50 else obj.message
+    message_preview.short_description = "Message Preview"
+    
+    def mark_as_read(self, request, queryset):
+        count = queryset.update(is_read=True)
+        self.message_user(request, f'{count} messages marked as read.')
+    mark_as_read.short_description = "Mark selected messages as read"
+    
+    def mark_as_unread(self, request, queryset):
+        count = queryset.update(is_read=False)
+        self.message_user(request, f'{count} messages marked as unread.')
+    mark_as_unread.short_description = "Mark selected messages as unread"
+    
+    def delete_selected_messages(self, request, queryset):
+        count = queryset.count()
+        queryset.delete()
+        self.message_user(request, f'{count} contact messages deleted successfully.')
+    delete_selected_messages.short_description = "Delete selected messages"
+
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = ('user', 'food', 'created_at')
     list_filter = ('created_at', 'user')
     search_fields = ('user__username', 'food__title')
 
+@admin.register(Reservation)
+class ReservationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'date', 'time', 'guests', 'is_confirmed', 'submitted_at')
+    list_filter = ('date', 'is_confirmed')
+    search_fields = ('name', 'email', 'phone')
+    ordering = ('-submitted_at',)
+    actions = ['mark_confirmed', 'mark_unconfirmed']
+
+    def mark_confirmed(self, request, queryset):
+        count = queryset.update(is_confirmed=True)
+        self.message_user(request, f'{count} reservations marked as confirmed.')
+    mark_confirmed.short_description = "Mark selected as confirmed"
+
+    def mark_unconfirmed(self, request, queryset):
+        count = queryset.update(is_confirmed=False)
+        self.message_user(request, f'{count} reservations marked as unconfirmed.')
+    mark_unconfirmed.short_description = "Mark selected as unconfirmed"
+
 # Admin site customization
 admin.site.site_header = "Restaurant Management System"
 admin.site.site_title = "Restaurant Admin"
 admin.site.index_title = "Welcome to Restaurant Management"
+
+# Alternative registration method (backup)
+# admin.site.register(Contact, ContactAdmin)

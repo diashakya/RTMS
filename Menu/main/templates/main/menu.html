@@ -90,7 +90,7 @@
     
     <!-- Quick Actions -->
     <div class="quick-actions">
-        <button class="action-btn" id="reservation-btn">
+        <button class="action-btn" id="reservation-btn" onclick="window.location.href='{% url 'make_reservation' %}'">
             <i class="fas fa-calendar-alt"></i> Make Reservation
         </button>
         <button class="action-btn" id="catering-btn">
@@ -359,7 +359,7 @@
     </div>
 </div>
 
-{% endblock content %}
+{% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/menu.js' %}"></script>

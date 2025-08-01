@@ -77,4 +77,5 @@ urlpatterns = [
 
     # Admin email functionality
     path('send-status-email/<int:order_id>/', send_status_email, name='send_status_email'),
+    path('reservation/', make_reservation, name='make_reservation'),
 ]

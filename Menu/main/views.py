@@ -38,7 +38,7 @@ from django.contrib.auth.decorators import login_required
 import json
 
 # ------------------------Models
-from .models import Order, OrderItem, Foods, Special, Customer, Favorite, Cart, CartItem
+from .models import Order, OrderItem, Foods, Special, Customer, Favorite, Cart, CartItem, Category
 
 # -----------------------------------   Local Apps
 from .models import Special
@@ -60,12 +60,32 @@ def about(request):
     return render(request, 'main/about.html')
 
 def contact(request):
-    """Renders the contact page."""
-    return render(request, 'main/contact.html')
-
-from .models import Special, Foods
-
-from .models import Special, Foods, Category
+    """Contact page with functional contact form"""
+    if request.method == 'POST':
+        from .forms import ContactForm
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            contact_message = form.save()
+            
+            # Send notification email to admin (optional)
+            try:
+                send_contact_notification_email(contact_message)
+            except Exception as e:
+                print(f"Error sending notification email: {e}")
+            
+            messages.success(request, 'Thank you for your message! We will get back to you soon.')
+            return redirect('contact')
+        else:
+            messages.error(request, 'Please correct the errors in the form.')
+    else:
+        from .forms import ContactForm
+        form = ContactForm()
+    
+    context = {
+        'form': form,
+        'page_title': 'Contact Us'
+    }
+    return render(request, 'main/contact.html', context)
 
 def menu(request):
     """Renders the menu page with food items and today's specials, filtered by category and search query."""
@@ -1286,6 +1306,41 @@ def send_status_email(request, order_id):
         messages.error(request, f'Error sending email: {str(e)}')
     
     return redirect('admin:main_order_changelist')
+
+def send_contact_notification_email(contact_message):
+    """Send email notification to admin when new contact message is received"""
+    subject = f"New Contact Message from {contact_message.name}"
+    message = f"""
+    New contact message received:
+    
+    Name: {contact_message.name}
+    Email: {contact_message.email}
+    Phone: {contact_message.phone}
+    
+    Message:
+    {contact_message.message}
+    
+    Submitted at: {contact_message.submitted_at}
+    """
+    
+    from_email = settings.DEFAULT_FROM_EMAIL
+    recipient_list = [settings.ADMIN_EMAIL] if hasattr(settings, 'ADMIN_EMAIL') else ['admin@restaurant.com']
+    
+    send_mail(subject, message, from_email, recipient_list, fail_silently=True)
+
+def make_reservation(request):
+    from .forms import ReservationForm
+    if request.method == 'POST':
+        form = ReservationForm(request.POST)
+        if form.is_valid():
+            reservation = form.save()
+            messages.success(request, 'Your reservation request has been submitted! We will confirm soon.')
+            return redirect('make_reservation')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ReservationForm()
+    return render(request, 'main/reservation.html', {'form': form, 'page_title': 'Make Reservation'})
 
 
 

@@ -93,11 +93,29 @@ class OrderItem(models.Model):
     food = models.ForeignKey(Foods, on_delete=models.SET_NULL, null=True, blank=True)
     special = models.ForeignKey(Special, on_delete=models.SET_NULL, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=1)
-    price = models.DecimalField(max_digits=8, decimal_places=2)  # price at time of order
+    price = models.DecimalField(max_digits=8, decimal_places=2, default=0)  # price at time of order
+
+    def save(self, *args, **kwargs):
+        """Ensure price is set when saving"""
+        if self.price is None or self.price == 0:
+            if self.food and self.food.price:
+                self.price = self.food.price
+            elif self.special:
+                if self.special.discounted_price:
+                    self.price = self.special.discounted_price
+                elif self.special.price:
+                    self.price = self.special.price
+                else:
+                    self.price = 0
+            else:
+                self.price = 0
+        super().save(*args, **kwargs)
 
     @property
     def total_price(self):
         """Calculate total price for this item (price * quantity)"""
+        if self.price is None:
+            return 0
         return self.price * self.quantity
 
     def __str__(self):
@@ -127,11 +145,20 @@ class Cart(models.Model):
 
     @property
     def total_price(self):
-        return sum(item.total_price for item in self.items.all())
+        total = 0
+        for item in self.items.all():
+            item_total = item.total_price
+            if item_total is not None:
+                total += item_total
+        return total
 
     @property
     def total_items(self):
-        return sum(item.quantity for item in self.items.all())
+        total = 0
+        for item in self.items.all():
+            if item.quantity is not None:
+                total += item.quantity
+        return total
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
@@ -142,15 +169,21 @@ class CartItem(models.Model):
 
     @property
     def item_price(self):
-        if self.food:
+        if self.food and self.food.price:
             return self.food.price
         elif self.special:
-            return self.special.discounted_price or self.special.price
+            if self.special.discounted_price:
+                return self.special.discounted_price
+            elif self.special.price:
+                return self.special.price
         return 0
 
     @property
     def total_price(self):
-        return self.item_price * self.quantity
+        item_price = self.item_price
+        if item_price is None:
+            return 0
+        return item_price * self.quantity
 
     @property
     def item_name(self):
@@ -173,3 +206,39 @@ class CartItem(models.Model):
 
     class Meta:
         unique_together = ['cart', 'food', 'special']  # Prevent duplicate items
+
+class Contact(models.Model):
+    """Model to store contact form submissions"""
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    message = models.TextField()
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-submitted_at']
+        verbose_name = "Contact Message"
+        verbose_name_plural = "Contact Messages"
+    
+    def __str__(self):
+        return f"Contact from {self.name} - {self.email}"
+
+class Reservation(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    date = models.DateField()
+    time = models.TimeField()
+    guests = models.PositiveIntegerField(default=1)
+    message = models.TextField(blank=True, null=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    is_confirmed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-submitted_at']
+        verbose_name = "Reservation"
+        verbose_name_plural = "Reservations"
+
+    def __str__(self):
+        return f"Reservation for {self.name} on {self.date} at {self.time}"
