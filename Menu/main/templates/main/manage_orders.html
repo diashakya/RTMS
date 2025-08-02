@@ -57,6 +57,7 @@
                     <div class="card">
                         <div class="card-body">
                             <form method="GET" class="d-flex align-items-center">
+                                {% csrf_token %}
                                 <label for="status" class="me-2"><strong>Filter by Status:</strong></label>
                                 <select name="status" id="status" class="form-select me-3" style="width: auto;">
                                     <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Orders</option>

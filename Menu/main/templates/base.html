@@ -391,6 +391,8 @@
     <!-- custom js -->
     <script src="{% static 'js/script.js' %}"></script>
     <script src="{% static 'js/menu.js' %}"></script>
+    <script src="{% static 'js/form-validation.js' %}"></script>
+    <script src="{% static 'js/form-loading.js' %}"></script>
 
     <!-- jQuery for Bootstrap 5 compatibility -->
     <script
@@ -518,6 +520,14 @@
     <!-- Custom JavaScript block for individual pages -->
     {% block extra_js %}
     {% endblock %}
+
+    <!-- Global Loading Overlay (created by JavaScript, but backup HTML structure) -->
+    <div id="page-loading-overlay" class="loading-overlay" style="display: none;">
+        <div style="text-align: center; color: white;">
+            <div class="spinner"></div>
+            <div class="loading-text">Loading...</div>
+        </div>
+    </div>
 
   </body>
 </html>

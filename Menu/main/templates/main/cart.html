@@ -259,11 +259,23 @@
                 <i class="fas fa-credit-card" style="margin-right: 10px;"></i>Checkout Details
             </h4>
             
-            <form method="post">
+            <form method="post" class="checkout-form">
                 {% csrf_token %}
                 
+                <!-- Display Django form errors -->
+                {% if checkout_form.non_field_errors %}
+                    <div class="validation-summary" style="display: block;">
+                        <h5><i class="fas fa-exclamation-triangle"></i> Please fix the following errors:</h5>
+                        <ul>
+                            {% for error in checkout_form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+                
                 <!-- Order Type Selection -->
-                <div class="mb-4">
+                <div class="mb-4 form-group-enhanced">
                     <h5 class="section-header">
                         <i class="fas fa-map-marker-alt" style="margin-right: 10px;"></i>Order Type *
                     </h5>
@@ -293,6 +305,11 @@
                             </label>
                         </div>
                     </div>
+                    {% if checkout_form.order_type.errors %}
+                        <div class="invalid-feedback" style="display: block;">
+                            {{ checkout_form.order_type.errors.0 }}
+                        </div>
+                    {% endif %}
                 </div>
                 
                 <!-- Customer Details -->
@@ -302,34 +319,64 @@
                     </h5>
                 </div>
                 <div class="row mb-4">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-3 form-group-enhanced">
                         <label class="form-label" style="font-weight: bold;">First Name *</label>
                         {{ checkout_form.customer_firstname }}
+                        {% if checkout_form.customer_firstname.errors %}
+                            <div class="invalid-feedback" style="display: block;">
+                                {{ checkout_form.customer_firstname.errors.0 }}
+                            </div>
+                        {% endif %}
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-3 form-group-enhanced">
                         <label class="form-label" style="font-weight: bold;">Last Name *</label>
                         {{ checkout_form.customer_lastname }}
+                        {% if checkout_form.customer_lastname.errors %}
+                            <div class="invalid-feedback" style="display: block;">
+                                {{ checkout_form.customer_lastname.errors.0 }}
+                            </div>
+                        {% endif %}
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-3 form-group-enhanced">
                         <label class="form-label" style="font-weight: bold;">Phone Number *</label>
                         {{ checkout_form.customer_mobileno }}
+                        {% if checkout_form.customer_mobileno.errors %}
+                            <div class="invalid-feedback" style="display: block;">
+                                {{ checkout_form.customer_mobileno.errors.0 }}
+                            </div>
+                        {% endif %}
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6 mb-3 form-group-enhanced">
                         <label class="form-label" style="font-weight: bold;">Email Address *</label>
                         {{ checkout_form.customer_email }}
+                        {% if checkout_form.customer_email.errors %}
+                            <div class="invalid-feedback" style="display: block;">
+                                {{ checkout_form.customer_email.errors.0 }}
+                            </div>
+                        {% endif %}
                     </div>
-                    <div class="col-12 mb-3" id="delivery-address-section">
+                    <div class="col-12 mb-3 form-group-enhanced" id="delivery-address-section">
                         <label class="form-label" style="font-weight: bold;">Delivery Address *</label>
                         {{ checkout_form.customer_address }}
+                        {% if checkout_form.customer_address.errors %}
+                            <div class="invalid-feedback" style="display: block;">
+                                {{ checkout_form.customer_address.errors.0 }}
+                            </div>
+                        {% endif %}
                     </div>
-                    <div class="col-12 mb-3" id="table-number-section" style="display: none;">
+                    <div class="col-12 mb-3 form-group-enhanced" id="table-number-section" style="display: none;">
                         <label class="form-label" style="font-weight: bold;">Table Number *</label>
                         {{ checkout_form.table_number }}
+                        {% if checkout_form.table_number.errors %}
+                            <div class="invalid-feedback" style="display: block;">
+                                {{ checkout_form.table_number.errors.0 }}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
                 
                 <!-- Payment Method -->
-                <div class="mb-4">
+                <div class="mb-4 form-group-enhanced">
                     <h5 class="section-header">
                         <i class="fas fa-credit-card" style="margin-right: 10px;"></i>Payment Method *
                     </h5>
@@ -371,12 +418,25 @@
                             </label>
                         </div>
                     </div>
+                    {% if checkout_form.payment_method.errors %}
+                        <div class="invalid-feedback" style="display: block;">
+                            {{ checkout_form.payment_method.errors.0 }}
+                        </div>
+                    {% endif %}
                 </div>
                 
                 <!-- Order Notes -->
-                <div class="mb-4">
+                <div class="mb-4 form-group-enhanced">
                     <label class="form-label" style="font-weight: bold;">Special Instructions</label>
                     {{ checkout_form.order_notes }}
+                    {% if checkout_form.order_notes.errors %}
+                        <div class="invalid-feedback" style="display: block;">
+                            {{ checkout_form.order_notes.errors.0 }}
+                        </div>
+                    {% endif %}
+                    <small class="form-text text-muted">
+                        <span id="notes-char-count">0</span>/500 characters
+                    </small>
                 </div>
                 
                 <!-- Place Order Button -->
@@ -508,7 +568,125 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleOrderTypeFields();
     updateOrderTypeVisual();
     updatePaymentVisual();
+    
+    // Character counter for order notes
+    const orderNotesField = document.querySelector('#id_order_notes');
+    const charCountSpan = document.querySelector('#notes-char-count');
+    
+    if (orderNotesField && charCountSpan) {
+        orderNotesField.addEventListener('input', function() {
+            const currentLength = this.value.length;
+            charCountSpan.textContent = currentLength;
+            
+            // Visual feedback for character limit
+            if (currentLength > 450) {
+                charCountSpan.style.color = '#dc3545';
+            } else if (currentLength > 350) {
+                charCountSpan.style.color = '#ffc107';
+            } else {
+                charCountSpan.style.color = '#6c757d';
+            }
+            
+            if (currentLength > 500) {
+                this.classList.add('is-invalid');
+                let feedback = this.parentNode.querySelector('.char-limit-feedback');
+                if (!feedback) {
+                    feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback char-limit-feedback';
+                    this.parentNode.appendChild(feedback);
+                }
+                feedback.textContent = 'Order notes cannot exceed 500 characters.';
+                feedback.style.display = 'block';
+            } else {
+                this.classList.remove('is-invalid');
+                const feedback = this.parentNode.querySelector('.char-limit-feedback');
+                if (feedback) {
+                    feedback.style.display = 'none';
+                }
+            }
+        });
+        
+        // Initialize character count
+        charCountSpan.textContent = orderNotesField.value.length;
+    }
+    
+    // Enhanced validation error styling for radio groups
+    const orderTypeSelection = document.querySelector('.order-type-selection');
+    const paymentMethods = document.querySelector('.payment-methods');
+    
+    // Add error styling class
+    const style = document.createElement('style');
+    style.textContent = `
+        .order-type-selection.has-error,
+        .payment-methods.has-error {
+            border: 2px solid #dc3545;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #f8d7da;
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        .order-type-selection.has-error::after,
+        .payment-methods.has-error::after {
+            content: 'Please make a selection';
+            display: block;
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Enhanced loading functionality for cart operations
+    initCartLoadingHandlers();
 });
+
+function initCartLoadingHandlers() {
+    // Handle quantity updates with loading
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const button = form.querySelector('button[type="submit"]');
+            if (!button) return;
+            
+            // Show loading for checkout
+            if (button.name === 'checkout') {
+                e.preventDefault();
+                const form = this;
+                
+                // Show form loading
+                if (window.loadingManager) {
+                    window.loadingManager.showFormLoading(form);
+                    window.loadingManager.showGlobalLoading('Processing your order...');
+                }
+                
+                // Submit after showing loading
+                setTimeout(() => {
+                    form.submit();
+                }, 100);
+                return;
+            }
+            
+            // Show loading for other operations
+            if (button.name === 'update_quantity') {
+                if (window.loadingManager) {
+                    window.loadingManager.showButtonLoading(button, 'Update');
+                }
+            } else if (button.name === 'remove_item') {
+                if (window.loadingManager) {
+                    window.loadingManager.showButtonLoading(button, 'Remove');
+                }
+            }
+        });
+    });
+}
+
+// Add loading notifications for cart operations
+function showCartLoadingNotification(message) {
+    if (window.showLoadingNotification) {
+        window.showLoadingNotification(message, 3000);
+    }
+}
 </script>
 
 {% endblock %}

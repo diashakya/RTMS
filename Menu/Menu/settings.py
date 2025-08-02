@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['*','127.0.0.1', 'localhost', ]
 # Application definition
 INSTALLED_APPS = [
     'unfold',  # Modern admin UI
+    "whitenoise.runserver_nostatic",  # Use whitenoise for static files in production
     'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -50,6 +51,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Serve static files in production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -58,7 +60,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
     'allauth.account.middleware.AccountMiddleware',
-    'main.middleware.RoleBasedAccessMiddleware',  # Add role-based access control
 ]
 
 ROOT_URLCONF = 'Menu.urls'

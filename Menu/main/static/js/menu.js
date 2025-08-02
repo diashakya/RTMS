@@ -89,38 +89,52 @@ function initSearchFunctionality() {
 
 /* ---------------------------------------- Add to Cart Functionality ---------------------------------------- */
 function initAddToCart() {
-    // Forms will submit normally to the server, no AJAX needed
-    // Quantity controls are handled by the updateQuantity function
+    // Add click handlers for AJAX add to cart buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('add-to-cart-btn') || e.target.closest('.add-to-cart-btn')) {
+            const button = e.target.classList.contains('add-to-cart-btn') ? e.target : e.target.closest('.add-to-cart-btn');
+            const form = button.closest('form');
+            
+            // Check if this should be AJAX (you can add a data attribute to enable AJAX)
+            if (button.dataset.ajax === 'true' || form.dataset.ajax === 'true') {
+                e.preventDefault();
+                
+                const formData = new FormData(form);
+                const itemType = formData.get('item_type');
+                const itemId = formData.get('item_id');
+                const quantity = formData.get('quantity') || 1;
+                
+                addToCartAjax(itemType, itemId, quantity, button);
+            }
+        }
+    });
 }
 
-function addToCartAjax(itemType, itemId, quantity) {
+function addToCartAjax(itemType, itemId, quantity, button = null) {
     const csrfToken = getCookie('csrftoken');
     
-    fetch('/api/add-to-cart/', {
+    makeAjaxCall('/api/add-to-cart/', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken,
-        },
-        body: JSON.stringify({
+        data: {
             type: itemType,
             id: itemId,
             quantity: quantity
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(data.message, 'success');
-            updateCartBadge(data.cart_count);
-            shakeCartIcon();
-        } else {
-            showNotification('Error adding to cart: ' + data.message, 'error');
+        },
+        button: button,
+        loadingMessage: 'Adding item to cart...',
+        onSuccess: (data) => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                updateCartBadge(data.cart_count);
+                shakeCartIcon();
+            } else {
+                showNotification('Error adding to cart: ' + data.message, 'error');
+            }
+        },
+        onError: (error) => {
+            console.error('Error:', error);
+            showNotification('Error adding to cart', 'error');
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error adding to cart', 'error');
     });
 }
 
@@ -252,13 +266,13 @@ function initFavorites() {
             if (icon.classList.contains('far')) {
                 icon.classList.remove('far');
                 icon.classList.add('fas');
-                // Add to favorites
-                addToFavorites(itemId);
+                // Add to favorites with loading
+                addToFavorites(itemId, btn);
             } else {
                 icon.classList.remove('fas');
                 icon.classList.add('far');
-                // Remove from favorites
-                removeFromFavorites(itemId);
+                // Remove from favorites with loading
+                removeFromFavorites(itemId, btn);
             }
         });
     });
@@ -438,63 +452,57 @@ function shareModalItem() {
     }
 }
 
-function addToFavorites(itemId) {
+function addToFavorites(itemId, button = null) {
     if (!checkAuthentication()) return;
     
-    fetch('/api/toggle-favorite/', {
+    makeAjaxCall('/api/toggle-favorite/', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken'),
-        },
-        body: JSON.stringify({
+        data: {
             food_id: itemId
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            if (data.action === 'added') {
-                showNotification(data.message, 'success');
-                updateFavoritesBadge(data.favorites_count);
+        },
+        button: button,
+        loadingMessage: 'Adding to favorites...',
+        onSuccess: (data) => {
+            if (data.success) {
+                if (data.action === 'added') {
+                    showNotification(data.message, 'success');
+                    updateFavoritesBadge(data.favorites_count);
+                }
+            } else {
+                showNotification('Error: ' + data.message, 'error');
             }
-        } else {
-            showNotification('Error: ' + data.message, 'error');
+        },
+        onError: (error) => {
+            console.error('Error:', error);
+            showNotification('Error adding to favorites', 'error');
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error adding to favorites', 'error');
     });
 }
 
-function removeFromFavorites(itemId) {
+function removeFromFavorites(itemId, button = null) {
     if (!checkAuthentication()) return;
     
-    fetch('/api/toggle-favorite/', {
+    makeAjaxCall('/api/toggle-favorite/', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken'),
-        },
-        body: JSON.stringify({
+        data: {
             food_id: itemId
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            if (data.action === 'removed') {
-                showNotification(data.message, 'success');
-                updateFavoritesBadge(data.favorites_count);
+        },
+        button: button,
+        loadingMessage: 'Removing from favorites...',
+        onSuccess: (data) => {
+            if (data.success) {
+                if (data.action === 'removed') {
+                    showNotification(data.message, 'success');
+                    updateFavoritesBadge(data.favorites_count);
+                }
+            } else {
+                showNotification('Error: ' + data.message, 'error');
             }
-        } else {
-            showNotification('Error: ' + data.message, 'error');
+        },
+        onError: (error) => {
+            console.error('Error:', error);
+            showNotification('Error removing from favorites', 'error');
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error removing from favorites', 'error');
     });
 }
 
@@ -738,3 +746,299 @@ function showNotification(message, type) {
         }, 300);
     }, 3000);
 }
+
+/* ----------------------------------------Loading Utilities ---------------------------------------- */
+
+/**
+ * Loading management system for AJAX calls
+ */
+class LoadingManager {
+    constructor() {
+        this.activeLoaders = new Set();
+        this.createGlobalOverlay();
+    }
+
+    // Create global loading overlay
+    createGlobalOverlay() {
+        if (!document.getElementById('global-loading-overlay')) {
+            const overlay = document.createElement('div');
+            overlay.id = 'global-loading-overlay';
+            overlay.className = 'loading-overlay';
+            overlay.innerHTML = `
+                <div style="text-align: center; color: white;">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Processing your request</div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+    }
+
+    // Show global loading
+    showGlobalLoading(message = 'Processing your request') {
+        const overlay = document.getElementById('global-loading-overlay');
+        const text = overlay.querySelector('.loading-text');
+        if (text) text.textContent = message;
+        overlay.classList.add('show');
+    }
+
+    // Hide global loading
+    hideGlobalLoading() {
+        const overlay = document.getElementById('global-loading-overlay');
+        overlay.classList.remove('show');
+    }
+
+    // Show button loading state
+    showButtonLoading(button, originalText = null) {
+        if (!button) return;
+        
+        const buttonId = button.id || button.className || 'unknown';
+        this.activeLoaders.add(buttonId);
+        
+        // Store original text if provided
+        if (originalText) {
+            button.dataset.originalText = originalText;
+        } else {
+            button.dataset.originalText = button.textContent || button.innerHTML;
+        }
+        
+        // Add loading class and spinner
+        button.classList.add('btn-loading');
+        button.disabled = true;
+        
+        // Change button text based on type
+        if (button.classList.contains('cart-btn') || button.textContent.includes('Add to Cart')) {
+            button.innerHTML = '<span class="spinner-small"></span>Adding...';
+        } else if (button.classList.contains('favorite-btn')) {
+            button.innerHTML = '<span class="spinner-small"></span>Updating...';
+        } else {
+            button.innerHTML = '<span class="spinner-small"></span>Loading...';
+        }
+    }
+
+    // Hide button loading state
+    hideButtonLoading(button) {
+        if (!button) return;
+        
+        const buttonId = button.id || button.className || 'unknown';
+        this.activeLoaders.delete(buttonId);
+        
+        // Remove loading class and restore original text
+        button.classList.remove('btn-loading');
+        button.disabled = false;
+        
+        const originalText = button.dataset.originalText;
+        if (originalText) {
+            button.innerHTML = originalText;
+            delete button.dataset.originalText;
+        }
+    }
+
+    // Show form loading state
+    showFormLoading(form) {
+        if (!form) return;
+        form.classList.add('form-loading');
+        
+        // Disable all form inputs
+        const inputs = form.querySelectorAll('input, button, textarea, select');
+        inputs.forEach(input => {
+            input.disabled = true;
+        });
+    }
+
+    // Hide form loading state
+    hideFormLoading(form) {
+        if (!form) return;
+        form.classList.remove('form-loading');
+        
+        // Re-enable all form inputs
+        const inputs = form.querySelectorAll('input, button, textarea, select');
+        inputs.forEach(input => {
+            input.disabled = false;
+        });
+    }
+
+    // Show section loading with skeleton
+    showSectionLoading(container, type = 'default') {
+        if (!container) return;
+        
+        let skeletonHTML = '';
+        switch (type) {
+            case 'menu-items':
+                skeletonHTML = `
+                    <div class="skeleton skeleton-image"></div>
+                    <div class="skeleton skeleton-title"></div>
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text" style="width: 70%;"></div>
+                `;
+                break;
+            case 'cart':
+                skeletonHTML = `
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                    <div class="skeleton skeleton-text" style="width: 60%;"></div>
+                `;
+                break;
+            default:
+                skeletonHTML = `
+                    <div class="skeleton skeleton-title"></div>
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text" style="width: 85%;"></div>
+                `;
+        }
+        
+        container.innerHTML = `<div class="loading-skeleton">${skeletonHTML}</div>`;
+    }
+
+    // Clear all loading states
+    clearAllLoading() {
+        this.hideGlobalLoading();
+        
+        // Clear button loading states
+        document.querySelectorAll('.btn-loading').forEach(btn => {
+            this.hideButtonLoading(btn);
+        });
+        
+        // Clear form loading states
+        document.querySelectorAll('.form-loading').forEach(form => {
+            this.hideFormLoading(form);
+        });
+        
+        this.activeLoaders.clear();
+    }
+
+    // Flash success/error animations
+    flashSuccess(element) {
+        if (!element) return;
+        element.classList.add('success-flash');
+        setTimeout(() => element.classList.remove('success-flash'), 600);
+    }
+
+    flashError(element) {
+        if (!element) return;
+        element.classList.add('error-flash');
+        setTimeout(() => element.classList.remove('error-flash'), 600);
+    }
+}
+
+// Create global loading manager instance
+const loadingManager = new LoadingManager();
+
+// Enhanced AJAX wrapper with automatic loading states
+function makeAjaxCall(url, options = {}) {
+    const {
+        method = 'GET',
+        data = null,
+        button = null,
+        form = null,
+        globalLoading = false,
+        loadingMessage = 'Processing your request',
+        onSuccess = () => {},
+        onError = () => {},
+        onComplete = () => {}
+    } = options;
+
+    // Show appropriate loading state
+    if (globalLoading) {
+        loadingManager.showGlobalLoading(loadingMessage);
+    }
+    if (button) {
+        loadingManager.showButtonLoading(button);
+    }
+    if (form) {
+        loadingManager.showFormLoading(form);
+    }
+
+    // Prepare fetch options
+    const fetchOptions = {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        }
+    };
+
+    if (data) {
+        fetchOptions.body = JSON.stringify(data);
+    }
+
+    // Make the request
+    return fetch(url, fetchOptions)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Success handling
+            if (button) loadingManager.flashSuccess(button);
+            if (form) loadingManager.flashSuccess(form);
+            onSuccess(data);
+            return data;
+        })
+        .catch(error => {
+            console.error('AJAX Error:', error);
+            // Error handling
+            if (button) loadingManager.flashError(button);
+            if (form) loadingManager.flashError(form);
+            onError(error);
+            throw error;
+        })
+        .finally(() => {
+            // Cleanup loading states
+            if (globalLoading) {
+                loadingManager.hideGlobalLoading();
+            }
+            if (button) {
+                loadingManager.hideButtonLoading(button);
+            }
+            if (form) {
+                loadingManager.hideFormLoading(form);
+            }
+            onComplete();
+        });
+}
+
+// Enhanced notification system with loading integration
+function showLoadingNotification(message, duration = 2000) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        background: #f76d37;
+        color: white;
+        border-radius: 8px;
+        z-index: 10001;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+    `;
+    
+    notification.innerHTML = `
+        <div class="spinner-small"></div>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            if (document.body.contains(notification)) {
+                document.body.removeChild(notification);
+            }
+        }, 300);
+    }, duration);
+}
+
+/* ----------------------------------------Loading Integration with Existing Functions ---------------------------------------- */
+
+// Export for use in other files
+window.loadingManager = loadingManager;
+window.makeAjaxCall = makeAjaxCall;
+window.showLoadingNotification = showLoadingNotification;
