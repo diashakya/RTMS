@@ -1,0 +1,18 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Sales Report</h1>
+<table class="admin-table">
+    <tr>
+        <th>Month</th>
+        <th>Total Sales</th>
+        <th>Order Count</th>
+    </tr>
+    {% for row in sales %}
+    <tr>
+        <td>{{ row.month|date:"F Y" }}</td>
+        <td>{{ row.total_sales }}</td>
+        <td>{{ row.order_count }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

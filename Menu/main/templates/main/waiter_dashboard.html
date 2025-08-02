@@ -5,6 +5,11 @@
 
 {% block content %}
 <div class="container-fluid py-4">
+    <div class="mb-3 text-end">
+        <a href="{% url 'sales_report' %}" class="btn btn-outline-primary">
+            <i class="fas fa-chart-line"></i> View Sales Report
+        </a>
+    </div>
     <div class="row">
         <!-- Table Management Section -->
         <div class="col-md-8">
@@ -14,16 +19,18 @@
                 </div>
                 <div class="card-body">
                     <div class="table-grid">
-                        {% for table in tables %}
+                        {% for table in active_assignments %}
                         <div class="table-card {% if table.status == 'occupied' %}occupied{% elif table.status == 'reserved' %}reserved{% else %}available{% endif %}"
                              onclick="handleTableClick('{{ table.id }}')">
                             <h5>Table {{ table.number }}</h5>
                             <p>Capacity: {{ table.capacity }}</p>
                             <p class="status">{{ table.get_status_display }}</p>
                             {% if table.status == 'occupied' %}
-                                <p class="order-info">Order #{{ table.current_order.id }}</p>
+                                <button class="btn btn-sm btn-success mt-2" onclick="event.stopPropagation(); markTableAvailable('{{ table.id }}');">Mark Available</button>
                             {% endif %}
                         </div>
+                        {% empty %}
+                        <p>No assigned tables</p>
                         {% endfor %}
                     </div>
                 </div>
@@ -38,7 +45,7 @@
                 </div>
                 <div class="card-body">
                     <div class="active-orders">
-                        {% for assignment in waiter.table_assignments.all %}
+                        {% for assignment in active_assignments %}
                         <div class="order-card">
                             <h5>Order #{{ assignment.order.id }}</h5>
                             <p>Table {{ assignment.table.number }}</p>
@@ -46,6 +53,9 @@
                             <button class="btn btn-sm btn-primary" onclick="viewOrderDetails('{{ assignment.order.id }}')">
                                 View Details
                             </button>
+                            {% if assignment.order.status != 'completed' %}
+                                <button class="btn btn-sm btn-success mt-2" onclick="markOrderServed('{{ assignment.order.id }}');">Mark Served</button>
+                            {% endif %}
                         </div>
                         {% empty %}
                         <p>No active orders</p>
@@ -154,6 +164,34 @@ function viewOrderDetails(orderId) {
             document.getElementById('orderDetailsContent').innerHTML = html;
             new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
         });
+}
+
+function markOrderServed(orderId) {
+    if (confirm('Mark this order as served?')) {
+        fetch(`/waiter/order/${orderId}/mark-served/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        }).then(() => location.reload());
+    }
+}
+
+function markTableAvailable(tableId) {
+    if (confirm('Mark this table as available?')) {
+        fetch(`/waiter/table/${tableId}/clear/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        }).then(() => location.reload());
+    }
+}
+
+function getCookie(name) {
+    var value = "; " + document.cookie;
+    var parts = value.split("; " + name + "=");
+    if (parts.length == 2) return parts.pop().split(";").shift();
 }
 </script>
 {% endblock %}

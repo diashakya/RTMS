@@ -13,7 +13,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from decouple import config
 import os
-
+import django_heroku
+import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,10 +27,12 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG')
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'testserver']
+ALLOWED_HOSTS = ['*','127.0.0.1', 'localhost', ]
 
 # Application definition
 INSTALLED_APPS = [
+    'unfold',  # Modern admin UI
+    "whitenoise.runserver_nostatic",  # Use whitenoise for static files in production
     'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -48,6 +51,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Serve static files in production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -56,7 +60,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
     'allauth.account.middleware.AccountMiddleware',
-    'main.middleware.RoleBasedAccessMiddleware',  # Add role-based access control
 ]
 
 ROOT_URLCONF = 'Menu.urls'
@@ -142,7 +145,10 @@ STATICFILES_DIRS = [
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+django_heroku.settings(locals())
 MEDIA_ROOT = BASE_DIR/'media'
 MEDIA_URL = '/media/'
 
@@ -161,9 +167,4 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='Restaurant <noreply@r
 # For development, you can use console backend to see emails in terminal
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-# Authentication URLs
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
 

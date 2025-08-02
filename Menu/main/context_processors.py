@@ -27,7 +27,16 @@ def cart_context(request):
             except Cart.DoesNotExist:
                 cart_count = 0
     
+    # Add waiter role info
+    is_waiter = False
+    if hasattr(request, 'user') and request.user.is_authenticated:
+        try:
+            if hasattr(request.user, 'waiter_profile') and request.user.waiter_profile.user_type == 'waiter':
+                is_waiter = True
+        except Exception:
+            pass
     return {
         'cart_count': cart_count,
         'favorites_count': favorites_count,
+        'is_waiter': is_waiter,
     }
