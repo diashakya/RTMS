@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Sales Report</h2>
+    <form id="filter-form" class="form-inline mb-3" method="get">
+        <label for="start_date">From:</label>
+        <input type="date" id="start_date" name="start_date" value="{{ start_date }}" class="form-control mx-2">
+        <label for="end_date">To:</label>
+        <input type="date" id="end_date" name="end_date" value="{{ end_date }}" class="form-control mx-2">
+        <label for="status">Status:</label>
+        <select id="status" name="status" class="form-control mx-2">
+            <option value="all" {% if status == 'all' %}selected{% endif %}>All</option>
+            <option value="completed" {% if status == 'completed' %}selected{% endif %}>Completed</option>
+            <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+        </select>
+        <button type="submit" class="btn btn-primary mx-2">Filter</button>
+    </form>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Sales</h5>
+                    <p class="card-text display-6">Rs {{ total_sales|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Number of Orders</h5>
+                    <p class="card-text display-6">{{ order_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-secondary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Average Order Value</h5>
+                    <p class="card-text display-6">Rs {{ avg_order_value|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Order ID</th>
+                    <th>Status</th>
+                    <th>Customer</th>
+                    <th>Type</th>
+                    <th>Total (Rs)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ order.created_at|date:'Y-m-d H:i' }}</td>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.status|title }}</td>
+                    <td>{{ order.customer_name|default:order.user.username|default:'Guest' }}</td>
+                    <td>{{ order.get_order_type_display }}</td>
+                    <td>{{ order.total|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">No orders found for the selected criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4">
+        <canvas id="salesChart" height="100"></canvas>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const chartData = {{ chart_data|safe }};
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    const salesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Sales (Rs)',
+                data: chartData.sales,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true },
+                title: { display: true, text: 'Sales Over Time' }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+</script>
+{% endblock %}

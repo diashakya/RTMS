@@ -18,7 +18,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 
 from django.contrib.auth.forms import PasswordChangeForm    
 from django.contrib.auth.decorators import login_required
@@ -90,8 +90,11 @@ def contact(request):
 def menu(request):
     """Renders the menu page with food items and today's specials, filtered by category and search query."""
     # Restrict waiter users
-    if hasattr(request.user, 'profile') and request.user.profile.user_type == 'waiter':
-        return redirect('waiter_dashboard')
+    try:
+        if hasattr(request.user, 'waiter_profile') and request.user.waiter_profile.user_type == 'waiter':
+            return redirect('waiter_dashboard')
+    except Exception:
+        pass
     
     todays_specials = Special.objects.filter(date=date.today(), active=True)
     categories = Category.objects.all()
@@ -698,6 +701,58 @@ def update_order_status(request, order_id):
         return JsonResponse({'success': False, 'message': 'Order not found'})
 
 # ......................................................Admin Dashboard Views........................
+
+from django.utils import timezone
+from django.db.models import Sum, Avg, Count
+from django.contrib.auth.decorators import user_passes_test
+import json as pyjson
+
+def is_superuser_or_waiter(user):
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    try:
+        return hasattr(user, 'waiter_profile') and user.waiter_profile.user_type == 'waiter'
+    except Exception:
+        return False
+
+@user_passes_test(is_superuser_or_waiter)
+def sales_report(request):
+    # Filters
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    status = request.GET.get('status', 'completed')
+    orders = Order.objects.all()
+    if start_date:
+        orders = orders.filter(created_at__date__gte=start_date)
+    if end_date:
+        orders = orders.filter(created_at__date__lte=end_date)
+    if status and status != 'all':
+        orders = orders.filter(status=status)
+    # Only count orders with a total (exclude 0 or null)
+    orders = orders.exclude(total__isnull=True)
+    # Stats
+    total_sales = orders.aggregate(total=Sum('total'))['total'] or 0
+    order_count = orders.count()
+    avg_order_value = orders.aggregate(avg=Avg('total'))['avg'] or 0
+    # Prepare chart data (sales by day)
+    sales_by_day = orders.extra({'day': "date(created_at)"}).values('day').annotate(sales=Sum('total')).order_by('day')
+    chart_data = {
+        'labels': [item['day'] for item in sales_by_day],
+        'sales': [float(item['sales']) for item in sales_by_day],
+    }
+    context = {
+        'orders': orders.order_by('-created_at'),
+        'total_sales': total_sales,
+        'order_count': order_count,
+        'avg_order_value': avg_order_value,
+        'start_date': start_date or '',
+        'end_date': end_date or '',
+        'status': status,
+        'chart_data': pyjson.dumps(chart_data),
+    }
+    return render(request, 'main/sales_report.html', context)
 
 @login_required
 def admin_dashboard(request):
@@ -1388,9 +1443,9 @@ class WaiterRequiredMixin:
         if not request.user.is_authenticated:
             return redirect('login')
         try:
-            if request.user.profile.user_type != 'waiter':
+            if request.user.waiter_profile.user_type != 'waiter':
                 raise PermissionDenied("You must be a waiter to access this page.")
-        except (AttributeError, RelatedObjectDoesNotExist):
+        except (AttributeError, ObjectDoesNotExist):
             raise PermissionDenied("Waiter profile not found.")
         return super().dispatch(request, *args, **kwargs)
 
@@ -1399,9 +1454,62 @@ class WaiterDashboardView(WaiterRequiredMixin, TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['tables'] = Table.objects.all()
-        context['waiter'] = self.request.user.profile
+        waiter_profile = self.request.user.waiter_profile
+        # Only tables assigned to this waiter
+        assigned_tables = waiter_profile.assigned_tables.all()
+        context['tables'] = assigned_tables
+        context['waiter'] = waiter_profile
+        # Only active assignments (orders) for this waiter
+        context['active_assignments'] = waiter_profile.table_assignments.filter(order__status__in=["pending", "confirmed", "preparing", "ready"]).select_related('order', 'table')
         return context
+
+
+@login_required
+def mark_order_served(request, order_id):
+    """Waiter marks an order as served (completed)."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+    try:
+        # Only allow waiters to mark their assigned orders
+        waiter_profile = request.user.waiter_profile
+        assignment = waiter_profile.table_assignments.select_related('order', 'table').get(order__id=order_id)
+        order = assignment.order
+        if order.status == 'completed':
+            return JsonResponse({'success': False, 'message': 'Order already completed.'}, status=400)
+        order.status = 'completed'
+        order.save()
+        # Real-time update (notify all clients)
+        try:
+            send_order_update(order.id, order.status, f"Order #{order.id} marked as served by waiter.")
+        except Exception as e:
+            print(f"Real-time notify failed: {e}")
+        return JsonResponse({'success': True, 'message': 'Order marked as served.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+@login_required
+def clear_table(request, table_id):
+    """Waiter marks a table as available (cleared)."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+    try:
+        waiter_profile = request.user.waiter_profile
+        table = waiter_profile.assigned_tables.get(id=table_id)
+        # Only clear if table is not already available
+        if table.status == 'available':
+            return JsonResponse({'success': False, 'message': 'Table already available.'}, status=400)
+        table.status = 'available'
+        table.save()
+        # Optionally, remove assignment(s) or mark as cleared
+        # Real-time update (notify all clients)
+        try:
+            send_order_update(None, None, f"Table {table.number} marked as available by waiter.")
+        except Exception as e:
+            print(f"Real-time notify failed: {e}")
+        return JsonResponse({'success': True, 'message': 'Table marked as available.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
 
 @login_required
 def order_details_ajax(request, order_id):

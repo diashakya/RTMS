@@ -309,6 +309,13 @@ class WaiterProfile(models.Model):
     employee_id = models.CharField(max_length=20, unique=True)
     phone = models.CharField(max_length=20)
     assigned_tables = models.ManyToManyField(Table, blank=True, related_name='assigned_waiters')
+
+    @property
+    def user_type(self):
+        # Return the user_type from the related UserProfile
+        if hasattr(self.user, 'profile') and self.user.profile.user_type:
+            return self.user.profile.user_type
+        return None
     
     class Meta:
         verbose_name = "Waiter Profile"

@@ -36,6 +36,7 @@ urlpatterns = [
     
     # ---------------------------admin dashboard urls-----------------------------
     path('admin-dashboard/', admin_dashboard, name='admin_dashboard'),
+    path('sales-report/', sales_report, name='sales_report'),
     path('manage-orders/', manage_orders, name='manage_orders'),
     path('generate-qr-codes/', generate_qr_codes, name='generate_qr_codes'),
     path('table-menu/', table_menu, name='table_menu'),
@@ -84,4 +85,6 @@ urlpatterns = [
     # Waiter URLs
     path('waiter/', WaiterDashboardView.as_view(), name='waiter_dashboard'),
     path('waiter/order/<int:order_id>/details/', order_details_ajax, name='waiter_order_details'),
+    path('waiter/order/<int:order_id>/mark-served/', mark_order_served, name='waiter_mark_order_served'),
+    path('waiter/table/<int:table_id>/clear/', clear_table, name='waiter_clear_table'),
 ]
