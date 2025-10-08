@@ -1,10 +1,14 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from django.urls import reverse
+from django.urls import reverse, path
 from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
-from .models import Special, Foods, Category, Favorite, Order, OrderItem, Customer, Cart, CartItem, Contact, Reservation, CateringRequest, UserProfile
+from .models import Special, Foods, Category, Favorite, Order, OrderItem, Customer, Cart, CartItem, Contact, Reservation, CateringRequest, UserProfile, WaiterProfile
+from django.core.exceptions import *
+from django.db.models.functions import TruncMonth
+from django.db.models import Sum
+from django.template.response import TemplateResponse
 
 # Enhanced Order Item Inline
 class OrderItemInline(admin.TabularInline):
@@ -271,6 +275,12 @@ class CateringRequestAdmin(admin.ModelAdmin):
         self.message_user(request, f'{count} requests marked as unhandled.')
     mark_unhandled.short_description = "Mark selected as unhandled"
 
+@admin.register(WaiterProfile)
+class WaiterProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'employee_id', 'phone')
+    search_fields = ('user__username', 'employee_id', 'phone')
+    list_filter = ('user',)
+
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'user_type', 'employee_id', 'phone')
@@ -307,5 +317,29 @@ admin.site.site_header = "Restaurant Management System"
 admin.site.site_title = "Restaurant Admin"
 admin.site.index_title = "Welcome to Restaurant Management"
 
-# Alternative registration method (backup)
-# admin.site.register(Contact, ContactAdmin)
+# Custom Sales Report Admin View (no dummy model registration)
+def sales_report_view(request):
+    sales = (
+        Order.objects
+        .filter(status='completed')
+        .annotate(month=TruncMonth('created_at'))
+        .values('month')
+        .annotate(total_sales=Sum('total'), order_count=Sum('id'))
+        .order_by('month')
+    )
+    context = dict(
+        admin.site.each_context(request),
+        sales=sales,
+    )
+    return TemplateResponse(request, "admin/sales_report.html", context)
+
+# Add the custom view to admin URLs (safe version)
+original_get_urls = admin.site.get_urls
+
+def get_admin_urls():
+    my_urls = [
+        path('sales-report/', admin.site.admin_view(sales_report_view), name='sales-report'),
+    ]
+    return my_urls + original_get_urls()
+
+admin.site.get_urls = get_admin_urls
